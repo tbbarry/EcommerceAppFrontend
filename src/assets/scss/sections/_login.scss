@@ -1,0 +1,349 @@
+// main: ../main.scss
+/*--------------------------------------------------------------
+# Login Section
+--------------------------------------------------------------*/
+.login {
+  .auth-container {
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--surface-color);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+    overflow: hidden;
+    position: relative;
+
+    @media (max-width: 576px) {
+      margin: 0 15px;
+    }
+  }
+
+  .auth-form {
+    padding: 40px 35px;
+    display: none;
+
+    &.active {
+      display: block;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @media (max-width: 576px) {
+      padding: 30px 25px;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 35px;
+
+    h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: color-mix(in srgb, var(--default-color), transparent 40%);
+      font-size: 15px;
+      margin: 0;
+    }
+  }
+
+  .input-group {
+    position: relative;
+    margin-bottom: 20px;
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      color: color-mix(in srgb, var(--default-color), transparent 50%);
+      font-size: 16px;
+      transition: color 0.3s;
+      pointer-events: none;
+    }
+
+    .form-control {
+      padding: 16px 16px 16px 50px;
+      border: 1.5px solid color-mix(in srgb, var(--default-color), transparent 85%);
+      background: var(--background-color);
+      color: var(--default-color);
+      font-size: 15px;
+      transition: all 0.3s;
+      position: relative;
+      z-index: 1;
+      border-radius: 12px !important;
+
+      &:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color), transparent 90%);
+        outline: none;
+      }
+
+      &:focus~.input-icon {
+        color: var(--accent-color);
+      }
+
+      &::placeholder {
+        color: color-mix(in srgb, var(--default-color), transparent 60%);
+      }
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: color-mix(in srgb, var(--default-color), transparent 50%);
+      font-size: 16px;
+      z-index: 3;
+      transition: color 0.3s;
+
+      &:hover {
+        color: var(--accent-color);
+      }
+    }
+  }
+
+  .name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+
+    @media (max-width: 576px) {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+
+  .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      input[type="checkbox"] {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid color-mix(in srgb, var(--default-color), transparent 70%);
+        border-radius: 4px;
+        background: var(--background-color);
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:checked {
+          background: var(--accent-color);
+          border-color: var(--accent-color);
+
+          &::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+          }
+        }
+      }
+
+      label {
+        font-size: 14px;
+        color: var(--default-color);
+        cursor: pointer;
+      }
+    }
+
+    .forgot-password {
+      font-size: 14px;
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+
+      &:hover {
+        color: color-mix(in srgb, var(--accent-color), transparent 20%);
+      }
+    }
+  }
+
+  .terms-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid color-mix(in srgb, var(--default-color), transparent 70%);
+      border-radius: 4px;
+      background: var(--background-color);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 2px;
+      flex-shrink: 0;
+
+      &:checked {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+
+        &::after {
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 5px;
+          width: 4px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      }
+    }
+
+    label {
+      font-size: 13px;
+      color: color-mix(in srgb, var(--default-color), transparent 20%);
+      line-height: 1.4;
+      cursor: pointer;
+
+      a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .auth-btn {
+    width: 100%;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &.primary-btn {
+      background: var(--accent-color);
+      color: var(--contrast-color);
+
+      &:hover {
+        background: color-mix(in srgb, var(--accent-color), #000 10%);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    &.social-btn {
+      background: var(--background-color);
+      color: var(--default-color);
+      border: 1.5px solid color-mix(in srgb, var(--default-color), transparent 85%);
+
+      &:hover {
+        background: color-mix(in srgb, var(--default-color), transparent 97%);
+        border-color: color-mix(in srgb, var(--default-color), transparent 75%);
+      }
+
+      i {
+        font-size: 18px;
+      }
+    }
+
+    i {
+      font-size: 16px;
+    }
+  }
+
+  .divider {
+    position: relative;
+    text-align: center;
+    margin: 25px 0;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: color-mix(in srgb, var(--default-color), transparent 85%);
+    }
+
+    span {
+      background: var(--surface-color);
+      color: color-mix(in srgb, var(--default-color), transparent 50%);
+      padding: 0 20px;
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  }
+
+  .switch-form {
+    text-align: center;
+    margin-top: 25px;
+
+    span {
+      color: color-mix(in srgb, var(--default-color), transparent 40%);
+      font-size: 14px;
+    }
+
+    .switch-btn {
+      background: none;
+      border: none;
+      color: var(--accent-color);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: 5px;
+      transition: color 0.3s;
+
+      &:hover {
+        color: color-mix(in srgb, var(--accent-color), transparent 20%);
+      }
+    }
+  }
+}
