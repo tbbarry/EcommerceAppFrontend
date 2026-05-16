@@ -1,0 +1,493 @@
+// main: ../main.scss
+/*--------------------------------------------------------------
+# Cart Section
+--------------------------------------------------------------*/
+.cart {
+
+  // Cart Items Container
+  .cart-items {
+    background-color: var(--surface-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    .cart-header {
+      border-bottom: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+
+      h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        color: color-mix(in srgb, var(--heading-color), transparent 20%);
+      }
+    }
+
+    .cart-item {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+      transition: background-color 0.3s ease;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: color-mix(in srgb, var(--background-color), transparent 70%);
+      }
+
+      .product-info {
+        .product-image {
+          width: 5rem;
+          height: 5rem;
+          min-width: 5rem;
+          border-radius: 0.375rem;
+          overflow: hidden;
+          margin-right: 1rem;
+          border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+          background-color: var(--surface-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+          }
+
+          @media (max-width: 767.98px) {
+            width: 4rem;
+            height: 4rem;
+            min-width: 4rem;
+          }
+        }
+
+        .product-details {
+          flex: 1;
+
+          .product-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: var(--heading-color);
+          }
+
+          .product-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8125rem;
+            color: color-mix(in srgb, var(--default-color), transparent 30%);
+
+            span {
+              display: inline-block;
+            }
+          }
+
+          .remove-item {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 0.8125rem;
+            color: color-mix(in srgb, var(--default-color), transparent 30%);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: color 0.3s ease;
+
+            &:hover {
+              color: #dc3545;
+            }
+
+            i {
+              font-size: 0.875rem;
+            }
+          }
+        }
+      }
+
+      .price-tag {
+        .current-price {
+          font-weight: 600;
+          color: var(--heading-color);
+          font-size: 1rem;
+        }
+
+        .original-price {
+          text-decoration: line-through;
+          color: color-mix(in srgb, var(--default-color), transparent 40%);
+          font-size: 0.875rem;
+          margin-left: 0.5rem;
+        }
+      }
+
+      .quantity-selector {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+        border-radius: 0.375rem;
+        overflow: hidden;
+
+        .quantity-btn {
+          background: none;
+          border: none;
+          width: 2rem;
+          height: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--default-color);
+          transition: background-color 0.3s ease;
+
+          &:hover {
+            background-color: color-mix(in srgb, var(--accent-color), transparent 90%);
+            color: var(--accent-color);
+          }
+
+          &:active {
+            background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+          }
+        }
+
+        .quantity-input {
+          width: 2.5rem;
+          text-align: center;
+          border: none;
+          border-left: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+          border-right: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+          font-size: 0.875rem;
+          color: var(--heading-color);
+          font-weight: 600;
+          padding: 0.25rem 0;
+          background-color: var(--surface-color);
+
+          &:focus {
+            outline: none;
+          }
+
+          &::-webkit-inner-spin-button,
+          &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+        }
+      }
+
+      .item-total {
+        font-weight: 700;
+        color: var(--heading-color);
+        font-size: 1.125rem;
+      }
+
+      @media (max-width: 767.98px) {
+        padding: 1rem 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.375rem;
+        border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+
+        .price-tag,
+        .item-total {
+          font-size: 0.9375rem;
+        }
+      }
+    }
+
+    .cart-actions {
+      padding-top: 1.5rem;
+      margin-top: 1rem;
+      border-top: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+
+      .coupon-form {
+        .input-group {
+          max-width: 24rem;
+
+          .form-control {
+            border-right: none;
+            color: var(--default-color);
+            background-color: var(--surface-color);
+            font-size: 0.875rem;
+            border-color: color-mix(in srgb, var(--default-color), transparent 80%);
+
+            &:focus {
+              border-color: var(--accent-color);
+              box-shadow: none;
+            }
+
+            &::placeholder {
+              color: color-mix(in srgb, var(--default-color), transparent 70%);
+            }
+          }
+
+          .btn {
+            border-color: color-mix(in srgb, var(--default-color), transparent 80%);
+            border-left: none;
+            font-size: 0.875rem;
+            background-color: color-mix(in srgb, var(--default-color), transparent 10%);
+            color: var(--contrast-color);
+
+            &:hover {
+              background-color: color-mix(in srgb, var(--accent-color), transparent 10%);
+              border-color: var(--accent-color);
+            }
+          }
+        }
+      }
+
+      .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        transition: all 0.3s ease;
+      }
+    }
+  }
+
+  // Cart Summary
+  .cart-summary {
+    background-color: var(--surface-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    padding: 1.5rem;
+    position: sticky;
+    top: 6.5rem;
+
+    .summary-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      font-size: 0.9375rem;
+
+      &.discount {
+        color: #28a745;
+      }
+
+      .summary-label {
+        color: color-mix(in srgb, var(--default-color), transparent 20%);
+      }
+
+      .summary-value {
+        font-weight: 600;
+        color: var(--heading-color);
+      }
+
+      .shipping-options {
+        width: 100%;
+        margin-top: 0.5rem;
+
+        .form-check {
+          margin-bottom: 0.5rem;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .form-check-input {
+            margin-top: 0;
+            margin-left: 0;
+            margin-right: 0.5rem;
+            float: none;
+
+            &:checked {
+              background-color: var(--accent-color);
+              border-color: var(--accent-color);
+            }
+
+            &:focus {
+              box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--accent-color), transparent 75%);
+            }
+          }
+
+          .form-check-label {
+            font-size: 0.875rem;
+            color: var(--default-color);
+            padding-left: 0;
+          }
+        }
+      }
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      padding-top: 1rem;
+      border-top: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+
+      .summary-label {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--heading-color);
+      }
+
+      .summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+      }
+    }
+
+    .checkout-button {
+      margin-bottom: 1rem;
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+
+        i {
+          transition: transform 0.3s ease;
+        }
+
+        &:hover {
+          i {
+            transform: translateX(0.25rem);
+          }
+        }
+      }
+    }
+
+    .continue-shopping {
+      margin-bottom: 1.5rem;
+
+      .btn-link {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-size: 0.9375rem;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        transition: all 0.3s ease;
+
+        i {
+          transition: transform 0.3s ease;
+        }
+
+        &:hover {
+          color: color-mix(in srgb, var(--accent-color), transparent 25%);
+
+          i {
+            transform: translateX(-0.25rem);
+          }
+        }
+      }
+    }
+
+    .payment-methods {
+      border-top: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+      padding-top: 1rem;
+
+      .payment-title {
+        font-size: 0.875rem;
+        color: color-mix(in srgb, var(--default-color), transparent 30%);
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+
+      .payment-icons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+
+        i {
+          font-size: 1.5rem;
+          color: color-mix(in srgb, var(--default-color), transparent 40%);
+          transition: color 0.3s ease;
+
+          &:hover {
+            color: var(--accent-color);
+          }
+        }
+      }
+    }
+  }
+
+  // Custom Button Styles
+  .btn-outline-accent {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    background-color: transparent;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: var(--contrast-color);
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+  }
+
+  .btn-outline-heading {
+    color: var(--heading-color);
+    border-color: var(--heading-color);
+    background-color: transparent;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: var(--contrast-color);
+      background-color: var(--heading-color);
+      border-color: var(--heading-color);
+    }
+  }
+
+  .btn-outline-remove {
+    color: #dc3545;
+    border-color: #dc3545;
+    background-color: transparent;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: var(--contrast-color);
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+  }
+
+  .btn-accent {
+    color: var(--contrast-color);
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: var(--contrast-color);
+      background-color: color-mix(in srgb, var(--accent-color), #000 15%);
+      border-color: color-mix(in srgb, var(--accent-color), #000 15%);
+    }
+  }
+
+  // Responsive Styles
+  @media (max-width: 991.98px) {
+    .cart-summary {
+      position: static;
+    }
+  }
+}
