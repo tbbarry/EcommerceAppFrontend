@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { AuthService, User } from '../../core/auth.service';
+import { AuthService, User } from '../../../core/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -13,7 +13,7 @@ import { AuthService, User } from '../../core/auth.service';
         <div class="col-md-8">
           <div class="card p-4">
             <h2>Mon compte</h2>
-            <p *ngIf="user; else noUser">Bienvenue, {{ user.name || user.email }}.</p>
+            <p *ngIf="user; else noUser">Bienvenue, {{ user.firstname && user.lastname ? (user.firstname + ' ' + user.lastname) : user.email }}.</p>
             <div *ngIf="user" class="mt-4">
               <p><strong>Email :</strong> {{ user.email }}</p>
               <p><strong>Rôle :</strong> {{ user.role || 'Client' }}</p>

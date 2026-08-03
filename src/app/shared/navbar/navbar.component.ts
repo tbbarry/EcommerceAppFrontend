@@ -22,7 +22,7 @@ import { AuthService } from '../../core/auth.service';
           </ul>
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item" *ngIf="user$ | async as user; else guest">
-              <a class="nav-link" routerLink="/account/profile">Bonjour, {{ user.name || user.email }}</a>
+              <a class="nav-link" routerLink="/account/profile">Bonjour, {{ user.firstname && user.lastname ? (user.firstname + ' ' + user.lastname) : user.email }}</a>
             </li>
             <li class="nav-item" *ngIf="user$ | async as user">
               <a class="nav-link" (click)="logout()" role="button">Logout</a>

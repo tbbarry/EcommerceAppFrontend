@@ -1,0 +1,176 @@
+<main class="main">
+  <div class="page-title light-background">
+    <div class="container d-lg-flex justify-content-between align-items-center">
+      <h1 class="mb-2 mb-lg-0">Register</h1>
+      <nav class="breadcrumbs">
+        <ol>
+          <li><a routerLink="/">Home</a></li>
+          <li class="current">Register</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <section id="register" class="register section">
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <div class="registration-form-wrapper">
+            <div class="form-header text-center">
+              <h2>Create Your Account</h2>
+              <p>Create your account and start shopping with us</p>
+            </div>
+
+            <div class="row">
+              <div class="col-lg-8 mx-auto">
+                <form (ngSubmit)="register()">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          [class.is-invalid]="registerData.firstname.length > 0 && !hasFirstName"
+                          [class.is-valid]="hasFirstName"
+                          id="firstName"
+                          placeholder="First Name"
+                          required
+                          autocomplete="given-name"
+                          [(ngModel)]="registerData.firstname"
+                          name="firstName"
+                        >
+                        <label for="firstName">First Name</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          [class.is-invalid]="registerData.lastname.length > 0 && !hasLastName"
+                          [class.is-valid]="hasLastName"
+                          id="lastName"
+                          placeholder="Last Name"
+                          required
+                          autocomplete="family-name"
+                          [(ngModel)]="registerData.lastname"
+                          name="lastName"
+                        >
+                        <label for="lastName">Last Name</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-floating mb-3">
+                    <input
+                      type="email"
+                      class="form-control"
+                      [class.is-invalid]="registerData.email.length > 0 && !isEmailValid"
+                      [class.is-valid]="isEmailValid"
+                      id="email"
+                      placeholder="Email Address"
+                      required
+                      autocomplete="email"
+                      [(ngModel)]="registerData.email"
+                      name="email"
+                    >
+                    <label for="email">Email Address</label>
+                  </div>
+
+                  <div *ngIf="registerData.email.length > 0 && !isEmailValid" class="inline-error mb-3">
+                    Veuillez saisir une adresse email valide.
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input
+                          type="password"
+                          class="form-control"
+                          [class.is-invalid]="registerData.password.length > 0 && !isPasswordValid"
+                          [class.is-valid]="registerData.password.length > 0 && isPasswordValid"
+                          id="password"
+                          placeholder="Password"
+                          required
+                          minlength="8"
+                          autocomplete="new-password"
+                          [(ngModel)]="registerData.password"
+                          name="password"
+                        >
+                        <label for="password">Password</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input
+                          type="password"
+                          class="form-control"
+                          [class.is-invalid]="registerData.confirmPassword.length > 0 && !passwordsMatch"
+                          [class.is-valid]="registerData.confirmPassword.length > 0 && passwordsMatch"
+                          id="confirmPassword"
+                          placeholder="Confirm Password"
+                          required
+                          minlength="8"
+                          autocomplete="new-password"
+                          [(ngModel)]="registerData.confirmPassword"
+                          name="confirmPassword"
+                        >
+                        <label for="confirmPassword">Confirm Password</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="password-rules mb-3">
+                    <p class="password-rules-title">Le mot de passe doit contenir :</p>
+                    <ul>
+                      <li [class.rule-valid]="hasMinLength">Au moins 8 caracteres</li>
+                      <li [class.rule-valid]="hasUppercase">Une lettre majuscule</li>
+                      <li [class.rule-valid]="hasDigit">Un chiffre</li>
+                      <li [class.rule-valid]="hasSpecialCharacter">Un caractere special parmi &#64; # $ % ^ &amp; + =</li>
+                    </ul>
+                  </div>
+
+                  <div *ngIf="registerData.confirmPassword.length > 0 && !passwordsMatch" class="inline-error mb-3">
+                    Les mots de passe ne correspondent pas.
+                  </div>
+
+                  <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-register" [disabled]="loading || !canSubmit">
+                      <span *ngIf="!loading">Create Account</span>
+                      <span *ngIf="loading">Creating...</span>
+                    </button>
+                  </div>
+
+                  <div class="divider">
+                    <span>or sign up with</span>
+                  </div>
+
+                  <div class="social-buttons mb-4">
+                    <button type="button" class="btn btn-social" (click)="registerWithGoogle()">
+                      <i class="bi bi-google"></i>
+                      <span>Google</span>
+                    </button>
+                  </div>
+
+                  <div class="login-link text-center">
+                    <p>Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+                  </div>
+                </form>
+
+                <div *ngIf="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
+              </div>
+            </div>
+
+            <div class="decorative-elements">
+              <div class="circle circle-1"></div>
+              <div class="circle circle-2"></div>
+              <div class="circle circle-3"></div>
+              <div class="square square-1"></div>
+              <div class="square square-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
