@@ -1,0 +1,44 @@
+.verify-email {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.verify-card {
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 3rem 2rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.icon-wrap {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e8f3ff;
+  color: #0d6efd;
+  font-size: 2rem;
+}
+
+.tips {
+  max-width: 540px;
+  margin-top: 1.5rem;
+}
+
+.tips h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.tips ul {
+  margin-bottom: 0;
+  padding-left: 1.25rem;
+}
+
+.lead strong {
+  font-weight: 700;
+}

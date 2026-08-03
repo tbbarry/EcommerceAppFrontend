@@ -1,0 +1,37 @@
+<main class="main">
+  <section class="verify-email">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+          <div class="verify-card text-center">
+            <div class="icon-wrap">
+              <i class="bi bi-envelope-check"></i>
+            </div>
+            <h1>Vérifiez votre email</h1>
+            <p class="lead">
+              Nous avons envoyé un message à
+              <strong *ngIf="email; else noEmail">{{ email }}</strong>
+              <ng-template #noEmail>l'adresse fournie</ng-template>
+            </p>
+            <p>
+              Cliquez sur le lien reçu pour activer votre compte puis revenez vous connecter.
+            </p>
+
+            <div class="tips mx-auto text-start">
+              <h2>Si vous ne voyez pas l’email :</h2>
+              <ul>
+                <li>Vérifiez le dossier spam ou promotions.</li>
+                <li>Patientez quelques instants avant de réessayer.</li>
+                <li>Contactez le support si rien n’arrive.</li>
+              </ul>
+            </div>
+
+            <div class="mt-4">
+              <a routerLink="/auth/login" class="btn btn-primary">Retour à la connexion</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
