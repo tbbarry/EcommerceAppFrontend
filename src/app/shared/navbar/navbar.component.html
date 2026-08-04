@@ -1,0 +1,117 @@
+<header id="header" class="header sticky-top">
+  <div class="main-header">
+    <div class="container-fluid container-xl">
+      <div class="d-flex py-3 align-items-center justify-content-between">
+        <a routerLink="/" class="logo d-flex align-items-center">
+          <h1 class="sitename">NiceShop</h1>
+        </a>
+
+        <form class="search-form desktop-search-form" (submit)="$event.preventDefault()">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search for products">
+            <button class="btn" type="submit" aria-label="Search">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <div class="header-actions d-flex align-items-center justify-content-end">
+          <button class="header-action-btn mobile-search-toggle d-xl-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileSearch" aria-expanded="false" aria-controls="mobileSearch">
+            <i class="bi bi-search"></i>
+          </button>
+
+          <div class="dropdown account-dropdown" *ngIf="user$ | async as user; else guestAccount">
+            <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Account menu">
+              <i class="bi bi-person"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <div class="dropdown-header">
+                <h6>Bienvenue {{ getDisplayName(user) }}</h6>
+                <p class="mb-0">Gerer votre compte et commandes</p>
+              </div>
+              <div class="dropdown-body">
+                <a class="dropdown-item d-flex align-items-center" routerLink="/account/profile">
+                  <i class="bi bi-person-circle me-2"></i>
+                  <span>Mon profil</span>
+                </a>
+                <a class="dropdown-item d-flex align-items-center" routerLink="/cart">
+                  <i class="bi bi-bag-check me-2"></i>
+                  <span>Mes commandes</span>
+                </a>
+                <a class="dropdown-item d-flex align-items-center" routerLink="/products">
+                  <i class="bi bi-heart me-2"></i>
+                  <span>Ma wishlist</span>
+                </a>
+                <a class="dropdown-item d-flex align-items-center" routerLink="/account/profile">
+                  <i class="bi bi-gear me-2"></i>
+                  <span>Parametres</span>
+                </a>
+              </div>
+              <div class="dropdown-footer">
+                <button type="button" class="btn btn-primary w-100" (click)="logout()">Se deconnecter</button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #guestAccount>
+            <div class="dropdown account-dropdown">
+              <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Account menu">
+                <i class="bi bi-person"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end">
+                <div class="dropdown-header">
+                  <h6>Bienvenue sur <span class="sitename">NiceShop</span></h6>
+                  <p class="mb-0">Accedez au compte et vos commandes</p>
+                </div>
+                <div class="dropdown-footer">
+                  <a routerLink="/auth/login" class="btn btn-primary w-100 mb-2">Sign In</a>
+                  <a routerLink="/auth/register" class="btn btn-outline-primary w-100">Register</a>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
+          <a routerLink="/products" class="header-action-btn d-none d-md-block" aria-label="Wishlist">
+            <i class="bi bi-heart"></i>
+            <span class="badge">0</span>
+          </a>
+
+          <a routerLink="/cart" class="header-action-btn" aria-label="Cart">
+            <i class="bi bi-cart3"></i>
+            <span class="badge">3</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-nav">
+    <div class="container-fluid container-xl position-relative">
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Category</a></li>
+          <li><a routerLink="/products" routerLinkActive="active">Product Details</a></li>
+          <li><a routerLink="/cart" routerLinkActive="active">Cart</a></li>
+          <li><a routerLink="/auth/register" routerLinkActive="active">Checkout</a></li>
+          <li><a routerLink="/auth/login" routerLinkActive="active">Login</a></li>
+          <li><a routerLink="/auth/register" routerLinkActive="active">Register</a></li>
+          <li><a routerLink="/account/profile" routerLinkActive="active">Mon compte</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="collapse" id="mobileSearch">
+    <div class="container">
+      <form class="search-form" (submit)="$event.preventDefault()">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search for products">
+          <button class="btn" type="submit" aria-label="Search">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</header>

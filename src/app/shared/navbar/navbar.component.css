@@ -1,0 +1,127 @@
+.header {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+.main-header .sitename {
+  margin: 0;
+  font-size: 2.25rem;
+  letter-spacing: -0.5px;
+}
+
+.search-form {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 2rem;
+}
+
+.search-form .input-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.search-form .form-control {
+  border: 0;
+  box-shadow: none;
+  min-height: 56px;
+}
+
+.search-form .btn {
+  min-width: 84px;
+  border: 0;
+  background: #262225;
+  color: #fff;
+}
+
+.header-action-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937;
+  background: transparent;
+  border: 0;
+  text-decoration: none;
+  position: relative;
+}
+
+.header-action-btn .badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #262225;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-dropdown .dropdown-menu {
+  width: 300px;
+  border-radius: 0.9rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.account-dropdown .dropdown-header,
+.account-dropdown .dropdown-body,
+.account-dropdown .dropdown-footer {
+  padding: 1rem 1.25rem;
+}
+
+.account-dropdown .dropdown-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.account-dropdown .dropdown-footer {
+  border-top: 1px solid #e5e7eb;
+}
+
+.account-dropdown .dropdown-item {
+  border-radius: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.header-nav {
+  background: #262225;
+}
+
+.navmenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.navmenu a {
+  color: #fff;
+  text-decoration: none;
+  display: inline-block;
+  padding: 1rem 0.95rem;
+  opacity: 0.9;
+}
+
+.navmenu a.active,
+.navmenu a:hover {
+  opacity: 1;
+}
+
+@media (max-width: 1199.98px) {
+  .search-form.desktop-search-form {
+    display: none;
+  }
+
+  .main-header .sitename {
+    font-size: 1.9rem;
+  }
+}

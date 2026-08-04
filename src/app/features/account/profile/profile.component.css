@@ -1,0 +1,50 @@
+.profile-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.address-form-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.address-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-cancel-address {
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: #fff;
+  color: #0f172a;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.9rem;
+}
+
+.password-rules {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(248, 250, 252, 0.75);
+}
+
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+.rule-item:last-child {
+  margin-bottom: 0;
+}
+
+.rule-item.valid {
+  color: #0f766e;
+}
