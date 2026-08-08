@@ -1,28 +1,61 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { CartItem, CartService } from '../../core/cart.service';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <section class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="alert alert-secondary">
-            <h2>Panier</h2>
-            <p>Le panier de l’utilisateur sera bientôt connecté à votre backend.</p>
-          </div>
-          <div class="card mb-4">
-            <div class="card-body text-center">
-              <p class="mb-3">Aucun produit dans le panier pour le moment.</p>
-              <a routerLink="/products" class="btn btn-primary">Retour au shop</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  `
+  imports: [CommonModule, RouterModule, CurrencyPipe],
+  templateUrl: './cart.component.html',
+  styleUrls: ['./cart.component.css']
 })
-export class CartComponent {}
+export class CartComponent {
+  readonly cartService = inject(CartService);
+
+  setQuantity(item: CartItem, rawValue: string | number): void {
+    const value = typeof rawValue === 'string' ? parseInt(rawValue, 10) : rawValue;
+    if (Number.isFinite(value) && value > 0) {
+      this.cartService.setQuantity(item, value);
+    }
+  }
+
+  decrease(item: CartItem): void {
+    if (item.quantity <= 1) {
+      this.cartService.removeItem(item);
+    } else {
+      this.cartService.setQuantity(item, item.quantity - 1);
+    }
+  }
+
+  increase(item: CartItem): void {
+    this.cartService.setQuantity(item, item.quantity + 1);
+  }
+
+  remove(item: CartItem): void {
+    this.cartService.removeItem(item);
+  }
+
+  dismissError(): void {
+    this.cartService.cartError.set(null);
+  }
+
+  clearAll(): void {
+    this.cartService.clearCart();
+  }
+
+  lineTotal(item: CartItem): number {
+    return item.price * item.quantity;
+  }
+
+  getVariantLabel(item: CartItem): string {
+    const parts: string[] = [];
+    if (item.color) {
+      parts.push(`Color: ${item.color}`);
+    }
+    if (item.size) {
+      parts.push(`Size: ${item.size}`);
+    }
+    return parts.join(' � ');
+  }
+}

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
 
 @Component({
@@ -15,8 +15,11 @@ export class LoginComponent {
   credentials = { email: '', password: '' };
   loading = false;
   errorMessage = '';
+  readonly returnUrl: string;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/account/profile';
+  }
 
   login(): void {
     this.loading = true;
@@ -25,7 +28,7 @@ export class LoginComponent {
     this.auth.login(this.credentials).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/account/profile']);
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (err) => {
         this.loading = false;

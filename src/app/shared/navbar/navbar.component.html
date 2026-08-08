@@ -2,9 +2,15 @@
   <div class="main-header">
     <div class="container-fluid container-xl">
       <div class="d-flex py-3 align-items-center justify-content-between">
-        <a routerLink="/" class="logo d-flex align-items-center">
-          <h1 class="sitename">NiceShop</h1>
-        </a>
+        <div class="header-start d-flex align-items-center">
+          <button class="header-action-btn app-mobile-nav-toggle d-xl-none" type="button" aria-label="Toggle menu" (click)="toggleMobileMenu()">
+            <i class="bi" [ngClass]="isMobileMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
+          </button>
+
+          <a routerLink="/" class="logo d-flex align-items-center" (click)="closeMobileMenu()">
+            <h1 class="sitename">NiceShop</h1>
+          </a>
+        </div>
 
         <form class="search-form desktop-search-form" (submit)="$event.preventDefault()">
           <div class="input-group">
@@ -38,10 +44,6 @@
                   <i class="bi bi-bag-check me-2"></i>
                   <span>Mes commandes</span>
                 </a>
-                <a class="dropdown-item d-flex align-items-center" routerLink="/products">
-                  <i class="bi bi-heart me-2"></i>
-                  <span>Ma wishlist</span>
-                </a>
                 <a class="dropdown-item d-flex align-items-center" routerLink="/account/profile">
                   <i class="bi bi-gear me-2"></i>
                   <span>Parametres</span>
@@ -71,15 +73,56 @@
             </div>
           </ng-template>
 
-          <a routerLink="/products" class="header-action-btn d-none d-md-block" aria-label="Wishlist">
-            <i class="bi bi-heart"></i>
-            <span class="badge">0</span>
-          </a>
+          <!-- Cart with mini-dropdown -->
+          <div class="dropdown cart-dropdown">
+            <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Cart" data-bs-auto-close="outside">
+              <i class="bi bi-cart3"></i>
+              <span class="badge badge-active" *ngIf="cartService.totalQuantity() > 0">
+                {{ cartService.totalQuantity() }}
+              </span>
+            </button>
 
-          <a routerLink="/cart" class="header-action-btn" aria-label="Cart">
-            <i class="bi bi-cart3"></i>
-            <span class="badge">3</span>
-          </a>
+            <div class="dropdown-menu dropdown-menu-end cart-preview-panel">
+              <div class="cart-preview-header">
+                <span class="cart-preview-title">Cart ({{ cartService.totalQuantity() }})</span>
+                <a routerLink="/cart" class="cart-preview-view" data-bs-dismiss="dropdown">View all</a>
+              </div>
+
+              <div class="cart-preview-empty" *ngIf="cartService.isEmpty()">
+                <i class="bi bi-cart-x"></i>
+                <p>Your cart is empty</p>
+                <a routerLink="/products" class="btn btn-sm btn-dark" data-bs-dismiss="dropdown">Start Shopping</a>
+              </div>
+
+              <div class="cart-preview-items" *ngIf="!cartService.isEmpty()">
+                <div class="cart-preview-item" *ngFor="let item of cartService.cartItems()">
+                  <div class="cart-preview-img">
+                    <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.imageAlt || item.name">
+                    <i *ngIf="!item.imageUrl" class="bi bi-image"></i>
+                  </div>
+                  <div class="cart-preview-info">
+                    <a class="cart-preview-name" [routerLink]="['/products', item.slug]" data-bs-dismiss="dropdown">{{ item.name }}</a>
+                    <span class="cart-preview-variant" *ngIf="item.color || item.size">
+                      {{ item.color }}{{ item.color && item.size ? ' · ' : '' }}{{ item.size }}
+                    </span>
+                  </div>
+                  <div class="cart-preview-price">
+                    <span>{{ item.quantity }} × {{ item.price | currency:'USD':'symbol':'1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cart-preview-footer" *ngIf="!cartService.isEmpty()">
+                <div class="cart-preview-subtotal">
+                  <span>Subtotal</span>
+                  <strong>{{ cartService.subtotal() | currency:'USD':'symbol':'1.2-2' }}</strong>
+                </div>
+                <a routerLink="/cart" class="btn btn-dark w-100" data-bs-dismiss="dropdown">
+                  View Cart <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -89,14 +132,39 @@
     <div class="container-fluid container-xl position-relative">
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Category</a></li>
-          <li><a routerLink="/products" routerLinkActive="active">Product Details</a></li>
-          <li><a routerLink="/cart" routerLinkActive="active">Cart</a></li>
-          <li><a routerLink="/auth/register" routerLinkActive="active">Checkout</a></li>
-          <li><a routerLink="/auth/login" routerLinkActive="active">Login</a></li>
-          <li><a routerLink="/auth/register" routerLinkActive="active">Register</a></li>
-          <li><a routerLink="/account/profile" routerLinkActive="active">Mon compte</a></li>
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" (click)="closeMobileMenu()">Product Details</a></li>
+          <li><a routerLink="/cart" routerLinkActive="active" (click)="closeMobileMenu()">Cart</a></li>
+          <li><a routerLink="/checkout" routerLinkActive="active" (click)="closeMobileMenu()">Checkout</a></li>
+          <li><a routerLink="/auth/login" routerLinkActive="active" (click)="closeMobileMenu()">Login</a></li>
+          <li><a routerLink="/auth/register" routerLinkActive="active" (click)="closeMobileMenu()">Register</a></li>
+          <li><a routerLink="/account/profile" routerLinkActive="active" (click)="closeMobileMenu()">Mon compte</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="mobile-menu-backdrop d-xl-none"
+    *ngIf="isMobileMenuOpen"
+    (click)="closeMobileMenu()"
+    aria-label="Close menu"
+  ></button>
+
+  <div class="mobile-nav-panel d-xl-none" *ngIf="isMobileMenuOpen">
+    <div class="container-fluid container-xl">
+      <nav class="mobile-navmenu" aria-label="Mobile navigation">
+        <ul>
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" (click)="closeMobileMenu()">Product Details</a></li>
+          <li><a routerLink="/cart" routerLinkActive="active" (click)="closeMobileMenu()">Cart</a></li>
+          <li><a routerLink="/checkout" routerLinkActive="active" (click)="closeMobileMenu()">Checkout</a></li>
+          <li><a routerLink="/auth/login" routerLinkActive="active" (click)="closeMobileMenu()">Login</a></li>
+          <li><a routerLink="/auth/register" routerLinkActive="active" (click)="closeMobileMenu()">Register</a></li>
+          <li><a routerLink="/account/profile" routerLinkActive="active" (click)="closeMobileMenu()">Mon compte</a></li>
         </ul>
       </nav>
     </div>

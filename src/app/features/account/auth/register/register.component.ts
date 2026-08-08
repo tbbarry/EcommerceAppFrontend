@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
 
 @Component({
@@ -13,6 +13,7 @@ import { AuthService } from '../../../../core/auth.service';
 })
 export class RegisterComponent {
   private readonly strongPasswordPattern = /^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$/;
+  readonly returnUrl: string;
 
   registerData = {
     firstname: '',
@@ -24,7 +25,9 @@ export class RegisterComponent {
   loading = false;
   errorMessage = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/account/profile';
+  }
 
   get hasFirstName(): boolean {
     return this.registerData.firstname.trim().length > 0;
@@ -99,7 +102,7 @@ export class RegisterComponent {
       next: () => {
         this.loading = false;
         this.router.navigate(['/auth/verify-email'], {
-          queryParams: { email: this.registerData.email }
+          queryParams: { email: this.registerData.email, returnUrl: this.returnUrl }
         });
       },
       error: (err) => {
