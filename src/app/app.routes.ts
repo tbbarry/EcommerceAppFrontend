@@ -13,7 +13,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/product/product-list.component').then((m) => m.ProductListComponent)
   },
   {
-    path: 'products/:id',
+    path: 'category',
+    title: 'Catalogue',
+    loadComponent: () => import('./features/product/product-list.component').then((m) => m.ProductListComponent)
+  },
+  {
+    path: 'products/:slug',
     title: 'Détail produit',
     loadComponent: () => import('./features/product/product-detail.component').then((m) => m.ProductDetailComponent)
   },
@@ -21,6 +26,19 @@ export const routes: Routes = [
     path: 'cart',
     title: 'Panier',
     loadComponent: () => import('./features/cart/cart.component').then((m) => m.CartComponent)
+  },
+  {
+    path: 'checkout',
+    title: 'Checkout',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/checkout/checkout.component').then((m) => m.CheckoutComponent)
+  },
+  {
+    path: 'order-confirmation/:orderId',
+    title: 'Order confirmation',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/order-confirmation/order-confirmation.component').then((m) => m.OrderConfirmationComponent)
   },
   {
     path: 'auth/login',

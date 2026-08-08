@@ -27,7 +27,7 @@
             </div>
 
             <div class="mt-4">
-              <a routerLink="/auth/login" class="btn btn-primary">Retour à la connexion</a>
+              <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }" class="btn btn-primary">Retour à la connexion</a>
             </div>
           </div>
         </div>

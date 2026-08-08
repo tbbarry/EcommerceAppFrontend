@@ -11,8 +11,10 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 })
 export class VerifyEmailComponent {
   readonly email: string | null;
+  readonly returnUrl: string;
 
   constructor(private route: ActivatedRoute) {
     this.email = this.route.snapshot.queryParamMap.get('email');
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/account/profile';
   }
 }

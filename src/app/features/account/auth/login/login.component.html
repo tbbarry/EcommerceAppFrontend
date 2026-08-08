@@ -73,7 +73,7 @@
 
               <div class="switch-form">
                 <span>Don't have an account?</span>
-                <a routerLink="/auth/register" class="switch-btn">Create account</a>
+                <a routerLink="/auth/register" [queryParams]="{ returnUrl: returnUrl }" class="switch-btn">Create account</a>
               </div>
             </form>
 

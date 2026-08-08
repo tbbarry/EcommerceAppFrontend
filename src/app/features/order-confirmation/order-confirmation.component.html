@@ -1,0 +1,57 @@
+<main class="main order-confirmation-page">
+  <section class="section">
+    <div class="container">
+      <div class="confirmation-card">
+        <div class="icon-wrap">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+
+        <h1>Order Confirmed</h1>
+        <p>Your order has been placed successfully.</p>
+
+        <div class="details" *ngIf="order as data">
+          <div class="detail-row">
+            <span>Order Number</span>
+            <strong>{{ data.orderNumber }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Date</span>
+            <strong>{{ data.dateOrder | date:'medium' }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Shipping Method</span>
+            <strong>{{ data.shippingMethodName }}</strong>
+          </div>
+          <div class="detail-row" *ngIf="data.couponCodeUsed">
+            <span>Coupon</span>
+            <strong>{{ data.couponCodeUsed }}</strong>
+          </div>
+          <div class="detail-row" *ngIf="(data.discountAmount || 0) > 0">
+            <span>Coupon Discount</span>
+            <strong>-{{ (data.discountAmount || 0) | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Estimated Delivery</span>
+            <strong>{{ data.deliveryMinDays }}-{{ data.deliveryMaxDays }} business days</strong>
+          </div>
+          <div class="detail-row total">
+            <span>Total</span>
+            <strong>{{ data.total | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="details" *ngIf="!order">
+          <div class="detail-row">
+            <span>Order ID</span>
+            <strong>#{{ orderId || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-dark" routerLink="/account/profile">View My Account</a>
+          <a class="btn btn-outline-secondary" routerLink="/products">Continue Shopping</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

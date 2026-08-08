@@ -1769,13 +1769,17 @@ h6 {
 .page-title {
   color: var(--default-color);
   background-color: var(--background-color);
-  padding: 25px 0;
+  padding: 12px 0;
   position: relative;
 }
 
 .page-title h1 {
-  font-size: 24px;
-  font-weight: 700;
+  display: none;
+}
+
+.page-title .container {
+  justify-content: flex-start !important;
+  align-items: center !important;
 }
 
 .page-title .breadcrumbs ol {
@@ -1786,6 +1790,10 @@ h6 {
   margin: 0;
   font-size: 14px;
   font-weight: 400;
+}
+
+.page-title .breadcrumbs {
+  margin-left: 0 !important;
 }
 
 .page-title .breadcrumbs ol li+li {

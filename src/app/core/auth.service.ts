@@ -6,6 +6,8 @@ import { environment } from '../../environments/environment';
 export interface Address {
   id?: string;
   label?: string;
+  firstName?: string;
+  lastName?: string;
   line1?: string;
   line2?: string;
   city?: string;
@@ -45,6 +47,8 @@ export interface ChangePasswordPayload {
 
 export interface UpsertAddressPayload {
   label: string;
+  firstName?: string;
+  lastName?: string;
   line1: string;
   line2?: string;
   city: string;
@@ -68,8 +72,19 @@ interface AddressMutationAttempt {
 })
 export class AuthService {
   private readonly apiUrl = (environment.apiBaseUrl || '').replace(/\/$/, '');
-  private readonly profileEndpoints = ['/auth/profile', '/auth/me', '/api/users/me', '/users/me'];
-  private readonly addressCollectionEndpoints = ['/api/user/adress/me', '/api/user/address/me'];
+  private readonly profileEndpoints = ['/api/users/me', '/users/me'];
+  private readonly addressReadEndpoints = ['/api/user/address/me'];
+  private readonly addressCreateEndpoints = ['/api/user/address/me'];
+  private readonly addressUpdateEndpointTemplates = [
+    '/api/user/address/me',
+    '/api/user/address/me/{id}',
+    '/api/user/address/{id}'
+  ];
+  private readonly addressDeleteEndpointTemplates = [
+    '/api/user/address/me/{id}',
+    '/api/user/address/me',
+    '/api/user/address/{id}'
+  ];
   private readonly changePasswordEndpoints = [
     '/api/user/change-password',
     '/api/users/change-password',
@@ -142,26 +157,36 @@ export class AuthService {
       return of([]);
     }
 
-    return this.fetchAddressesFromEndpoints(this.addressCollectionEndpoints, 0).pipe(
+    return this.fetchAddressesFromEndpoints(this.addressReadEndpoints, 0).pipe(
       tap((addresses) => {
-        const current = this.currentUser;
-        if (!current) {
-          return;
-        }
-
-        const mergedUser: User = {
-          ...current,
-          addresses
-        };
-        this.userSubject.next(mergedUser);
-        this.setInStorage(this.userStorageKey, JSON.stringify(mergedUser));
-      })
+        this.setLocalAddresses(addresses);
+      }),
+      catchError(() =>
+        this.refreshProfile().pipe(
+          map((user) => user.addresses ?? [])
+        )
+      ),
+      catchError(() => of(this.currentUser?.addresses ?? []))
     );
+  }
+
+  getLocalAddresses(): Address[] {
+    return this.currentUser?.addresses ?? [];
+  }
+
+  setLocalAddresses(addresses: Address[]): void {
+    const current = this.currentUser ?? {};
+    const mergedUser: User = {
+      ...current,
+      addresses
+    };
+    this.userSubject.next(mergedUser);
+    this.setInStorage(this.userStorageKey, JSON.stringify(mergedUser));
   }
 
   addAddress(payload: UpsertAddressPayload): Observable<Address[]> {
     const body = this.normalizeAddressPayload(payload);
-    const attempts: AddressMutationAttempt[] = this.addressCollectionEndpoints.map((endpoint) => ({
+    const attempts: AddressMutationAttempt[] = this.addressCreateEndpoints.map((endpoint) => ({
       method: 'post',
       endpoint,
       payload: body
@@ -171,20 +196,29 @@ export class AuthService {
   }
 
   updateAddress(addressId: string, payload: UpsertAddressPayload): Observable<Address[]> {
-    const body = this.normalizeAddressPayload(payload);
-    const attempts: AddressMutationAttempt[] = this.addressCollectionEndpoints.flatMap((endpoint) => [
-      { method: 'patch' as const, endpoint: `${endpoint}/${addressId}`, payload: body },
-      { method: 'put' as const, endpoint: `${endpoint}/${addressId}`, payload: body }
-    ]);
+    const body = this.normalizeAddressPayload(payload, addressId);
+    const attempts: AddressMutationAttempt[] = this.addressUpdateEndpointTemplates.flatMap((template) => {
+      const endpoint = template.replace('{id}', encodeURIComponent(addressId));
+      return [
+        { method: 'patch' as const, endpoint, payload: body },
+        { method: 'put' as const, endpoint, payload: body }
+      ];
+    });
 
     return this.runAddressMutationAttempts(attempts, 0);
   }
 
   deleteAddress(addressId: string): Observable<Address[]> {
-    const attempts: AddressMutationAttempt[] = this.addressCollectionEndpoints.map((endpoint) => ({
-      method: 'delete',
-      endpoint: `${endpoint}/${addressId}`
-    }));
+    const attempts: AddressMutationAttempt[] = this.addressDeleteEndpointTemplates.map((template) => {
+      const endpoint = template.replace('{id}', encodeURIComponent(addressId));
+      const requiresBody = endpoint === '/api/user/address/me';
+
+      return {
+        method: 'delete' as const,
+        endpoint,
+        payload: requiresBody ? { id: this.toNumericIdOrText(addressId) } : undefined
+      };
+    });
 
     return this.runAddressMutationAttempts(attempts, 0);
   }
@@ -206,13 +240,15 @@ export class AuthService {
       isDefault: true,
       defaultAddress: true,
       main: true
-    });
+    }, address.id);
 
-    const attempts: AddressMutationAttempt[] = this.addressCollectionEndpoints.map((endpoint) => ({
-      method: 'put',
-      endpoint: `${endpoint}/${address.id}`,
-      payload
-    }));
+    const attempts: AddressMutationAttempt[] = this.addressUpdateEndpointTemplates.flatMap((template) => {
+      const endpoint = template.replace('{id}', encodeURIComponent(address.id!));
+      return [
+        { method: 'patch' as const, endpoint, payload },
+        { method: 'put' as const, endpoint, payload }
+      ];
+    });
 
     return this.runAddressMutationAttempts(attempts, 0);
   }
@@ -543,6 +579,8 @@ export class AuthService {
     const normalized: Address = {
       id: this.toText(record['id']) || this.toText(record['addressId']),
       label: this.toText(record['label']) || this.toText(record['name']) || `Address ${index + 1}`,
+      firstName: this.toText(record['firstName']) || this.toText(record['firstname']),
+      lastName: this.toText(record['lastName']) || this.toText(record['lastname']),
       line1:
         this.toText(record['line1']) ||
         this.toText(record['address']) ||
@@ -554,9 +592,9 @@ export class AuthService {
       state: this.toText(record['state']) || this.toText(record['region']) || this.toText(record['province']),
       postalCode:
         this.toText(record['postalCode']) ||
+        this.toText(record['zipCode']) ||
         this.toText(record['zipcode']) ||
-        this.toText(record['zip']) ||
-        this.toText(record['zipCode']),
+        this.toText(record['zip']),
       country: this.toText(record['country']),
       phone:
         this.toText(record['phone']) ||
@@ -697,30 +735,39 @@ export class AuthService {
       }
     }
 
+    const singleAddress = this.normalizeAddress(record, 0);
+    if (singleAddress) {
+      return [singleAddress];
+    }
+
     return [];
   }
 
-  private normalizeAddressPayload(payload: UpsertAddressPayload): Record<string, unknown> {
+  private normalizeAddressPayload(payload: UpsertAddressPayload, addressId?: string | number): Record<string, unknown> {
     const isDefault = payload.isDefault || payload.main || payload.defaultAddress;
+    const user = this.currentUser;
+    const firstName = (payload.firstName || user?.firstname || '').trim();
+    const lastName = (payload.lastName || user?.lastname || '').trim();
+    const country = (payload.country || 'US').trim().toUpperCase();
 
-    return {
-      label: payload.label,
-      line1: payload.line1,
-      address: payload.line1,
-      line2: payload.line2,
-      city: payload.city,
-      state: payload.state,
-      postalCode: payload.postalCode,
-      zipcode: payload.postalCode,
-      country: payload.country,
-      phone: payload.phone,
-      phoneNumber: payload.phone,
-      contactPhone: payload.phone,
-      addressPhone: payload.phone,
-      isDefault,
-      main: isDefault,
-      defaultAddress: isDefault
+    const body: Record<string, unknown> = {
+      firstName,
+      lastName,
+      address: (payload.line1 || '').trim(),
+      zipcode: (payload.postalCode || '').trim(),
+      city: (payload.city || '').trim(),
+      state: (payload.state || '').trim().toUpperCase(),
+      phone: (payload.phone || '').trim(),
+      label: (payload.label || '').trim(),
+      country,
+      defaultAddress: !!isDefault
     };
+
+    if (addressId !== undefined && addressId !== null && `${addressId}`.trim()) {
+      body['id'] = this.toNumericIdOrText(addressId);
+    }
+
+    return body;
   }
 
   private runAddressMutationAttempts(attempts: AddressMutationAttempt[], index: number): Observable<Address[]> {
@@ -731,8 +778,12 @@ export class AuthService {
     const attempt = attempts[index];
     return this.executeAddressMutation(attempt).pipe(
       switchMap(() =>
-        this.getMyAddresses().pipe(
-          catchError(() => of(this.currentUser?.addresses ?? []))
+        this.fetchAddressesFromEndpoints(this.addressReadEndpoints, 0).pipe(
+          catchError(() => this.getMyAddresses()),
+          catchError(() => of(this.currentUser?.addresses ?? [])),
+          tap((addresses) => {
+            this.setLocalAddresses(addresses);
+          })
         )
       ),
       catchError((error) => {
@@ -759,7 +810,26 @@ export class AuthService {
       return this.http.put(url, attempt.payload, { responseType: 'text' }).pipe(map((body) => this.parseArbitraryBody(body)));
     }
 
-    return this.http.delete(url, { responseType: 'text' }).pipe(map((body) => this.parseArbitraryBody(body)));
+    const options: { responseType: 'text'; body?: unknown } = { responseType: 'text' };
+    if (attempt.payload !== undefined) {
+      options.body = attempt.payload;
+    }
+
+    return this.http.delete(url, options).pipe(map((body) => this.parseArbitraryBody(body)));
+  }
+
+  private toNumericIdOrText(value: string | number): string | number {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return value;
+    }
+
+    const numeric = Number(trimmed);
+    return Number.isFinite(numeric) ? numeric : trimmed;
   }
 
   private updateProfileFromEndpoints(endpoint: string, payload: UpdateProfilePayload): Observable<User> {
