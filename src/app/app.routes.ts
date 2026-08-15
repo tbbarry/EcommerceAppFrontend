@@ -76,5 +76,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/account/profile/profile.component').then((m) => m.ProfileComponent)
   },
+  {
+    path: 'payment/success',
+    title: 'Paiement réussi',
+    loadComponent: () => import('./features/paiement-success/paiement-success.component').then((m) => m.PaymentSuccessComponent)
+  },
+  {
+    path: 'my-orders',
+    title: 'Mes commandes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/account/orders/orders.component').then((m) => m.OrdersComponent)
+  },
   { path: '**', redirectTo: '' }
 ];

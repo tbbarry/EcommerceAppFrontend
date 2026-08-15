@@ -154,9 +154,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
         this.selectedSort = response.sort || this.selectedSort;
         this.isLoading = false;
       },
-      error: () => {
+      error: (e) => {
         this.products = [];
         this.isLoading = false;
+        console.log(e)
       }
     });
   }

@@ -1,0 +1,643 @@
+<main class="main">
+
+  <!-- =========================
+       PAGE HEADER
+  ========================== -->
+  <div class="page-title light-background">
+
+    <div class="container">
+
+      <nav class="breadcrumbs">
+        <ol>
+          <li>
+            <a routerLink="/">Home</a>
+          </li>
+
+          <li class="current">
+            Mes commandes
+          </li>
+        </ol>
+      </nav>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       ORDERS SECTION
+  ========================== -->
+  <section class="orders-section section">
+
+    <div class="container">
+
+      <!-- =========================
+           LOADING
+      ========================== -->
+      <div
+        class="orders-loading"
+        *ngIf="loading"
+      >
+
+        <div
+          class="spinner-border text-dark"
+          role="status"
+        >
+          <span class="visually-hidden">
+            Chargement…
+          </span>
+        </div>
+
+        <p>
+          Chargement de vos commandes...
+        </p>
+
+      </div>
+
+
+      <!-- =========================
+           ERROR
+      ========================== -->
+      <div
+        class="alert alert-danger orders-error"
+        *ngIf="error && !loading"
+        role="alert"
+      >
+
+        <div class="error-content">
+
+          <div>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ error }}
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            (click)="loadOrders()"
+          >
+            Réessayer
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           MAIN CONTENT
+      ========================== -->
+      <ng-container *ngIf="!loading && !error">
+
+
+        <!-- =========================
+             EMPTY ORDERS
+        ========================== -->
+        <div
+          class="orders-empty"
+          *ngIf="orders.length === 0"
+        >
+
+          <div class="orders-empty-icon">
+            <i class="bi bi-bag-x"></i>
+          </div>
+
+          <h2>
+            Aucune commande
+          </h2>
+
+          <p>
+            Vous n'avez pas encore passé de commande.
+          </p>
+
+          <a
+            routerLink="/products"
+            class="btn btn-dark btn-lg"
+          >
+            <i class="bi bi-bag me-2"></i>
+            Commencer mes achats
+          </a>
+
+        </div>
+
+
+        <!-- =========================
+             ORDERS
+        ========================== -->
+        <ng-container *ngIf="orders.length > 0">
+
+
+
+          <!-- =========================
+               STATUS FILTERS
+          ========================== -->
+          <div class="orders-filters">
+
+            <div class="orders-tabs">
+
+              <button
+                type="button"
+                class="order-tab"
+                *ngFor="let tab of statusTabs"
+                [class.active]="selectedStatus === tab.value"
+                (click)="selectStatus(tab.value)"
+              >
+
+                <i [class]="tab.icon"></i>
+
+                <span class="tab-label">
+                  {{ tab.label }}
+                </span>
+
+                <span class="tab-count">
+                  {{ getStatusCount(tab.value) }}
+                </span>
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- =========================
+               FILTER EMPTY
+          ========================== -->
+          <div
+            class="filtered-empty"
+            *ngIf="filteredOrders.length === 0"
+          >
+
+            <div class="filtered-empty-icon">
+              <i class="bi bi-filter-circle"></i>
+            </div>
+
+            <h3>
+              Aucune commande dans cette catégorie
+            </h3>
+
+            <p>
+              Aucune commande ne correspond au filtre sélectionné.
+            </p>
+
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="selectStatus('ALL')"
+            >
+              Voir toutes les commandes
+            </button>
+
+          </div>
+
+
+          <!-- =========================
+               ORDER LIST
+          ========================== -->
+          <div
+            class="orders-list"
+            *ngIf="filteredOrders.length > 0"
+          >
+
+            <article
+              class="order-card"
+              *ngFor="
+                let order of filteredOrders;
+                trackBy: trackByOrderId
+              "
+            >
+
+              <!-- =========================
+                   ORDER HEADER
+              ========================== -->
+              <div class="order-card-header">
+
+                <div class="order-main-info">
+
+                  <div class="order-number">
+
+                    <span class="order-label">
+                      Commande
+                    </span>
+
+                    <strong>
+                      #{{ order.orderNumber }}
+                    </strong>
+
+                  </div>
+
+                  <div class="order-date">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                      {{ formatDate(order.dateOrder || order.createdAt) }}
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+                <div
+                  class="order-status"
+                  [ngClass]="getStatusClass(order.status)"
+                >
+
+                  <i
+                    [class]="getStatusIcon(order.status)"
+                  ></i>
+
+                  {{ getStatusLabel(order.status) }}
+
+                </div>
+
+              </div>
+
+
+              <!-- =========================
+                   DELIVERY + ADDRESS
+              ========================== -->
+              <div class="order-delivery-section">
+
+
+                <!-- DELIVERY INFOS -->
+                <div class="order-delivery-info">
+
+
+                  <!-- DELIVERY TYPE -->
+                  <div class="delivery-info-item">
+
+                    <div class="delivery-info-icon">
+                      <i class="bi bi-truck"></i>
+                    </div>
+
+                    <div class="delivery-info-content">
+
+                      <span>
+                        Livraison
+                      </span>
+
+                      <strong>
+                        {{ getDeliveryTypeLabel(order.deliveryType) }}
+                      </strong>
+
+                      <small
+                        *ngIf="order.shippingMethodName"
+                      >
+                        {{ order.shippingMethodName }}
+                      </small>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- DELIVERY TIME -->
+                  <div class="delivery-info-item">
+
+                    <div class="delivery-info-icon">
+                      <i class="bi bi-clock"></i>
+                    </div>
+
+                    <div class="delivery-info-content">
+
+                      <span>
+                        Délai estimé
+                      </span>
+
+                      <strong>
+                        {{ order.deliveryMinDays }}
+                        -
+                        {{ order.deliveryMaxDays }}
+                        jours
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- ITEMS COUNT -->
+                  <div class="delivery-info-item">
+
+                    <div class="delivery-info-icon">
+                      <i class="bi bi-box-seam"></i>
+                    </div>
+
+                    <div class="delivery-info-content">
+
+                      <span>
+                        Articles
+                      </span>
+
+                      <strong>
+                        {{ getItemsCount(order) }}
+                        article{{ getItemsCount(order) > 1 ? 's' : '' }}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <!-- ADDRESS -->
+                <div class="order-address">
+
+                  <div class="order-address-header">
+
+                    <div class="delivery-info-icon">
+                      <i class="bi bi-geo-alt"></i>
+                    </div>
+
+                    <div>
+
+                      <span>
+                        Adresse de livraison
+                      </span>
+
+                      <strong>
+                        {{ order.shippingFirstName }}
+                        {{ order.shippingLastName }}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="address-content">
+
+                    <span>
+                      {{ order.shippingStreet }}
+                    </span>
+
+                    <span>
+
+                      {{ order.shippingZipCode }}
+                      {{ order.shippingCity }}
+
+                      <ng-container
+                        *ngIf="order.shippingState"
+                      >
+                        , {{ order.shippingState }}
+                      </ng-container>
+
+                    </span>
+
+                    <span>
+                      {{ order.shippingCountry }}
+                    </span>
+
+                    <span
+                      class="address-phone"
+                      *ngIf="order.shippingPhone"
+                    >
+                      <i class="bi bi-telephone me-1"></i>
+                      {{ order.shippingPhone }}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <!-- =========================
+                   ITEMS
+              ========================== -->
+              <div class="order-items">
+
+                <div class="order-items-title">
+
+                  <div class="items-title-left">
+
+                    <i class="bi bi-bag"></i>
+
+                    <span>
+                      Articles commandés
+                    </span>
+
+                  </div>
+
+                  <span class="items-count">
+
+                    {{ order.items?.length || 0 }}
+                    référence{{ (order.items?.length || 0) > 1 ? 's' : '' }}
+
+                  </span>
+
+                </div>
+
+
+                <!-- ITEM -->
+                <div
+                  class="order-item"
+                  *ngFor="
+                    let item of order.items;
+                    trackBy: trackByItemId
+                  "
+                >
+
+
+                  <!-- IMAGE -->
+                  <div class="order-item-image">
+
+                    <img
+                      *ngIf="item.imageUrlSnapshot"
+                      [src]="item.imageUrlSnapshot"
+                      [alt]="item.productNameSnapshot"
+                      loading="lazy"
+                    />
+
+                    <div
+                      class="order-item-placeholder"
+                      *ngIf="!item.imageUrlSnapshot"
+                    >
+                      <i class="bi bi-image"></i>
+                    </div>
+
+                  </div>
+
+
+                  <!-- PRODUCT -->
+                  <div class="order-item-info">
+
+                    <h3>
+                      {{ item.productNameSnapshot }}
+                    </h3>
+
+                    <div class="order-item-sku">
+
+                      Réf.
+                      {{ item.variantSkuSnapshot }}
+
+                    </div>
+
+
+                    <div class="order-item-variants">
+
+                      <span
+                        *ngIf="item.colorSnapshot"
+                      >
+
+                        <i class="bi bi-palette"></i>
+
+                        {{ item.colorSnapshot }}
+
+                      </span>
+
+
+                      <span
+                        *ngIf="item.sizeSnapshot"
+                      >
+
+                        <i class="bi bi-rulers"></i>
+
+                        Taille {{ item.sizeSnapshot }}
+
+                      </span>
+
+                    </div>
+
+
+                    <div class="order-item-quantity">
+
+                      <span>
+                        Quantité
+                      </span>
+
+                      <strong>
+                        × {{ item.quantity }}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- PRICE -->
+                  <div class="order-item-price">
+
+                    <span class="item-price-label">
+                      Prix
+                    </span>
+
+                    <strong>
+                      {{ item.totalPrice | currency:'USD':'symbol':'1.2-2' }}
+                    </strong>
+
+                    <small
+                      *ngIf="item.quantity > 1"
+                    >
+                      {{ item.unitPrice | currency:'USD':'symbol':'1.2-2' }}
+                      / unité
+                    </small>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <!-- =========================
+                   FINANCIAL SUMMARY
+              ========================== -->
+              <div class="order-card-footer">
+
+                <div class="order-summary">
+
+                  <div class="summary-line">
+
+                    <span>
+                      Sous-total
+                    </span>
+
+                    <strong>
+                      {{ getOrderSubtotal(order) | currency:'USD':'symbol':'1.2-2' }}
+                    </strong>
+
+                  </div>
+
+
+                  <div class="summary-line">
+
+                    <span>
+                      Livraison
+                    </span>
+
+                    <strong
+                      [class.free-shipping]="getShippingCost(order) === 0"
+                    >
+
+                      <ng-container
+                        *ngIf="
+                          getShippingCost(order) > 0;
+                          else freeShipping
+                        "
+                      >
+                        {{ getShippingCost(order) | currency:'USD':'symbol':'1.2-2' }}
+                      </ng-container>
+
+                      <ng-template #freeShipping>
+                        Gratuite
+                      </ng-template>
+
+                    </strong>
+
+                  </div>
+
+
+                  <div
+                    class="summary-line discount-line"
+                    *ngIf="getDiscount(order) > 0"
+                  >
+
+                    <span>
+                      Réduction
+                    </span>
+
+                    <strong>
+                      -{{ getDiscount(order) | currency:'USD':'symbol':'1.2-2' }}
+                    </strong>
+
+                  </div>
+
+
+                  <div class="summary-divider"></div>
+
+
+                  <div class="summary-total">
+
+                    <span>
+                      Total
+                    </span>
+
+                    <strong>
+                      {{ getTotal(order) | currency:'USD':'symbol':'1.2-2' }}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </article>
+
+          </div>
+
+        </ng-container>
+
+      </ng-container>
+
+    </div>
+
+  </section>
+
+</main>

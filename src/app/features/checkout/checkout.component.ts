@@ -1,6 +1,7 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
+import { CheckoutIdempotencyService } from '../../core/checkout-idempotency-service';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, catchError, finalize, map, of } from 'rxjs';
@@ -62,6 +63,7 @@ interface CheckoutResponse {
   shippingMethodName: string;
   deliveryMinDays: number;
   deliveryMaxDays: number;
+  paymentUrl?: string;
 }
 
 interface CouponPreviewResult {
@@ -110,6 +112,7 @@ export class CheckoutComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly taxService = inject(TaxService);
   readonly cartService = inject(CartService);
+  private readonly checkoutIdempotencyService = inject(CheckoutIdempotencyService);
   private readonly apiBase = (environment.apiBaseUrl || '').replace(/\/$/, '');
 
   step: 1 | 2 | 3 = 1;
@@ -122,7 +125,6 @@ export class CheckoutComponent implements OnInit {
   addressError = '';
   shippingError = '';
   checkoutError = '';
-
   addresses: Address[] = [];
   selectedAddressId: string | null = null;
   editingAddressIndex: number | null = null;
@@ -145,6 +147,7 @@ export class CheckoutComponent implements OnInit {
 
   showAddAddressForm = false;
   newAddress: UpsertAddressPayload = this.getEmptyAddressForm();
+  checkoutErrorAction: string = 'NONE';
 
   ngOnInit(): void {
     if (this.cartService.isEmpty()) {
@@ -490,56 +493,29 @@ export class CheckoutComponent implements OnInit {
     }
 
     this.isPlacingOrder = true;
+    const idempotencyKey = this.checkoutIdempotencyService.getOrCreateKey();
 
     this.http
-      .post<CheckoutResponse>(`${this.apiBase}/api/orders/checkout`, payload)
+      .post<CheckoutResponse>(`${this.apiBase}/api/orders/checkout`, payload, { headers: { 'Idempotency-Key': idempotencyKey } })
       .pipe(finalize(() => (this.isPlacingOrder = false)))
       .subscribe({
         next: (response) => {
+            /*
           sessionStorage.setItem('last-order-confirmation', JSON.stringify(response));
           this.cartService.clearCart();
-          this.router.navigate(['/order-confirmation', response.orderId]);
+          this.router.navigate(['/order-confirmation', response.orderId]); */
+          if(response && response.paymentUrl) {
+            window.location.href = response.paymentUrl;
+          }
+
         },
         error: (error) => {
-          const status = Number(error?.status || 0);
-          const message = String(error?.error?.message || error?.error?.error || error?.message || '').trim();
-
-          if (status === 401) {
-            this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/checkout' } });
-            return;
+          console.log('Checkout error:', error);
+          if(error && error.error.code) {
+            let code = error.error.code;
+            this.handleCheckoutError(error);
           }
-
-          if (status === 404 && /deliveryaddress not found/i.test(message)) {
-            this.checkoutError = 'Address not found anymore. Please select another one.';
-            this.loadAddresses(true);
-            this.step = 1;
-            return;
-          }
-
-          if (status === 404 && /shippingmethod not found/i.test(message)) {
-            this.checkoutError = 'Shipping method is no longer available. Please choose another one.';
-            this.loadShippingMethods(true);
-            this.step = 2;
-            return;
-          }
-
-          if ((status === 400 || status === 422) && /panier est vide|cart is empty/i.test(message)) {
-            this.router.navigate(['/cart']);
-            return;
-          }
-
-          if ((status === 400 || status === 422) && /stock insuffisant|insufficient stock/i.test(message)) {
-            this.checkoutError = message || 'Stock changed for one product. Please review your cart.';
-            this.router.navigate(['/cart']);
-            return;
-          }
-
-          if (status === 400 && /coupon|code promo|expired|already used|minimum/i.test(message)) {
-            this.couponError = message || 'Coupon is invalid or no longer usable.';
-            return;
-          }
-
-          this.checkoutError = message || 'Unable to place your order right now. Please try again.';
+          
         }
       });
   }
@@ -1099,4 +1075,105 @@ export class CheckoutComponent implements OnInit {
       isDefault: false
     };
   }
+
+   private handleCheckoutError(error: any): void {
+        const code = error?.error?.code;
+
+        // Reset
+        this.checkoutError = "";
+        this.checkoutErrorAction = 'NONE';
+
+        switch (code) {
+
+            // ============================================================
+            // CART / PRODUCTS
+            // ============================================================
+
+            case 'CART_NOT_FOUND':
+            case 'CART_IS_EMPTY':
+            case 'QUANTITY_MUST_BE_GREATER_THAN_ZERO':
+            case 'ORDER_MUST_HAVE_AT_LEAST_ONE_ITEM':
+            case 'VARIANT_NOT_FOUND':
+            case 'STOCK_NOT_FOUND_FOR_VARIANT':
+            this.checkoutError =
+                'Something went wrong with your cart. Please review your cart and try again.';
+            this.checkoutErrorAction = 'CART';
+            break;
+
+
+            // ============================================================
+            // STOCK
+            // ============================================================
+
+            case 'INSUFFICIENT_STOCK':
+            this.checkoutError =
+                'One or more products in your cart are no longer available in the requested quantity. Please review your cart and try again.';
+            this.checkoutErrorAction = 'CART';
+            break;
+
+
+            // ============================================================
+            // DELIVERY ADDRESS
+            // ============================================================
+
+            case 'DELIVERY_ADDRESS_REQUIRED':
+            case 'DELIVERY_ADDRESS_NOT_FOUND':
+            this.checkoutError =
+                'We could not use your delivery address. Please select a valid delivery address and try again.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+            
+
+            // ============================================================
+            // SHIPPING
+            // ============================================================
+
+            case 'SHIPPING_METHOD_NOT_FOUND':
+            this.checkoutError =
+                'The selected shipping method is no longer available. Please select another shipping method and try again.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+
+
+            // ============================================================
+            // USER / ORDER
+            // ============================================================
+
+            case 'USER_NOT_FOUND':
+            this.checkoutError =
+                'We could not find your account. Please sign in again and try again.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+
+            case 'ORDER_NOT_FOUND':
+            this.checkoutError =
+                'We could not find your order. Please try again.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+
+
+            // ============================================================
+            // PAYMENT
+            // ============================================================
+
+            case 'STRIPE_SESSION_CREATION_FAILED':
+            this.checkoutError =
+                'We could not start the payment process. Please try again in a moment.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+
+
+            // ============================================================
+            // UNKNOWN ERROR
+            // ============================================================
+
+            default:
+            this.checkoutError =
+                'Something went wrong while placing your order. Please try again.';
+            this.checkoutErrorAction = 'NONE';
+            break;
+        }
+        }
+
+
 }

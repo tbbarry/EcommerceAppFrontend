@@ -333,7 +333,19 @@
             </div>
 
             <div class="summary-confirm-bar">
-              <div class="alert alert-danger mb-3" *ngIf="checkoutError">{{ checkoutError }}</div>
+
+             <!-- Checkout error --> 
+              <div class="checkout-error alert alert-danger mb-3" *ngIf="checkoutError" role="alert" aria-live="assertive" > 
+                <div class="checkout-error-content"> 
+                    <div class="checkout-error-message"> <i class="bi bi-exclamation-triangle-fill"></i>  <strong>We couldn't place your order</strong> 
+                        <p class="mb-3">{{ checkoutError }}</p> 
+                        
+                        <a *ngIf="checkoutErrorAction =='CART'" routerLink="/cart" class="btn btn-sm btn-danger checkout-cart-btn" > 
+                            <i class="bi bi-cart3 me-1"></i> Review cart 
+                        </a> 
+                    </div> 
+                </div> 
+              </div>
               <div class="confirm-actions">
                 <a routerLink="/products" class="btn btn-outline-secondary continue-shopping-btn">Continue shopping</a>
                 <button class="btn btn-dark confirm-btn" type="button" [disabled]="!canConfirmOrder || isPlacingOrder" (click)="placeOrder()">

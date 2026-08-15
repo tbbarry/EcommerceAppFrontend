@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Router } from '@angular/router';
 
 export interface Address {
   id?: string;
@@ -98,7 +99,8 @@ export class AuthService {
   private userSubject = new BehaviorSubject<User | null>(this.getSavedUser());
   readonly user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+
+  constructor(private http: HttpClient, private router: Router) {}
 
   initAuthState(): void {
     this.hydrateProfileFromApi();
@@ -320,6 +322,7 @@ export class AuthService {
     this.removeFromStorage(this.authTokenKey);
     this.removeFromStorage(this.userStorageKey);
     this.userSubject.next(null);
+    this.router.navigateByUrl('/auth/login');
   }
 
   isLoggedIn(): boolean {

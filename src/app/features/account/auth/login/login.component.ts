@@ -18,7 +18,7 @@ export class LoginComponent {
   readonly returnUrl: string;
 
   constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
-    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/account/profile';
+    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/products';
   }
 
   login(): void {
