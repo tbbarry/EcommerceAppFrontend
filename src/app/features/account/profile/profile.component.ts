@@ -13,6 +13,7 @@ import { Address, AuthService, ChangePasswordPayload, UpdateProfilePayload, Upse
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
+
   readonly user$;
   readonly profileForm;
   readonly addressForm;
@@ -106,7 +107,6 @@ export class ProfileComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
   }
 
   isFieldInvalid(fieldName: 'firstname' | 'lastname' | 'phone'): boolean {
@@ -143,6 +143,10 @@ export class ProfileComponent implements OnInit {
     const confirm = this.passwordForm.controls.confirmPassword;
     return confirm.dirty && this.passwordForm.controls.newPassword.value !== confirm.value;
   }
+
+  showMyOrder() {
+  throw new Error('Method not implemented.');
+ }
 
   saveChanges(): void {
     this.saveError = '';

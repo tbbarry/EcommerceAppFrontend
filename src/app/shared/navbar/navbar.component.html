@@ -40,14 +40,11 @@
                   <i class="bi bi-person-circle me-2"></i>
                   <span>Mon profil</span>
                 </a>
-                <a class="dropdown-item d-flex align-items-center" routerLink="/cart">
+                <a class="dropdown-item d-flex align-items-center" routerLink="/my-orders">
                   <i class="bi bi-bag-check me-2"></i>
                   <span>Mes commandes</span>
                 </a>
-                <a class="dropdown-item d-flex align-items-center" routerLink="/account/profile">
-                  <i class="bi bi-gear me-2"></i>
-                  <span>Parametres</span>
-                </a>
+    
               </div>
               <div class="dropdown-footer">
                 <button type="button" class="btn btn-primary w-100" (click)="logout()">Se deconnecter</button>
@@ -134,12 +131,6 @@
         <ul>
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
           <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
-          <li><a routerLink="/products" routerLinkActive="active" (click)="closeMobileMenu()">Product Details</a></li>
-          <li><a routerLink="/cart" routerLinkActive="active" (click)="closeMobileMenu()">Cart</a></li>
-          <li><a routerLink="/checkout" routerLinkActive="active" (click)="closeMobileMenu()">Checkout</a></li>
-          <li><a routerLink="/auth/login" routerLinkActive="active" (click)="closeMobileMenu()">Login</a></li>
-          <li><a routerLink="/auth/register" routerLinkActive="active" (click)="closeMobileMenu()">Register</a></li>
-          <li><a routerLink="/account/profile" routerLinkActive="active" (click)="closeMobileMenu()">Mon compte</a></li>
         </ul>
       </nav>
     </div>
