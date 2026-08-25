@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { CatalogSearchParams, ProductService } from '../../core/product.service';
+import { CategoryNode, Facet, FacetValue, ProductCard } from '../../models/catalogResponse.model';
+
 
 interface ProductItem {
   id: number;
@@ -65,9 +68,16 @@ interface CatalogResponse {
   styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent implements OnInit, OnDestroy {
+toggleFacet2(arg0: string,arg1: any) {
+throw new Error('Method not implemented.');
+}
   products: ProductItem[] = [];
+  products2: ProductCard[] = [];
+  selectedFacetValues: Map<number, number[]> = new Map();
+  facets: Facet[] = [];
   categories: FacetItem[] = [];
   categoryTree: CategoryTreeNode[] = [];
+  categories2: CategoryNode[] = [];
   colors: FacetItem[] = [];
   sizes: FacetItem[] = [];
   availableSorts: string[] = [];
@@ -85,6 +95,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
   priceSliderMax = 500;
   minPriceValue = 0;
   maxPriceValue = 500;
+  selectedCategoryId: number | null = null;
+  expandedCategories = new Set<number>();
   feedbackProductId: number | null = null;
   isCatalogImageViewerOpen = false;
   catalogViewerImageUrl = '';
@@ -98,10 +110,69 @@ export class ProductListComponent implements OnInit, OnDestroy {
     maxPrice: new FormControl<number | null>(null)
   });
 
+  readonly productService = inject(ProductService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  catalogSearchParams: CatalogSearchParams = {};
+
   constructor(private http: HttpClient) {}
 
-  ngOnInit(): void {
-    this.loadProducts();
+ ngOnInit(): void {
+  this.route.queryParams.subscribe(params => {
+
+    this.selectedCategoryId = params['categoryId']
+      ? Number(params['categoryId'])
+      : null;
+
+    this.selectedFacetValues.clear();
+
+    if (params['facets']) {
+      const facetGroups = params['facets'].split(';');
+
+      for (const group of facetGroups) {
+        const [facetId, values] = group.split(':');
+
+        if (!facetId || !values) {
+          continue;
+        }
+
+        this.selectedFacetValues.set(
+          Number(facetId),
+          values.split(',').map(Number)
+        );
+      }
+    }
+
+    this.selectedPage = params['page']
+      ? Number(params['page'])
+      : 0;
+
+    this.pageSize = params['size']
+      ? Number(params['size'])
+      : 24;
+
+    this.loadCatalog();
+  });
+}
+  loadCatalog(): void {
+
+    this.catalogSearchParams = this.buildSearchParams();
+
+    this.productService.getCatalog(this.catalogSearchParams).subscribe({
+      next: (response) => {
+        console.log('Catalog response:', response);
+        this.products2 = response.products || [];
+        this.categories2 = response.categories || [];
+        console.log('Categories2:', this.categories2);
+        console.log('Products2:', this.products2);
+        this.facets = response.facets || [];
+        console.log('Facets:', this.facets);
+      },
+      error: (e) => {
+
+        console.log(e);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -155,7 +226,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (e) => {
-        this.products = [];
+        this.products = [];  
         this.isLoading = false;
         console.log(e)
       }
@@ -164,8 +235,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     this.selectedPage = 0;
-    this.loadProducts();
-  }
+    this.selectedPage = 0;
+
+    const params = this.buildSearchParams();
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: ''
+    });
+
+      this.loadCatalog()
+    }
 
   clearFilters(): void {
     this.selectedCategories = [];
@@ -216,7 +297,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleCategoryBranch(category: string): void {
+  toggleCategoryBranch1(category: string): void {
     if (this.expandedCategoryBranches.has(category)) {
       this.expandedCategoryBranches.delete(category);
       return;
@@ -225,7 +306,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.expandedCategoryBranches.add(category);
   }
 
-  isCategoryBranchOpen(category: string): boolean {
+  isCategoryBranchOpen2(category: string): boolean {
     return this.expandedCategoryBranches.has(category);
   }
 
@@ -264,6 +345,34 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.loadProducts();
   }
 
+
+
+toggleFacetValue(facet: Facet, value: FacetValue): void {
+
+  // Inverse l'état
+  value.selected = !value.selected;
+
+  // Reconstruit la Map à partir des valeurs sélectionnées
+  const selectedIds = facet.values
+    .filter(v => v.selected)
+    .map(v => v.id);
+
+  if (selectedIds.length === 0) {
+    this.selectedFacetValues.delete(facet.id);
+  } else {
+    this.selectedFacetValues.set(facet.id, selectedIds);
+  }
+
+  if (!this.isMobileViewport()) {
+    this.applyFilters();
+  }
+  console.log('Selected Facet Values:', this.selectedFacetValues);
+}
+
+isFacetValueSelected(facetId: number, valueId: number): boolean {
+  return this.selectedFacetValues.get(facetId)?.includes(valueId) ?? false;
+}
+
   pageRange(): number[] {
     const totalPages = Math.max(this.pagination.totalPages, 1);
     const pages: number[] = [];
@@ -299,6 +408,23 @@ export class ProductListComponent implements OnInit, OnDestroy {
   getProductImage(product: ProductItem, index: number): string {
     if (product.defaultImageUrl) {
       return product.defaultImageUrl;
+    }
+
+    const fallbackImages = [
+      'assets/img/product/product-f-1.webp',
+      'assets/img/product/product-m-1.webp',
+      'assets/img/product/product-f-3.webp',
+      'assets/img/product/product-m-3.webp',
+      'assets/img/product/product-f-5.webp',
+      'assets/img/product/product-m-5.webp'
+    ];
+
+    return fallbackImages[index % fallbackImages.length];
+  }
+
+   getProductImage2(product: ProductCard, index: number): string {
+    if (product.imageUrl) {
+      return product.imageUrl;
     }
 
     const fallbackImages = [
@@ -350,6 +476,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.lockBodyScroll();
   }
 
+  openCatalogImageViewer2(product: ProductCard, index: number): void {
+    this.triggerImageFeedback(product.id);
+    this.catalogViewerImageUrl = this.getProductImage2(product, index);
+    this.catalogViewerImageAlt = product.name;
+    this.isCatalogImageViewerOpen = true;
+    this.lockBodyScroll();
+  }
   closeCatalogImageViewer(): void {
     this.isCatalogImageViewerOpen = false;
     this.unlockBodyScroll();
@@ -432,4 +565,61 @@ export class ProductListComponent implements OnInit, OnDestroy {
       document.body.style.overflow = '';
     }
   }
+
+  private buildFacetsQuery(): string {
+
+  return this.facets
+    .map(facet => {
+
+      const selectedValues = facet.values
+        .filter(value => value.selected)
+        .map(value => value.id);
+
+      if (selectedValues.length === 0) {
+        return null;
+      }
+
+      return `${facet.id}:${selectedValues.join(',')}`;
+    })
+    .filter(Boolean)
+    .join(';');
 }
+
+
+
+selectCategory(categoryId: number): void {
+  this.selectedCategoryId = categoryId;
+
+  if (!this.isMobileViewport()) {
+    this.applyFilters();
+  }
+}
+
+toggleCategoryBranch(categoryId: number): void {
+  if (this.expandedCategories.has(categoryId)) {
+    this.expandedCategories.delete(categoryId);
+  } else {
+    this.expandedCategories.add(categoryId);
+  }
+}
+
+isCategoryBranchOpen(categoryId: number): boolean {
+  return this.expandedCategories.has(categoryId);
+}
+
+private buildSearchParams(): CatalogSearchParams {
+  return {
+    page: this.selectedPage,
+    size: this.pageSize,
+    query: this.searchForm.value.query?.trim() || undefined,
+    minPrice: this.searchForm.value.minPrice,
+    maxPrice: this.searchForm.value.maxPrice,
+    categoryId: this.selectedCategoryId,
+    facets: this.buildFacetsQuery()
+  };
+}
+
+}
+
+
+
