@@ -322,4 +322,43 @@
     width: 42px;
     height: 42px;
   }
+
+
+  /* ===== Mega Menu 2 ===== */
+
+.products-megamenu-2 .category-layout {
+  display: flex;
+  gap: 2rem;               /* identique au template */
+}
+
+.products-megamenu-2 .categories-section {
+  flex: 1;
+}
+
+.products-megamenu-2 .category-headers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: .75rem;
+}
+
+.products-megamenu-2 .category-links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0 1.5rem;           /* pas d'espace vertical */
+}
+
+.products-megamenu-2 .link-row {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;             /* espace entre les liens */
+}
+
+.products-megamenu-2 .link-row a {
+  margin: 0;
+  padding: 0;
+  line-height: 1.35;
+}
+
+
+
 }

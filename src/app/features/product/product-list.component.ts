@@ -14,6 +14,8 @@ interface ProductItem {
   slug: string;
   brand?: string;
   price: number;
+  categoryName: string;
+  categoryId: number;
   defaultImageUrl?: string;
   defaultImageAlt?: string;
   categories: string[];
