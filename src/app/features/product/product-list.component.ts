@@ -159,6 +159,7 @@ throw new Error('Method not implemented.');
   loadCatalog(): void {
 
     this.catalogSearchParams = this.buildSearchParams();
+    console.log(this.catalogSearchParams);
 
     this.productService.getCatalog(this.catalogSearchParams).subscribe({
       next: (response) => {

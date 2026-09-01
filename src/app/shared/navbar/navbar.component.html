@@ -124,6 +124,7 @@
       </div>
     </div>
   </div>
+  <!--
 
   <div class="header-nav">
     <div class="container-fluid container-xl position-relative">
@@ -131,21 +132,18 @@
         <ul>
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
           <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
-                     <!-- Products Mega Menu 2 -->
+                   
             <li class="products-megamenu-2"><a href="#"><span>Megamenu 2</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                           <!-- Mega Menu -->
-            <li class="nav-item dropdown position-static">
+                         
 
-  <app-mega-menu
-    [categories]="categories">
-  </app-mega-menu>
-
-</li>
   
         </ul>
       </nav>
     </div>
-  </div>
+  </div> --> 
+
+  <app-mega-menu [categories] = "categories"></app-mega-menu>
+
 
   <button
     type="button"

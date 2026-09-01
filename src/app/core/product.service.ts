@@ -54,6 +54,7 @@ export class ProductService {
     if (params.facets) {
       httpParams = httpParams.set('facets', params.facets);
     }
+    console.log(httpParams);
 
     return this.http.get<CatalogResponse>(
       `${this.baseUrl}/api/catalog/products`,

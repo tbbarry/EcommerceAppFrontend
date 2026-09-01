@@ -361,4 +361,39 @@
 
 
 
+.mega-menu {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+}
+
+.mega-menu .dropdown-header {
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.mega-menu .dropdown-item {
+  padding: 0.25rem 1rem;
+}
+
+.navbar-nav .dropdown:hover > .mega-menu {
+  display: block;
+}
+
+
+
+
+
+
+
+
+
+
+
 }

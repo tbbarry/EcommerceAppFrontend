@@ -151,5 +151,26 @@ buildMegaMenu(categories: Category[]): MegaMenuCategory[] {
     }))
   }));
 }
+
+/*  mega menu*/
+  megaMenuOpen = false;
+  hideTimeOut: any;
+
+
+
+  isMenuOpen = false;
+  activeMenu: string | null = null;
+
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  showMegaMenu(menu: string) {
+    this.activeMenu = menu;
+  }
+
+  hideMegaMenu() {
+    this.activeMenu = null;
+  }
 }
 

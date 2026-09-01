@@ -1,231 +1,47 @@
-:host {
-  display: block;
+.custom-mega-menu {
+    position: fixed;
+    top: 158px;
+    left: 0;
+
+    width: 100vw;
+
+    max-height: 70vh; /* 70% de la hauteur de l'écran */
+    overflow-y: auto; /* scroll vertical automatique */
+
+    padding: 1rem;
+    background-color: white;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+
+    z-index: 1050;
 }
 
 
-/* =========================================
-   DROPDOWN
-   ========================================= */
-
-.categories-dropdown {
-  position: absolute !important;
-
-  top: 100% !important;
-  left: 50% !important;
-
-  transform: translateX(-50%) !important;
-
-  width: min(1100px, calc(100vw - 30px)) !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  border: 0 !important;
-
-  border-radius: 0 0 8px 8px !important;
-
-  background: #fff;
-
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-
-  overflow: hidden;
-
-  z-index: 1050;
+.custom-mega-menu .dropdown-header {
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
-
-/* =========================================
-   CONTENEUR
-   ========================================= */
-
-.categories-mega-container {
-  width: 100%;
-
-  max-width: 1100px;
-
-  margin: 0 auto;
-
-  padding: 25px 30px 30px;
+.custom-mega-menu .dropdown-item {
+  padding: 0.25rem 1rem;
 }
 
-
-/* =========================================
-   TABS
-   ========================================= */
-
-.categories-tabs {
-  display: flex;
-
-  flex-wrap: nowrap;
-
-  margin: 0 0 25px;
-
-  padding: 0;
-
-  border-bottom: 1px solid #e5e5e5;
-
-  overflow-x: auto;
-
-  scrollbar-width: none;
-}
-
-.categories-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-
-.categories-tabs .nav-item {
-  flex: 0 0 auto;
-}
-
-
-.categories-tabs .nav-link {
+.navbar-nav .nav-item {
   position: relative;
-
-  border: 0 !important;
-
-  border-radius: 0 !important;
-
-  background: transparent !important;
-
-  color: #555;
-
-  font-size: 14px;
-
-  font-weight: 600;
-
-  text-transform: uppercase;
-
-  padding: 12px 18px;
-
-  white-space: nowrap;
 }
 
-
-.categories-tabs .nav-link:hover {
-  color: #000;
+.navbar-nav .nav-item:hover > .custom-mega-menu {
+  display: block; /* Show on hover */
 }
 
-
-.categories-tabs .nav-link.active {
-  color: #000;
-
-  background: transparent !important;
+.navbar-nav .nav-item:hover > .nav-link {
+  color: white;
 }
 
-
-.categories-tabs .nav-link.active::after {
-  content: "";
-
-  position: absolute;
-
-  left: 15px;
-  right: 15px;
-  bottom: -1px;
-
-  height: 2px;
-
-  background: #000;
-}
-
-
-/* =========================================
-   CONTENU
-   ========================================= */
-
-.categories-tab-content {
-  width: 100%;
-}
-
-
-/* =========================================
-   COLONNES
-   ========================================= */
-
-.category-column {
-  height: 100%;
-}
-
-
-/* =========================================
-   TITRES
-   ========================================= */
-
-.category-title {
-  margin: 0 0 14px;
-
-  color: #222;
-
-  font-size: 14px;
-
-  font-weight: 700;
-
-  text-transform: uppercase;
-}
-
-
-/* =========================================
-   LIENS
-   ========================================= */
-
-.category-links {
-  list-style: none;
-
-  margin: 0;
-
-  padding: 0;
-}
-
-
-.category-links li {
-  margin-bottom: 8px;
-}
-
-
-.category-links a {
-  color: #666;
-
-  font-size: 14px;
-
-  text-decoration: none;
-
-  transition: all 0.2s ease;
-}
-
-
-.category-links a:hover {
-  color: #000;
-
-  padding-left: 4px;
-}
-
-
-/* =========================================
-   MOBILE
-   ========================================= */
-
-@media (max-width: 991px) {
-
-  .categories-dropdown {
-    width: calc(100vw - 20px) !important;
-  }
-
-  .categories-mega-container {
-    padding: 20px;
-  }
-
-}
-
-
-@media (max-width: 575px) {
-
-  .categories-dropdown {
-    width: calc(100vw - 10px) !important;
-  }
-
-  .categories-mega-container {
-    padding: 15px;
-  }
-
+.navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
 }

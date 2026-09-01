@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Category } from '../../../models/categorie.model';
 import { Input } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-mega-menu',
@@ -15,62 +15,49 @@ export class MegaMenuComponent {
 
   @Input({ required: true }) categories: Category[] = [];
   megaMenuOpen = false;
+  hideTimeOut: any;
 
-selectedCategoryIndex = 0;
+ 
 
+  isMenuOpen = false;
+  activeMenu: string | null = null;
+  constructor(private router: Router) {}
 
-toggleMegaMenu(event: Event): void {
-
-  event.preventDefault();
-
-  event.stopPropagation();
-
-  this.megaMenuOpen = !this.megaMenuOpen;
-
-  if (this.megaMenuOpen) {
-
-    this.selectedCategoryIndex = 0;
-
-    this.updateMegaMenuPosition();
-
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
   }
 
-}
-
-
-selectCategory(index: number, event: Event): void {
-
-  event.preventDefault();
-
-  event.stopPropagation();
-
-  this.selectedCategoryIndex = index;
-
-}
-
-
-closeMegaMenu(): void {
-
-  this.megaMenuOpen = false;
-
-}
-
-
-updateMegaMenuPosition(): void {
-
-  const button = document.getElementById('categoriesMegaMenu');
-
-  if (!button) {
-    return;
+  showMegaMenu(menu: string) {
+    this.activeMenu = menu;
   }
 
-  const rect = button.getBoundingClientRect();
+  hideMegaMenu() {
+    this.activeMenu = null;
+  }
 
-  document.documentElement.style.setProperty(
-    '--mega-menu-top',
-    `${rect.bottom}px`
+  getGroups(items: any[], size: number): any[][] {
+  const groups = [];
+
+  for (let i = 0; i < items.length; i += size) {
+    groups.push(items.slice(i, i + size));
+  }
+
+  return groups;
+}
+
+
+
+goToProducts(categoryId: number): void {
+  this.hideMegaMenu()
+  this.router.navigate(
+    ['/products'],
+    {
+      queryParams: {
+        categoryId: categoryId
+      }
+    }
   );
-
 }
+
 
 }

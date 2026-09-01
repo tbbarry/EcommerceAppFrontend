@@ -1,130 +1,25 @@
-<a
-  class="nav-link dropdown-toggle"
-  href="#"
-  id="categoriesMegaMenu"
-  role="button"
-  data-bs-toggle="dropdown"
-  data-bs-auto-close="outside"
-  aria-expanded="false">
-
-  Catégories
-
-</a>
-
-
-<div
-  class="dropdown-menu categories-dropdown"
-  aria-labelledby="categoriesMegaMenu">
-
-  <div class="categories-mega-container">
-
-    <!-- ==========================
-         TABS DES CATEGORIES PARENTES
-         ========================== -->
-
-    <ul class="nav nav-tabs categories-tabs" role="tablist">
-
-      <li
-        class="nav-item"
-        role="presentation"
-        *ngFor="let category of categories; let i = index">
-
-        <button
-          class="nav-link"
-          [class.active]="i === 0"
-
-          type="button"
-
-          [id]="'category-tab-' + category.id"
-
-          data-bs-toggle="tab"
-
-          [attr.data-bs-target]="'#category-content-' + category.id"
-
-          role="tab"
-
-          [attr.aria-controls]="'category-content-' + category.id"
-
-          [attr.aria-selected]="i === 0">
-
-          {{ category.name }}
-
-        </button>
-
-      </li>
-
-    </ul>
-
-
-    <!-- ==========================
-         CONTENU DES TABS
-         ========================== -->
-
-    <div class="tab-content categories-tab-content">
-
-      <div
-        *ngFor="let category of categories; let i = index"
-
-        class="tab-pane fade"
-
-        [class.show]="i === 0"
-
-        [class.active]="i === 0"
-
-        [id]="'category-content-' + category.id"
-
-        role="tabpanel"
-
-        [attr.aria-labelledby]="'category-tab-' + category.id">
-
-
-        <div class="row g-4">
-
-          <!-- ==========================
-               ENFANTS
-               ========================== -->
-
-          <div
-            class="col-xl-3 col-lg-4 col-md-6"
-
-            *ngFor="let child of category.children">
-
-            <div class="category-column">
-
-              <h6 class="category-title">
-                {{ child.name }}
-              </h6>
-
-
-              <ul class="category-links">
-
-                <li
-                  *ngFor="let grandchild of child.children">
-
-                  <a
-                    [routerLink]="['/products']"
-                    [queryParams]="{
-                      category: grandchild.id
-                    }">
-
-                    {{ grandchild.name }}
-
-                  </a>
-
-                </li>
-
-              </ul>
-
+<nav class="navbar navbar-expand-lg navbar-light bg-dark">
+  <button class="navbar-toggler" type="button" (click)="toggleMenu()" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" [ngClass]="{'show': isMenuOpen}" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item"  *ngFor="let category of categories" (mouseenter)="showMegaMenu(category.name)" (mouseleave)="hideMegaMenu()">
+        <a class="nav-link btn"  (click)="goToProducts(category.id)" >{{category.name}}</a>
+        <div class="custom-mega-menu" *ngIf="activeMenu === category.name" >
+          <div class="container-fluid">
+            <div class="row" *ngFor="let group of getGroups(category.children, 4)">
+              <div class="col-md-3" *ngFor="let child of group">
+                <h5 class="dropdown-header">{{child.name}}</h5>
+                <ul class="list-unstyled">
+                  <li><a  class="dropdown-item btn" (click)="goToProducts(child.id)">Voir tout</a></li>
+                  <li *ngFor="let grandChild of child.children"><a class="dropdown-item btn"  (click)="goToProducts(grandChild.id)">{{grandChild.name}}</a></li>
+                </ul>
+              </div>
             </div>
-
           </div>
-
         </div>
-
-      </div>
-
-    </div>
-
+      </li>
+    </ul>
   </div>
-
-</div>
+</nav>
