@@ -1,0 +1,28 @@
+.stock-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.stock-indicator small {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stock-indicator--muted {
+  color: #475569;
+}
+
+.stock-indicator--danger {
+  color: #b91c1c;
+}
+
+.stock-indicator--warning {
+  color: #b45309;
+}
+
+.stock-indicator--success {
+  color: #15803d;
+}

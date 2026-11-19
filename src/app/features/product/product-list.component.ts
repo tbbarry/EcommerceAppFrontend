@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CatalogSearchParams, ProductService } from '../../core/product.service';
 import { CategoryNode, Facet, FacetValue, ProductCard } from '../../models/catalogResponse.model';
+import { ProductPriceDisplayComponent } from '../../shared/pricing/product-price-display.component';
 
 
 interface ProductItem {
@@ -65,7 +66,7 @@ interface CatalogResponse {
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, ProductPriceDisplayComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
@@ -104,6 +105,7 @@ throw new Error('Method not implemented.');
   catalogViewerImageUrl = '';
   catalogViewerImageAlt = '';
   expandedCategoryBranches = new Set<string>();
+  activeCategoryTrail: string[] = [];
   private feedbackResetHandle: ReturnType<typeof setTimeout> | null = null;
 
   searchForm = new FormGroup({
@@ -157,6 +159,7 @@ throw new Error('Method not implemented.');
   });
 }
   loadCatalog(): void {
+    this.isLoading = true;
 
     this.catalogSearchParams = this.buildSearchParams();
     console.log(this.catalogSearchParams);
@@ -170,9 +173,12 @@ throw new Error('Method not implemented.');
         console.log('Products2:', this.products2);
         this.facets = response.facets || [];
         console.log('Facets:', this.facets);
+        this.activeCategoryTrail = this.getCategoryTrail(this.categories2, this.selectedCategoryId);
+        this.isLoading = false;
       },
       error: (e) => {
 
+        this.isLoading = false;
         console.log(e);
       }
     });
@@ -238,7 +244,6 @@ throw new Error('Method not implemented.');
 
   applyFilters(): void {
     this.selectedPage = 0;
-    this.selectedPage = 0;
 
     const params = this.buildSearchParams();
 
@@ -248,7 +253,7 @@ throw new Error('Method not implemented.');
       queryParamsHandling: ''
     });
 
-      this.loadCatalog()
+    this.loadCatalog();
     }
 
   clearFilters(): void {
@@ -257,10 +262,18 @@ throw new Error('Method not implemented.');
     this.selectedSizes = [];
     this.selectedSort = 'relevance';
     this.selectedPage = 0;
+    this.selectedCategoryId = null;
+    this.activeCategoryTrail = [];
+    this.selectedFacetValues.clear();
+    this.facets.forEach((facet) => {
+      facet.values.forEach((value) => {
+        value.selected = false;
+      });
+    });
     this.searchForm.reset({ query: '', minPrice: null, maxPrice: null });
     this.minPriceValue = this.priceSliderMin;
     this.maxPriceValue = this.priceSliderMax;
-    this.loadProducts();
+    this.applyFilters();
   }
 
   applyFiltersFromMobilePanel(): void {
@@ -345,7 +358,7 @@ throw new Error('Method not implemented.');
       return;
     }
     this.selectedPage = page;
-    this.loadProducts();
+    this.applyFilters();
   }
 
 
@@ -369,7 +382,6 @@ toggleFacetValue(facet: Facet, value: FacetValue): void {
   if (!this.isMobileViewport()) {
     this.applyFilters();
   }
-  console.log('Selected Facet Values:', this.selectedFacetValues);
 }
 
 isFacetValueSelected(facetId: number, valueId: number): boolean {
@@ -388,11 +400,37 @@ isFacetValueSelected(facetId: number, valueId: number): boolean {
   }
 
   hasActiveFilters(): boolean {
-    return this.selectedCategories.length > 0 || this.selectedColors.length > 0 || this.selectedSizes.length > 0 || !!this.searchForm.value.query || this.searchForm.value.minPrice != null || this.searchForm.value.maxPrice != null;
+    return this.selectedCategoryId != null
+      || this.selectedFacetValues.size > 0
+      || this.selectedCategories.length > 0
+      || this.selectedColors.length > 0
+      || this.selectedSizes.length > 0
+      || !!this.searchForm.value.query
+      || this.searchForm.value.minPrice != null
+      || this.searchForm.value.maxPrice != null;
   }
 
   getActiveFilterTags(): string[] {
     const tags: string[] = [];
+    const categoryLabel = this.getSelectedCategoryLabel();
+    if (categoryLabel) {
+      tags.push(`Category: ${categoryLabel}`);
+    }
+
+    this.selectedFacetValues.forEach((values, facetId) => {
+      const facet = this.facets.find((item) => item.id === facetId);
+      if (!facet) {
+        return;
+      }
+
+      values.forEach((valueId) => {
+        const label = facet.values.find((value) => value.id === valueId)?.label;
+        if (label) {
+          tags.push(`${facet.code}: ${label}`);
+        }
+      });
+    });
+
     this.selectedCategories.forEach((category) => tags.push(`Category: ${category}`));
     this.selectedColors.forEach((color) => tags.push(`Color: ${color}`));
     this.selectedSizes.forEach((size) => tags.push(`Size: ${size}`));
@@ -592,6 +630,7 @@ isFacetValueSelected(facetId: number, valueId: number): boolean {
 
 selectCategory(categoryId: number): void {
   this.selectedCategoryId = categoryId;
+    this.activeCategoryTrail = this.getCategoryTrail(this.categories2, categoryId);
 
   if (!this.isMobileViewport()) {
     this.applyFilters();
@@ -609,6 +648,82 @@ toggleCategoryBranch(categoryId: number): void {
 isCategoryBranchOpen(categoryId: number): boolean {
   return this.expandedCategories.has(categoryId);
 }
+
+  clearCategorySelection(): void {
+    this.selectedCategoryId = null;
+    this.activeCategoryTrail = [];
+
+    if (!this.isMobileViewport()) {
+      this.applyFilters();
+    }
+  }
+
+  clearFacet(facet: Facet): void {
+    facet.values.forEach((value) => {
+      value.selected = false;
+    });
+
+    this.selectedFacetValues.delete(facet.id);
+
+    if (!this.isMobileViewport()) {
+      this.applyFilters();
+    }
+  }
+
+  getSelectedFacetCount(facet: Facet): number {
+    return facet.values.filter((value) => value.selected).length;
+  }
+
+  getSelectedCategoryLabel(): string | null {
+    if (this.selectedCategoryId == null) {
+      return null;
+    }
+
+    return this.findCategoryLabel(this.categories2, this.selectedCategoryId);
+  }
+
+  private findCategoryLabel(nodes: CategoryNode[], categoryId: number): string | null {
+    for (const node of nodes) {
+      if (node.id === categoryId) {
+        return node.name;
+      }
+
+      const childLabel = this.findCategoryLabel(node.children, categoryId);
+      if (childLabel) {
+        return childLabel;
+      }
+    }
+
+    return null;
+  }
+
+  getCategoryTrail(nodes: CategoryNode[], categoryId: number | null): string[] {
+    if (categoryId == null) {
+      return [];
+    }
+
+    const trail: string[] = [];
+
+    const findTrail = (items: CategoryNode[], path: string[]): boolean => {
+      for (const item of items) {
+        const nextPath = [...path, item.name];
+
+        if (item.id === categoryId) {
+          trail.splice(0, trail.length, ...nextPath);
+          return true;
+        }
+
+        if (item.children.length && findTrail(item.children, nextPath)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    findTrail(nodes, []);
+    return trail;
+  }
 
 private buildSearchParams(): CatalogSearchParams {
   return {

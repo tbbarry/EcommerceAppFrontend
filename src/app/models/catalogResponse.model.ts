@@ -3,8 +3,18 @@ export interface ProductCard {
   name: string;
   slug: string;
   price: number;
-  brand: string | ""; // This should be string | null to be consistent with TypeScript conventions
+  brand: string | "";
   imageUrl: string | null;
+  basePriceMin?: number | null;
+  basePriceMax?: number | null;
+  finalPriceMin?: number | null;
+  finalPriceMax?: number | null;
+  displayPrice?: string | null;
+  hasDiscount?: boolean;
+  promoScope?: 'NONE' | 'GLOBAL' | 'VARIANT';
+  discountPercentGlobal?: number | null;
+  discountPercentMin?: number | null;
+  discountPercentMax?: number | null;
 }
 
 export interface CategoryNode {

@@ -119,6 +119,15 @@ export class NavbarComponent {
     this.syncBodyMobileNavState(false);
   }
 
+  goToCategory(categoryId: number): void {
+    this.router.navigate(['/products'], {
+      queryParams: {
+        categoryId
+      }
+    });
+    this.closeMobileMenu();
+  }
+
   private syncBodyMobileNavState(isOpen: boolean): void {
     if (typeof document === 'undefined') {
       return;

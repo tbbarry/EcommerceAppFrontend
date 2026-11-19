@@ -1,0 +1,32 @@
+.price-block {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.price-main-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.price-primary {
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  line-height: 1.1;
+  color: #0b5ed7;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.price-strike {
+  color: #64748b;
+  text-decoration: line-through;
+  font-size: 0.92rem;
+}
+
+.price-note {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.88rem;
+  font-weight: 600;
+}

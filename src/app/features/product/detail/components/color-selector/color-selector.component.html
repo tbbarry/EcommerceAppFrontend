@@ -1,0 +1,20 @@
+<div class="selector-block" *ngIf="colors.length">
+  <h3>Couleur</h3>
+  <div class="swatch-grid">
+    <button
+      type="button"
+      class="swatch"
+      *ngFor="let color of colors"
+      [class.swatch--active]="selectedColor === color.name"
+      [class.swatch--disabled]="!color.available"
+      [attr.aria-selected]="selectedColor === color.name"
+      [attr.aria-disabled]="!color.available"
+      [disabled]="!color.available"
+      (click)="select(color.name, color.available)"
+      [attr.aria-label]="'Choisir la couleur ' + color.name"
+    >
+      <span class="swatch-dot" [style.background]="swatch(color.name)"></span>
+      <span class="swatch-name">{{ color.name }}</span>
+    </button>
+  </div>
+</div>

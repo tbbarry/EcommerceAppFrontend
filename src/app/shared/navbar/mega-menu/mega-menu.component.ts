@@ -1,63 +1,46 @@
-import { Component } from '@angular/core';
-import { Category } from '../../../models/categorie.model';
-import { Input } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+
+import { Category } from '../../../core/menu.service';
 
 @Component({
   selector: 'app-mega-menu',
+  standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './mega-menu.component.html',
   styleUrls: ['./mega-menu.component.css']
 })
 export class MegaMenuComponent {
-
-
   @Input({ required: true }) categories: Category[] = [];
-  megaMenuOpen = false;
-  hideTimeOut: any;
+  activeCategory: Category | null = null;
 
- 
-
-  isMenuOpen = false;
-  activeMenu: string | null = null;
   constructor(private router: Router) {}
 
-  toggleMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
+  showMegaMenu(category: Category): void {
+    this.activeCategory = category;
   }
 
-  showMegaMenu(menu: string) {
-    this.activeMenu = menu;
+  hideMegaMenu(): void {
+    this.activeCategory = null;
   }
 
-  hideMegaMenu() {
-    this.activeMenu = null;
-  }
+  getGroups(items: Category[], size: number): Category[][] {
+    const groups: Category[][] = [];
 
-  getGroups(items: any[], size: number): any[][] {
-  const groups = [];
-
-  for (let i = 0; i < items.length; i += size) {
-    groups.push(items.slice(i, i + size));
-  }
-
-  return groups;
-}
-
-
-
-goToProducts(categoryId: number): void {
-  this.hideMegaMenu()
-  this.router.navigate(
-    ['/products'],
-    {
-      queryParams: {
-        categoryId: categoryId
-      }
+    for (let index = 0; index < items.length; index += size) {
+      groups.push(items.slice(index, index + size));
     }
-  );
-}
 
+    return groups;
+  }
 
+  goToProducts(categoryId: number): void {
+    this.hideMegaMenu();
+    this.router.navigate(['/products'], {
+      queryParams: {
+        categoryId
+      }
+    });
+  }
 }

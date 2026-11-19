@@ -1,0 +1,10 @@
+<div class="price-block">
+  <div class="price-main-row">
+    <strong class="price-primary">{{ primaryPrice }}</strong>
+    <app-promotion-badge *ngIf="badgeLabel" [label]="badgeLabel"></app-promotion-badge>
+  </div>
+
+  <div class="price-strike" *ngIf="strikePrice">{{ strikePrice }}</div>
+
+  <p class="price-note" *ngIf="variableDiscountNote">{{ variableDiscountNote }}</p>
+</div>
