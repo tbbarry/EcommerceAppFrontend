@@ -3,13 +3,13 @@
     <div class="container-fluid container-xl">
       <div class="d-flex py-3 align-items-center justify-content-between">
         <div class="header-start d-flex align-items-center">
-          <button class="header-action-btn app-mobile-nav-toggle d-xl-none" type="button" aria-label="Toggle menu" (click)="toggleMobileMenu()">
-            <i class="bi" [ngClass]="isMobileMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
-          </button>
-
           <a routerLink="/" class="logo d-flex align-items-center" (click)="closeMobileMenu()">
             <h1 class="sitename">NiceShop</h1>
           </a>
+
+          <button class="header-action-btn app-mobile-nav-toggle d-xl-none ms-1" type="button" aria-label="Toggle menu" (click)="toggleMobileMenu()">
+            <i class="bi" [ngClass]="isMobileMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
+          </button>
         </div>
 
         <form class="search-form desktop-search-form" (submit)="$event.preventDefault()">
@@ -124,6 +124,7 @@
       </div>
     </div>
   </div>
+  <!--
 
   <div class="header-nav">
     <div class="container-fluid container-xl position-relative">
@@ -131,10 +132,18 @@
         <ul>
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
           <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
+                   
+            <li class="products-megamenu-2"><a href="#"><span>Megamenu 2</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                         
+
+  
         </ul>
       </nav>
     </div>
-  </div>
+  </div> --> 
+
+  <app-mega-menu [categories] = "categories"></app-mega-menu>
+
 
   <button
     type="button"
@@ -145,18 +154,74 @@
   ></button>
 
   <div class="mobile-nav-panel d-xl-none" *ngIf="isMobileMenuOpen">
-    <div class="container-fluid container-xl">
+    <div class="mobile-nav-surface container-fluid container-xl">
+      <div class="mobile-nav-head">
+        <div>
+          <p class="mobile-nav-kicker mb-1">Navigation</p>
+          <h2 class="mobile-nav-title mb-0">Explore NiceShop</h2>
+        </div>
+        <button type="button" class="header-action-btn mobile-nav-close" (click)="closeMobileMenu()" aria-label="Close menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
       <nav class="mobile-navmenu" aria-label="Mobile navigation">
-        <ul>
-          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
-          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
-          <li><a routerLink="/products" routerLinkActive="active" (click)="closeMobileMenu()">Product Details</a></li>
-          <li><a routerLink="/cart" routerLinkActive="active" (click)="closeMobileMenu()">Cart</a></li>
-          <li><a routerLink="/checkout" routerLinkActive="active" (click)="closeMobileMenu()">Checkout</a></li>
-          <li><a routerLink="/auth/login" routerLinkActive="active" (click)="closeMobileMenu()">Login</a></li>
-          <li><a routerLink="/auth/register" routerLinkActive="active" (click)="closeMobileMenu()">Register</a></li>
-          <li><a routerLink="/account/profile" routerLinkActive="active" (click)="closeMobileMenu()">Mon compte</a></li>
-        </ul>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link" (click)="closeMobileMenu()">
+          <i class="bi bi-house-door"></i>
+          <span>Home</span>
+        </a>
+
+        <a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link" (click)="closeMobileMenu()">
+          <i class="bi bi-grid"></i>
+          <span>Catalogue</span>
+        </a>
+
+        <div class="mobile-nav-section" *ngFor="let category of categories">
+          <button type="button" class="mobile-nav-parent" (click)="goToCategory(category.id)">
+            <span>{{ category.name }}</span>
+            <i class="bi bi-chevron-right"></i>
+          </button>
+
+          <div class="mobile-nav-children" *ngIf="category.children.length">
+            <button type="button" class="mobile-nav-child" *ngFor="let child of category.children" (click)="goToCategory(child.id)">
+              {{ child.name }}
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-nav-section mobile-nav-section--actions">
+          <a routerLink="/cart" class="mobile-nav-link mobile-nav-link--soft" (click)="closeMobileMenu()">
+            <i class="bi bi-cart3"></i>
+            <span>Cart</span>
+          </a>
+
+          <a routerLink="/checkout" class="mobile-nav-link mobile-nav-link--soft" (click)="closeMobileMenu()">
+            <i class="bi bi-credit-card"></i>
+            <span>Checkout</span>
+          </a>
+
+          <ng-container *ngIf="user$ | async as user; else guestMobileActions">
+            <div class="mobile-nav-auth-card">
+              <p class="mobile-nav-auth-label">Connecté en tant que</p>
+              <strong>{{ getDisplayName(user) }}</strong>
+              <div class="mobile-nav-auth-actions">
+                <a routerLink="/account/profile" class="btn btn-sm btn-outline-dark" (click)="closeMobileMenu()">Profile</a>
+                <a routerLink="/my-orders" class="btn btn-sm btn-dark" (click)="closeMobileMenu()">Orders</a>
+              </div>
+              <button type="button" class="btn btn-link p-0 mt-2 text-decoration-none" (click)="logout(); closeMobileMenu()">Se deconnecter</button>
+            </div>
+          </ng-container>
+
+          <ng-template #guestMobileActions>
+            <div class="mobile-nav-auth-card">
+              <p class="mobile-nav-auth-label">Bienvenue sur NiceShop</p>
+              <div class="mobile-nav-auth-actions">
+                <a routerLink="/auth/login" class="btn btn-sm btn-dark" (click)="closeMobileMenu()">Sign in</a>
+                <a routerLink="/auth/register" class="btn btn-sm btn-outline-dark" (click)="closeMobileMenu()">Register</a>
+              </div>
+            </div>
+          </ng-template>
+        </div>
       </nav>
     </div>
   </div>

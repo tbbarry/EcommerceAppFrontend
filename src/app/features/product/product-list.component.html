@@ -1,11 +1,15 @@
-<main class="main">
-  <div class="page-title light-background">
-    <div class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Catalogue</h1>
+<main class="main catalog-page">
+  <div class="page-title light-background catalog-hero-banner">
+    <div class="container">
       <nav class="breadcrumbs">
         <ol>
           <li><a routerLink="/">Home</a></li>
-          <li class="current">Products</li>
+          <li><a routerLink="/products">Products</a></li>
+          <ng-container *ngIf="activeCategoryTrail.length">
+            <li *ngFor="let segment of activeCategoryTrail; let last = last" [class.current]="last">
+              {{ segment }}
+            </li>
+          </ng-container>
         </ol>
       </nav>
     </div>
@@ -16,57 +20,71 @@
       <aside class="col-lg-4" [class.mobile-filters-open]="isMobileFiltersOpen">
         <div class="filter-sidebar">
           <div class="mobile-filters-head d-xl-none">
-            <h3 class="mb-0">Filters</h3>
+            <div>
+              <p class="mobile-filters-kicker mb-1">Filters</p>
+              <h3 class="mb-0">Refine results</h3>
+            </div>
             <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeMobileFilters()">Close</button>
           </div>
 
           <div class="filter-card">
-            <h3 class="widget-title">Categories</h3>
-            <div class="category-tree" *ngIf="categoryTree.length; else noCategories">
-              <div class="category-parent" *ngFor="let parent of categoryTree">
-                <button
-                  class="category-parent-toggle"
-                  type="button"
-                  (click)="toggleCategoryBranch(parent.value)"
-                  [attr.aria-expanded]="isCategoryBranchOpen(parent.value)"
-                >
-                  <span class="category-parent-label">{{ parent.value }}</span>
-                  <small>{{ parent.count }}</small>
-                  <i class="bi" [ngClass]="isCategoryBranchOpen(parent.value) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                </button>
+            <div class="filter-card-head">
+              <h3 class="widget-title mb-0">Categories</h3>
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearCategorySelection()">All categories</button>
+            </div>
 
-                <div class="category-children" *ngIf="isCategoryBranchOpen(parent.value)">
+            <div class="category-tree" *ngIf="categories2.length; else noCategories">
+              <div class="category-parent" *ngFor="let parent of categories2">
+                <div class="category-parent-row">
+                  <label class="category-radio" [class.selected]="selectedCategoryId === parent.id">
+                    <input
+                      type="radio"
+                      name="category"
+                      [checked]="selectedCategoryId === parent.id"
+                      (change)="selectCategory(parent.id)"
+                    />
+                    <span>{{ parent.name }}</span>
+                  </label>
+
                   <button
+                    *ngIf="parent.children.length > 0"
+                    type="button"
+                    class="category-parent-toggle"
+                    (click)="toggleCategoryBranch(parent.id)"
+                    [attr.aria-expanded]="isCategoryBranchOpen(parent.id)"
+                  >
+                    <i class="bi" [ngClass]="isCategoryBranchOpen(parent.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                  </button>
+                </div>
+
+                <div class="category-children" *ngIf="isCategoryBranchOpen(parent.id)">
+                  <label
                     class="category-child"
-                    type="button"
-                    *ngFor="let child of parent.subCategories"
-                    [class.selected]="isSelected(selectedCategories, child.value)"
-                    (click)="toggleCategory(child.value)"
+                    *ngFor="let child of parent.children"
+                    [class.selected]="selectedCategoryId === child.id"
                   >
-                    <span>{{ child.value }}</span>
-                    <small>{{ child.count }}</small>
-                  </button>
-
-                  <button
-                    class="category-child category-leaf"
-                    type="button"
-                    *ngIf="!parent.subCategories.length"
-                    [class.selected]="isSelected(selectedCategories, parent.value)"
-                    (click)="toggleCategory(parent.value)"
-                  >
-                    <span>{{ parent.value }}</span>
-                    <small>{{ parent.count }}</small>
-                  </button>
+                    <input
+                      type="radio"
+                      name="category"
+                      [checked]="selectedCategoryId === child.id"
+                      (change)="selectCategory(child.id)"
+                    />
+                    <span>{{ child.name }}</span>
+                  </label>
                 </div>
               </div>
             </div>
+
             <ng-template #noCategories>
               <p class="text-muted mb-0">No categories available.</p>
             </ng-template>
           </div>
 
           <div class="filter-card pricing-range-widget">
-            <h3 class="widget-title">Price Range</h3>
+            <div class="filter-card-head">
+              <h3 class="widget-title mb-0">Price Range</h3>
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFilters()">Reset</button>
+            </div>
             <div class="price-range-container">
               <div class="price-inputs row g-2">
                 <div class="col-6">
@@ -99,36 +117,32 @@
             </div>
           </div>
 
-          <div class="filter-card">
-            <h3 class="widget-title">Colors</h3>
-            <div class="filter-list" *ngIf="colors.length; else noColors">
-              <label class="filter-option" *ngFor="let color of colors">
-                <input type="checkbox" [checked]="isSelected(selectedColors, color.value)" (change)="toggleColor(color.value)">
-                <span>{{ color.value }}</span>
-                <small>({{ color.count }})</small>
-              </label>
-            </div>
-            <ng-template #noColors>
-              <p class="text-muted mb-0">No colors available.</p>
-            </ng-template>
-          </div>
+          <details class="facet-card" *ngFor="let facet of facets" open>
+            <summary>
+              <span>{{ facet.code }}</span>
+              <span class="facet-summary-badge">{{ getSelectedFacetCount(facet) }}/{{ facet.values.length }}</span>
+            </summary>
 
-          <div class="filter-card">
-            <h3 class="widget-title">Sizes</h3>
-            <div class="filter-list" *ngIf="sizes.length; else noSizes">
-              <label class="filter-option" *ngFor="let size of sizes">
-                <input type="checkbox" [checked]="isSelected(selectedSizes, size.value)" (change)="toggleSize(size.value)">
-                <span>{{ size.value }}</span>
-                <small>({{ size.count }})</small>
-              </label>
+            <div class="facet-body">
+              <div class="filter-list" *ngIf="facet.values.length; else noFacetValues">
+                <label class="filter-option" *ngFor="let value of facet.values">
+                  <input type="checkbox" [checked]="value.selected" (change)="toggleFacetValue(facet, value)">
+                  <span>{{ value.label }}</span>
+                </label>
+              </div>
+
+              <div class="facet-actions" *ngIf="getSelectedFacetCount(facet) > 0">
+                <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFacet(facet)">Clear facet</button>
+              </div>
             </div>
-            <ng-template #noSizes>
-              <p class="text-muted mb-0">No sizes available.</p>
+
+            <ng-template #noFacetValues>
+              <p class="text-muted mb-0">No {{ facet.code }} available.</p>
             </ng-template>
-          </div>
+          </details>
 
           <div class="mobile-filters-actions d-xl-none">
-            <button type="button" class="btn btn-dark" (click)="applyFiltersFromMobilePanel()">Apply Filters</button>
+            <button type="button" class="btn btn-dark" (click)="applyFiltersFromMobilePanel()">Apply filters</button>
             <button type="button" class="btn btn-outline-secondary" (click)="clearFiltersFromMobilePanel()">Reset</button>
           </div>
         </div>
@@ -142,7 +156,7 @@
         aria-label="Close filters"
       ></button>
 
-      <section class="col-lg-8">
+      <section class="col-lg-8 catalog-results">
         <div class="catalog-toolbar">
           <div class="toolbar-main-row d-flex flex-column flex-xl-row align-items-xl-center gap-3">
             <button type="button" class="btn btn-outline-dark mobile-filter-toggle d-xl-none" (click)="toggleMobileFilters()">
@@ -179,16 +193,16 @@
           <div class="spinner-border text-primary" role="status"></div>
         </div>
 
-        <div *ngIf="!isLoading && products.length; else noProducts" class="row g-4 mt-1">
-          <div *ngFor="let product of products; let i = index" class="col-6 col-lg-4">
+        <div *ngIf="!isLoading && products2.length; else noProducts" class="row g-4 mt-1">
+          <div *ngFor="let product of products2; let i = index" class="col-6 col-xxl-4">
             <article class="product-card">
               <div
                 class="product-image"
                 [class.image-feedback]="hasImageFeedback(product.id)"
-                (click)="openCatalogImageViewer(product, i)"
+                (click)="openCatalogImageViewer2(product, i)"
               >
-                <img [src]="getProductImage(product, i)" [alt]="product.defaultImageAlt || product.name" loading="lazy">
-                <div class="product-badge" *ngIf="!product.inStock">Out of stock</div>
+                <img [src]="getProductImage2(product, i)" [alt]="product.name" loading="lazy">
+                <div class="product-badge">Featured</div>
                 <div class="product-overlay">
                   <div class="product-actions-floating">
                     <button class="action-btn action-view" type="button" [routerLink]="['/products', product.slug]" (click)="$event.stopPropagation()">
@@ -202,20 +216,24 @@
                 </div>
               </div>
               <div class="product-details">
-                <div class="product-category">
-                  <span *ngFor="let category of product.categories; let last = last">
-                    {{ category }}<span *ngIf="!last"> • </span>
+                <div class="product-meta-top">
+                  <span class="product-chip">Catalog pick</span>
+                  <span class="product-brand" *ngIf="product.brand">
+                    <i class="bi bi-tag"></i>
+                    {{ product.brand }}
                   </span>
                 </div>
+
                 <h4 class="product-title">
                   <a [routerLink]="['/products', product.slug]">{{ product.name }}</a>
                 </h4>
+
                 <div class="product-meta">
-                  <div class="product-price">{{ product.price | currency:'USD':'symbol':'1.2-2' }}</div>
-                  <div class="product-rating" *ngIf="product.brand">
-                    <i class="bi bi-tag"></i>
-                    <span>{{ product.brand }}</span>
-                  </div>
+                  <app-product-price-display [product]="product" context="catalog"></app-product-price-display>
+                </div>
+
+                <div class="product-footer">
+                  <a class="btn btn-dark btn-sm" [routerLink]="['/products', product.slug]">View product</a>
                 </div>
               </div>
             </article>
@@ -225,7 +243,7 @@
         <ng-template #noProducts>
           <div class="empty-state">
             <h3>No products match your filters.</h3>
-            <p>Try adjusting your selections for categories, colors, sizes or search query.</p>
+            <p>Try adjusting the category, facet selection, price range or search query.</p>
           </div>
         </ng-template>
 

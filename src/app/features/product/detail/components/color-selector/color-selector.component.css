@@ -1,0 +1,45 @@
+.selector-block h3 {
+  margin-bottom: 0.65rem;
+  font-size: 0.98rem;
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.swatch {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.5rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.swatch-dot {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.18);
+  flex-shrink: 0;
+}
+
+.swatch-name {
+  color: #0f172a;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.swatch--active {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.16);
+}
+
+.swatch--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

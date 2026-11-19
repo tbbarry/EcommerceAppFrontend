@@ -1,0 +1,11 @@
+<div class="price-display" [class.price-display--detail]="context === 'detail'">
+  <div class="price-main-row">
+    <span class="price-primary" [class.price-primary--discounted]="viewModel.hasDiscount">{{ viewModel.primaryText }}</span>
+    <span class="price-badge" *ngIf="viewModel.discountBadge">{{ viewModel.discountBadge }}</span>
+  </div>
+
+  <div class="price-secondary" *ngIf="viewModel.secondaryText">{{ viewModel.secondaryText }}</div>
+
+  <div class="price-note" *ngIf="context === 'detail' && viewModel.detailNote">{{ viewModel.detailNote }}</div>
+  <div class="price-range" *ngIf="context === 'detail' && viewModel.detailRangeText">{{ viewModel.detailRangeText }}</div>
+</div>

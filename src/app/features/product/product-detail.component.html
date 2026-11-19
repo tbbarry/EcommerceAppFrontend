@@ -1,208 +1,158 @@
-<main class="main product-detail-page">
-  <div class="page-title light-background" *ngIf="product">
-    <div class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">{{ product.name }}</h1>
-      <nav class="breadcrumbs">
-        <ol>
-          <li><a routerLink="/">Home</a></li>
-          <li><a routerLink="/products">Products</a></li>
-          <li class="current">{{ product.name }}</li>
-        </ol>
-      </nav>
-    </div>
-  </div>
-
-  <section class="product-details section">
-    <div class="container" *ngIf="product; else detailState">
-      <div class="row g-3">
+<main class="main detail-page">
+  <section class="detail-content section" *ngIf="vm as detail; else detailState">
+    <div class="container">
+      <div class="row g-4 align-items-start">
         <div class="col-lg-7">
-          <div class="product-gallery">
-            <div class="main-showcase">
-              <div class="image-zoom-container">
-                <img
-                  *ngIf="getCurrentImage() as currentImage"
-                  [src]="currentImage.url"
-                  [alt]="currentImage.alt || product.name"
-                  class="img-fluid main-product-image"
-                  (click)="openImageViewer()"
-                >
-
-                <div class="image-navigation" *ngIf="displayedImages.length > 1">
-                  <button class="nav-arrow" type="button" (click)="showPreviousImage()" aria-label="Previous image">
-                    <i class="bi bi-chevron-left"></i>
-                  </button>
-                  <button class="nav-arrow" type="button" (click)="showNextImage()" aria-label="Next image">
-                    <i class="bi bi-chevron-right"></i>
-                  </button>
-                </div>
-
-                <div class="image-counter" *ngIf="displayedImages.length">
-                  {{ selectedImageIndex + 1 }}/{{ displayedImages.length }}
-                </div>
-              </div>
+          <div class="gallery-shell" *ngIf="galleryImages.length; else noImage">
+            <div class="main-image-wrap" (click)="openImageViewer()">
+              <img *ngIf="currentImage as image" [src]="image.url" [alt]="image.alt || detail.name" class="main-image" />
+              <button type="button" class="gallery-nav gallery-nav--left" *ngIf="galleryImages.length > 1" (click)="$event.stopPropagation(); previousImage()" aria-label="Image précédente">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button type="button" class="gallery-nav gallery-nav--right" *ngIf="galleryImages.length > 1" (click)="$event.stopPropagation(); nextImage()" aria-label="Image suivante">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <span class="gallery-position" *ngIf="galleryImages.length > 1">
+                {{ selectedImageIndex + 1 }} / {{ galleryImages.length }}
+              </span>
+              <span class="zoom-hint" *ngIf="galleryImages.length">Cliquer pour zoomer</span>
             </div>
 
-            <div class="thumbnail-grid" *ngIf="displayedImages.length" [class.single-thumbnail]="displayedImages.length === 1">
+            <div class="thumb-strip" *ngIf="galleryImages.length" #thumbRail>
               <button
-                class="thumbnail-wrapper thumbnail-item"
                 type="button"
-                *ngFor="let image of displayedImages; let index = index; trackBy: trackByImageId"
-                [class.active]="index === selectedImageIndex"
-                (click)="selectImage(index)"
+                class="thumb-item"
+                *ngFor="let image of galleryImages; let idx = index"
+                [class.thumb-item--active]="idx === selectedImageIndex"
+                (click)="onGalleryIndexChange(idx)"
+                [attr.aria-label]="'Miniature ' + (idx + 1)"
               >
-                <img [src]="image.url" [alt]="image.alt || product.name" class="img-fluid">
+                <img [src]="image.url" [alt]="image.alt || detail.name" />
               </button>
             </div>
           </div>
+
+          <ng-template #noImage>
+            <div class="gallery-shell gallery-shell--empty">
+              <span>Aucune image disponible</span>
+            </div>
+          </ng-template>
         </div>
 
         <div class="col-lg-5">
-          <div class="product-details-panel">
-            <div class="product-badge-container">
-              <span class="badge-category">{{ getCategoryLabel() }}</span>
-              <div class="rating-group brand-group" *ngIf="product.brand">
-                <i class="bi bi-tag"></i>
-                <span>{{ product.brand }}</span>
+          <article class="detail-panel">
+            <div class="top-meta">
+              <span class="brand-chip" *ngIf="detail.brand">{{ detail.brand }}</span>
+              <span class="slug-chip">#{{ detail.slug }}</span>
+            </div>
+
+            <h1 class="product-title">{{ detail.name }}</h1>
+
+            <p class="product-description">
+              {{ detail.description || 'Description produit à venir.' }}
+            </p>
+
+            <div class="price-block">
+              <div class="price-main-row">
+                <strong class="price-primary">{{ priceToDisplay() }}</strong>
+                <span class="promo-badge" *ngIf="promoBadgeLabel() as badgeLabel">{{ badgeLabel }}</span>
               </div>
+
+              <div class="price-strike" *ngIf="strikePriceToDisplay() as strikePrice">{{ strikePrice }}</div>
+
+              <p class="price-note" *ngIf="variableDiscountNote() as note">{{ note }}</p>
             </div>
 
-            <h1 class="product-name">{{ product.name }}</h1>
-
-            <div class="pricing-section">
-              <div class="price-display">
-                <span class="sale-price">{{ (getCurrentVariant()?.price || product.price) | currency:'USD':'symbol':'1.2-2' }}</span>
-              </div>
+            <div class="stock-indicator" [class]="'stock-indicator ' + stockToneClass">
+              <i class="bi" [ngClass]="{
+                'bi-info-circle': stockToneClass === 'stock-indicator--muted',
+                'bi-x-circle-fill': stockToneClass === 'stock-indicator--danger',
+                'bi-exclamation-triangle-fill': stockToneClass === 'stock-indicator--warning',
+                'bi-check-circle-fill': stockToneClass === 'stock-indicator--success'
+              }"></i>
+              <span>{{ stockLabel }}</span>
+              <small *ngIf="isSelectionComplete && selectedVariantStock > 0">{{ selectedVariantStock }} dispo</small>
             </div>
 
-            <div class="product-description">
-              <p>{{ product.description || 'No description available for this product yet.' }}</p>
-            </div>
-
-            <div class="availability-status">
-              <div class="stock-indicator" [class.out-of-stock]="!isCurrentSelectionInStock()">
-                <i class="bi" [ngClass]="isCurrentSelectionInStock() ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
-                <span class="stock-text">{{ isCurrentSelectionInStock() ? 'Available' : 'Unavailable' }}</span>
-              </div>
-              <div class="quantity-left">{{ getStockLabel() }}</div>
-            </div>
-
-            <div class="variant-section" *ngIf="product.colors.length || product.sizes.length">
-              <div class="color-selection" *ngIf="product.colors.length">
-                <label class="variant-label">Available Colors:</label>
-                <div class="color-grid">
+            <section class="selectors">
+              <div class="selector-block" *ngIf="detail.colors.length">
+                <h3>Couleur</h3>
+                <div class="swatch-grid">
                   <button
-                    class="color-chip"
                     type="button"
-                    *ngFor="let color of product.colors"
-                    [class.active]="isColorSelected(color.name)"
-                    [class.unavailable]="!isColorSelectable(color.name)"
-                    [style.background]="getColorSwatch(color.name)"
-                    [disabled]="!isColorSelectable(color.name)"
-                    (click)="selectColor(color.name)"
-                    [attr.aria-label]="color.name"
+                    class="swatch"
+                    *ngFor="let color of detail.colors"
+                    [class.swatch--active]="selectedColor === color.name"
+                    [class.swatch--disabled]="!isColorSelectable(color.name)"
+                    [attr.aria-selected]="selectedColor === color.name"
+                    [attr.aria-disabled]="!isColorSelectable(color.name)"
+                    (click)="onColorChoose(color.name)"
+                    [attr.aria-label]="'Choisir la couleur ' + color.name"
                   >
-                    <span class="selection-check"><i class="bi bi-check"></i></span>
+                    <span class="swatch-dot" [style.background]="colorSwatch(color.name)"></span>
+                    <span class="swatch-name">{{ color.name }}</span>
                   </button>
                 </div>
-                <div class="color-preview-grid">
-                  <button
-                    class="color-preview-card"
-                    type="button"
-                    *ngFor="let color of product.colors"
-                    [class.active]="isColorSelected(color.name)"
-                    [class.unavailable]="!isColorSelectable(color.name)"
-                    [disabled]="!isColorSelectable(color.name)"
-                    (click)="selectColor(color.name)"
-                  >
-                    <img
-                      *ngIf="getPreviewImageForColor(color.name) as previewImage"
-                      [src]="previewImage.url"
-                      [alt]="previewImage.alt || color.name"
-                    >
-                  </button>
-                </div>
-                <div class="selected-variant">Selected color: <span>{{ selectedColor || 'None' }}</span></div>
               </div>
 
-              <div class="size-selection" *ngIf="product.sizes.length">
-                <label class="variant-label">Available Sizes:</label>
+              <div class="selector-block" *ngIf="detail.sizes.length">
+                <h3>Taille</h3>
                 <div class="size-grid">
                   <button
-                    class="size-chip"
                     type="button"
-                    *ngFor="let size of product.sizes"
-                    [class.active]="isSizeSelected(size.value)"
-                    [class.unavailable]="!isSizeSelectable(size.value)"
-                    [disabled]="!isSizeSelectable(size.value)"
-                    (click)="selectSize(size.value)"
+                    class="size-chip"
+                    *ngFor="let size of detail.sizes"
+                    [class.size-chip--active]="selectedSize === size.value"
+                    [class.size-chip--disabled]="sizeDisabledMap[size.value]"
+                    [attr.aria-selected]="selectedSize === size.value"
+                    [attr.aria-disabled]="sizeDisabledMap[size.value]"
+                    (click)="onSizeChoose(size.value)"
                   >
                     {{ size.value }}
                   </button>
                 </div>
-                <div class="selected-variant">Selected option: <span>{{ getSelectedVariantLabel() }}</span></div>
               </div>
-            </div>
 
-            <div class="purchase-section">
-              <div class="quantity-control">
-                <label class="control-label">Quantity:</label>
-                <div class="quantity-input-group">
-                  <div class="quantity-selector">
-                    <button class="quantity-btn" type="button" (click)="decreaseQuantity()" aria-label="Decrease quantity">
-                      <i class="bi bi-dash"></i>
-                    </button>
-                    <input
-                      type="number"
-                      class="quantity-input"
-                      [ngModel]="quantity"
-                      (ngModelChange)="onQuantityInputChange($event)"
-                      min="1"
-                      [max]="getMaxQuantity()"
-                    >
-                    <button class="quantity-btn" type="button" (click)="increaseQuantity()" aria-label="Increase quantity">
-                      <i class="bi bi-plus"></i>
-                    </button>
-                  </div>
+            </section>
+
+            <div class="selection-hint" *ngIf="selectionHint as hint">{{ hint }}</div>
+
+            <section class="buy-box">
+              <div class="quantity-block">
+                <label for="detailQty" class="qty-label">Quantité</label>
+                <div class="qty-controls">
+                  <button type="button" (click)="decreaseQuantity()" aria-label="Diminuer la quantité">
+                    <i class="bi bi-dash"></i>
+                  </button>
+                  <input
+                    id="detailQty"
+                    type="number"
+                    [ngModel]="quantity"
+                    (ngModelChange)="onQuantityInputChange($event)"
+                    min="1"
+                    [max]="maxQuantity()"
+                  />
+                  <button type="button" (click)="increaseQuantity()" aria-label="Augmenter la quantité">
+                    <i class="bi bi-plus"></i>
+                  </button>
                 </div>
               </div>
 
-              <div class="selection-requirement" *ngIf="getSelectionRequirementMessage() as selectionMessage">
-                <i class="bi bi-info-circle"></i>
-                <span>{{ selectionMessage }}</span>
-              </div>
-
-              <div class="cart-added-feedback" *ngIf="cartFeedback() === 'added'">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Added to cart!</span>
-                <a routerLink="/cart" class="view-cart-link">View Cart <i class="bi bi-arrow-right"></i></a>
-              </div>
-
-              <div class="action-buttons d-none d-lg-flex">
-                <a routerLink="/products" class="btn secondary-action desktop-shop-btn">
-                  Go shopping
-                </a>
-                <button class="btn primary-action" type="button" [disabled]="!canAddToCart()" (click)="addToCart()">
-                  Add to Cart
+              <div class="cta-row">
+                <button class="btn btn-outline-dark" type="button" routerLink="/products">Continuer mes achats</button>
+                <button class="btn btn-dark" type="button" [disabled]="!canAddToCart()" (click)="addToCart()">
+                  <span *ngIf="!isAddingToCart">Ajouter au panier</span>
+                  <span *ngIf="isAddingToCart">Ajout...</span>
                 </button>
               </div>
-            </div>
 
-            <div class="mobile-cart-sticky d-lg-none" *ngIf="product">
-              <div class="mobile-cart-added" *ngIf="cartFeedback() === 'added'">
+              <div class="cart-feedback" *ngIf="cartFeedback() === 'added'">
                 <i class="bi bi-check-circle-fill"></i>
-                <span>Added!</span>
-                <a routerLink="/cart" class="view-cart-link-mobile">View Cart</a>
+                <span>Ajouté au panier.</span>
+                <a class="view-cart-link" (click)="goToCart()">Voir le panier</a>
               </div>
-              <div class="mobile-cart-actions" *ngIf="cartFeedback() !== 'added'">
-                <a routerLink="/products" class="btn secondary-action mobile-shop-btn">
-                  Go shopping
-                </a>
-                <button class="btn primary-action mobile-cart-btn" type="button" [disabled]="!canAddToCart()" (click)="addToCart()">
-                  Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
+            </section>
+          </article>
         </div>
       </div>
     </div>
@@ -211,28 +161,62 @@
 
 <div class="image-viewer-overlay" *ngIf="isImageViewerOpen" (click)="closeImageViewer()" aria-modal="true" role="dialog">
   <div class="image-viewer-shell" (click)="$event.stopPropagation()">
-    <button type="button" class="image-viewer-close" (click)="closeImageViewer()" aria-label="Close image viewer">
+    <div class="image-viewer-toolbar">
+      <button type="button" class="viewer-btn" (click)="zoomOut()" [disabled]="zoomLevel <= minZoom" aria-label="Réduire le zoom">
+        <i class="bi bi-zoom-out"></i>
+      </button>
+      <span class="zoom-value">{{ (zoomLevel * 100) | number:'1.0-0' }}%</span>
+      <button type="button" class="viewer-btn" (click)="zoomIn()" [disabled]="zoomLevel >= maxZoom" aria-label="Augmenter le zoom">
+        <i class="bi bi-zoom-in"></i>
+      </button>
+      <button type="button" class="viewer-btn" (click)="resetZoom()" [disabled]="zoomLevel === 1">Reset</button>
+    </div>
+
+    <button type="button" class="image-viewer-close" (click)="closeImageViewer()" aria-label="Fermer la visionneuse">
       <i class="bi bi-x-lg"></i>
     </button>
 
-    <img
-      *ngIf="getCurrentImage() as currentImage"
-      class="image-viewer-photo"
-      [src]="currentImage.url"
-      [alt]="currentImage.alt || product?.name || 'Product image'"
+    <button
+      type="button"
+      class="viewer-nav viewer-nav--left"
+      *ngIf="galleryImages.length > 1"
+      (click)="previousImage()"
+      aria-label="Image précédente"
     >
+      <i class="bi bi-chevron-left"></i>
+    </button>
 
-    <div class="image-viewer-nav" *ngIf="displayedImages.length > 1">
-      <button type="button" class="viewer-nav-btn" (click)="showPreviousImage()" aria-label="Previous image">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-      <button type="button" class="viewer-nav-btn" (click)="showNextImage()" aria-label="Next image">
-        <i class="bi bi-chevron-right"></i>
-      </button>
+    <button
+      type="button"
+      class="viewer-nav viewer-nav--right"
+      *ngIf="galleryImages.length > 1"
+      (click)="nextImage()"
+      aria-label="Image suivante"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <div class="image-viewer-stage" (wheel)="onViewerWheel($event)">
+      <img
+        *ngIf="currentImage as image"
+        class="image-viewer-photo"
+        [src]="image.url"
+        [alt]="image.alt || (vm?.name || 'Image produit')"
+        [style.transform]="'scale(' + zoomLevel + ')'"
+      >
     </div>
 
-    <div class="image-counter viewer-counter" *ngIf="displayedImages.length">
-      {{ selectedImageIndex + 1 }}/{{ displayedImages.length }}
+    <div class="viewer-selectors" *ngIf="galleryImages.length > 1">
+      <button
+        type="button"
+        class="viewer-thumb"
+        *ngFor="let image of galleryImages; let idx = index"
+        [class.viewer-thumb--active]="idx === selectedImageIndex"
+        (click)="onGalleryIndexChange(idx)"
+        [attr.aria-label]="'Sélectionner l\'image ' + (idx + 1)"
+      >
+        <img [src]="image.url" [alt]="image.alt || (vm?.name || 'Image produit')" />
+      </button>
     </div>
   </div>
 </div>
@@ -241,8 +225,8 @@
   <section class="container py-5 detail-state">
     <div *ngIf="isLoading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-3 mb-0">Loading product...</p>
+      <p class="mt-3 mb-0">Chargement du produit...</p>
     </div>
-    <div *ngIf="!isLoading" class="alert alert-danger">Product not found.</div>
+    <div *ngIf="!isLoading" class="alert alert-danger">Produit introuvable.</div>
   </section>
 </ng-template>

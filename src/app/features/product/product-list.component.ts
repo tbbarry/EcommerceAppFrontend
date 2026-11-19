@@ -1,9 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { CatalogSearchParams, ProductService } from '../../core/product.service';
+import { CategoryNode, Facet, FacetValue, ProductCard } from '../../models/catalogResponse.model';
+import { ProductPriceDisplayComponent } from '../../shared/pricing/product-price-display.component';
+
 
 interface ProductItem {
   id: number;
@@ -11,6 +15,8 @@ interface ProductItem {
   slug: string;
   brand?: string;
   price: number;
+  categoryName: string;
+  categoryId: number;
   defaultImageUrl?: string;
   defaultImageAlt?: string;
   categories: string[];
@@ -60,14 +66,21 @@ interface CatalogResponse {
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, ProductPriceDisplayComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent implements OnInit, OnDestroy {
+toggleFacet2(arg0: string,arg1: any) {
+throw new Error('Method not implemented.');
+}
   products: ProductItem[] = [];
+  products2: ProductCard[] = [];
+  selectedFacetValues: Map<number, number[]> = new Map();
+  facets: Facet[] = [];
   categories: FacetItem[] = [];
   categoryTree: CategoryTreeNode[] = [];
+  categories2: CategoryNode[] = [];
   colors: FacetItem[] = [];
   sizes: FacetItem[] = [];
   availableSorts: string[] = [];
@@ -85,11 +98,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
   priceSliderMax = 500;
   minPriceValue = 0;
   maxPriceValue = 500;
+  selectedCategoryId: number | null = null;
+  expandedCategories = new Set<number>();
   feedbackProductId: number | null = null;
   isCatalogImageViewerOpen = false;
   catalogViewerImageUrl = '';
   catalogViewerImageAlt = '';
   expandedCategoryBranches = new Set<string>();
+  activeCategoryTrail: string[] = [];
   private feedbackResetHandle: ReturnType<typeof setTimeout> | null = null;
 
   searchForm = new FormGroup({
@@ -98,10 +114,74 @@ export class ProductListComponent implements OnInit, OnDestroy {
     maxPrice: new FormControl<number | null>(null)
   });
 
+  readonly productService = inject(ProductService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  catalogSearchParams: CatalogSearchParams = {};
+
   constructor(private http: HttpClient) {}
 
-  ngOnInit(): void {
-    this.loadProducts();
+ ngOnInit(): void {
+  this.route.queryParams.subscribe(params => {
+
+    this.selectedCategoryId = params['categoryId']
+      ? Number(params['categoryId'])
+      : null;
+
+    this.selectedFacetValues.clear();
+
+    if (params['facets']) {
+      const facetGroups = params['facets'].split(';');
+
+      for (const group of facetGroups) {
+        const [facetId, values] = group.split(':');
+
+        if (!facetId || !values) {
+          continue;
+        }
+
+        this.selectedFacetValues.set(
+          Number(facetId),
+          values.split(',').map(Number)
+        );
+      }
+    }
+
+    this.selectedPage = params['page']
+      ? Number(params['page'])
+      : 0;
+
+    this.pageSize = params['size']
+      ? Number(params['size'])
+      : 24;
+
+    this.loadCatalog();
+  });
+}
+  loadCatalog(): void {
+    this.isLoading = true;
+
+    this.catalogSearchParams = this.buildSearchParams();
+    console.log(this.catalogSearchParams);
+
+    this.productService.getCatalog(this.catalogSearchParams).subscribe({
+      next: (response) => {
+        console.log('Catalog response:', response);
+        this.products2 = response.products || [];
+        this.categories2 = response.categories || [];
+        console.log('Categories2:', this.categories2);
+        console.log('Products2:', this.products2);
+        this.facets = response.facets || [];
+        console.log('Facets:', this.facets);
+        this.activeCategoryTrail = this.getCategoryTrail(this.categories2, this.selectedCategoryId);
+        this.isLoading = false;
+      },
+      error: (e) => {
+
+        this.isLoading = false;
+        console.log(e);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -155,7 +235,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (e) => {
-        this.products = [];
+        this.products = [];  
         this.isLoading = false;
         console.log(e)
       }
@@ -164,8 +244,17 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     this.selectedPage = 0;
-    this.loadProducts();
-  }
+
+    const params = this.buildSearchParams();
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: ''
+    });
+
+    this.loadCatalog();
+    }
 
   clearFilters(): void {
     this.selectedCategories = [];
@@ -173,10 +262,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.selectedSizes = [];
     this.selectedSort = 'relevance';
     this.selectedPage = 0;
+    this.selectedCategoryId = null;
+    this.activeCategoryTrail = [];
+    this.selectedFacetValues.clear();
+    this.facets.forEach((facet) => {
+      facet.values.forEach((value) => {
+        value.selected = false;
+      });
+    });
     this.searchForm.reset({ query: '', minPrice: null, maxPrice: null });
     this.minPriceValue = this.priceSliderMin;
     this.maxPriceValue = this.priceSliderMax;
-    this.loadProducts();
+    this.applyFilters();
   }
 
   applyFiltersFromMobilePanel(): void {
@@ -216,7 +313,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleCategoryBranch(category: string): void {
+  toggleCategoryBranch1(category: string): void {
     if (this.expandedCategoryBranches.has(category)) {
       this.expandedCategoryBranches.delete(category);
       return;
@@ -225,7 +322,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.expandedCategoryBranches.add(category);
   }
 
-  isCategoryBranchOpen(category: string): boolean {
+  isCategoryBranchOpen2(category: string): boolean {
     return this.expandedCategoryBranches.has(category);
   }
 
@@ -261,8 +358,35 @@ export class ProductListComponent implements OnInit, OnDestroy {
       return;
     }
     this.selectedPage = page;
-    this.loadProducts();
+    this.applyFilters();
   }
+
+
+
+toggleFacetValue(facet: Facet, value: FacetValue): void {
+
+  // Inverse l'état
+  value.selected = !value.selected;
+
+  // Reconstruit la Map à partir des valeurs sélectionnées
+  const selectedIds = facet.values
+    .filter(v => v.selected)
+    .map(v => v.id);
+
+  if (selectedIds.length === 0) {
+    this.selectedFacetValues.delete(facet.id);
+  } else {
+    this.selectedFacetValues.set(facet.id, selectedIds);
+  }
+
+  if (!this.isMobileViewport()) {
+    this.applyFilters();
+  }
+}
+
+isFacetValueSelected(facetId: number, valueId: number): boolean {
+  return this.selectedFacetValues.get(facetId)?.includes(valueId) ?? false;
+}
 
   pageRange(): number[] {
     const totalPages = Math.max(this.pagination.totalPages, 1);
@@ -276,11 +400,37 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   hasActiveFilters(): boolean {
-    return this.selectedCategories.length > 0 || this.selectedColors.length > 0 || this.selectedSizes.length > 0 || !!this.searchForm.value.query || this.searchForm.value.minPrice != null || this.searchForm.value.maxPrice != null;
+    return this.selectedCategoryId != null
+      || this.selectedFacetValues.size > 0
+      || this.selectedCategories.length > 0
+      || this.selectedColors.length > 0
+      || this.selectedSizes.length > 0
+      || !!this.searchForm.value.query
+      || this.searchForm.value.minPrice != null
+      || this.searchForm.value.maxPrice != null;
   }
 
   getActiveFilterTags(): string[] {
     const tags: string[] = [];
+    const categoryLabel = this.getSelectedCategoryLabel();
+    if (categoryLabel) {
+      tags.push(`Category: ${categoryLabel}`);
+    }
+
+    this.selectedFacetValues.forEach((values, facetId) => {
+      const facet = this.facets.find((item) => item.id === facetId);
+      if (!facet) {
+        return;
+      }
+
+      values.forEach((valueId) => {
+        const label = facet.values.find((value) => value.id === valueId)?.label;
+        if (label) {
+          tags.push(`${facet.code}: ${label}`);
+        }
+      });
+    });
+
     this.selectedCategories.forEach((category) => tags.push(`Category: ${category}`));
     this.selectedColors.forEach((color) => tags.push(`Color: ${color}`));
     this.selectedSizes.forEach((size) => tags.push(`Size: ${size}`));
@@ -299,6 +449,23 @@ export class ProductListComponent implements OnInit, OnDestroy {
   getProductImage(product: ProductItem, index: number): string {
     if (product.defaultImageUrl) {
       return product.defaultImageUrl;
+    }
+
+    const fallbackImages = [
+      'assets/img/product/product-f-1.webp',
+      'assets/img/product/product-m-1.webp',
+      'assets/img/product/product-f-3.webp',
+      'assets/img/product/product-m-3.webp',
+      'assets/img/product/product-f-5.webp',
+      'assets/img/product/product-m-5.webp'
+    ];
+
+    return fallbackImages[index % fallbackImages.length];
+  }
+
+   getProductImage2(product: ProductCard, index: number): string {
+    if (product.imageUrl) {
+      return product.imageUrl;
     }
 
     const fallbackImages = [
@@ -350,6 +517,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.lockBodyScroll();
   }
 
+  openCatalogImageViewer2(product: ProductCard, index: number): void {
+    this.triggerImageFeedback(product.id);
+    this.catalogViewerImageUrl = this.getProductImage2(product, index);
+    this.catalogViewerImageAlt = product.name;
+    this.isCatalogImageViewerOpen = true;
+    this.lockBodyScroll();
+  }
   closeCatalogImageViewer(): void {
     this.isCatalogImageViewerOpen = false;
     this.unlockBodyScroll();
@@ -432,4 +606,138 @@ export class ProductListComponent implements OnInit, OnDestroy {
       document.body.style.overflow = '';
     }
   }
+
+  private buildFacetsQuery(): string {
+
+  return this.facets
+    .map(facet => {
+
+      const selectedValues = facet.values
+        .filter(value => value.selected)
+        .map(value => value.id);
+
+      if (selectedValues.length === 0) {
+        return null;
+      }
+
+      return `${facet.id}:${selectedValues.join(',')}`;
+    })
+    .filter(Boolean)
+    .join(';');
 }
+
+
+
+selectCategory(categoryId: number): void {
+  this.selectedCategoryId = categoryId;
+    this.activeCategoryTrail = this.getCategoryTrail(this.categories2, categoryId);
+
+  if (!this.isMobileViewport()) {
+    this.applyFilters();
+  }
+}
+
+toggleCategoryBranch(categoryId: number): void {
+  if (this.expandedCategories.has(categoryId)) {
+    this.expandedCategories.delete(categoryId);
+  } else {
+    this.expandedCategories.add(categoryId);
+  }
+}
+
+isCategoryBranchOpen(categoryId: number): boolean {
+  return this.expandedCategories.has(categoryId);
+}
+
+  clearCategorySelection(): void {
+    this.selectedCategoryId = null;
+    this.activeCategoryTrail = [];
+
+    if (!this.isMobileViewport()) {
+      this.applyFilters();
+    }
+  }
+
+  clearFacet(facet: Facet): void {
+    facet.values.forEach((value) => {
+      value.selected = false;
+    });
+
+    this.selectedFacetValues.delete(facet.id);
+
+    if (!this.isMobileViewport()) {
+      this.applyFilters();
+    }
+  }
+
+  getSelectedFacetCount(facet: Facet): number {
+    return facet.values.filter((value) => value.selected).length;
+  }
+
+  getSelectedCategoryLabel(): string | null {
+    if (this.selectedCategoryId == null) {
+      return null;
+    }
+
+    return this.findCategoryLabel(this.categories2, this.selectedCategoryId);
+  }
+
+  private findCategoryLabel(nodes: CategoryNode[], categoryId: number): string | null {
+    for (const node of nodes) {
+      if (node.id === categoryId) {
+        return node.name;
+      }
+
+      const childLabel = this.findCategoryLabel(node.children, categoryId);
+      if (childLabel) {
+        return childLabel;
+      }
+    }
+
+    return null;
+  }
+
+  getCategoryTrail(nodes: CategoryNode[], categoryId: number | null): string[] {
+    if (categoryId == null) {
+      return [];
+    }
+
+    const trail: string[] = [];
+
+    const findTrail = (items: CategoryNode[], path: string[]): boolean => {
+      for (const item of items) {
+        const nextPath = [...path, item.name];
+
+        if (item.id === categoryId) {
+          trail.splice(0, trail.length, ...nextPath);
+          return true;
+        }
+
+        if (item.children.length && findTrail(item.children, nextPath)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    findTrail(nodes, []);
+    return trail;
+  }
+
+private buildSearchParams(): CatalogSearchParams {
+  return {
+    page: this.selectedPage,
+    size: this.pageSize,
+    query: this.searchForm.value.query?.trim() || undefined,
+    minPrice: this.searchForm.value.minPrice,
+    maxPrice: this.searchForm.value.maxPrice,
+    categoryId: this.selectedCategoryId,
+    facets: this.buildFacetsQuery()
+  };
+}
+
+}
+
+
+
