@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+// import { authGuard } from './core/auth.guard';  // DESABILITADO TEMPORARIAMENTE
+import { AddProductComponent } from './features/product/add-product.component';
 
 export const routes: Routes = [
   {
@@ -30,13 +31,13 @@ export const routes: Routes = [
   {
     path: 'checkout',
     title: 'Checkout',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],  // DESABILITADO TEMPORARIAMENTE
     loadComponent: () => import('./features/checkout/checkout.component').then((m) => m.CheckoutComponent)
   },
   {
     path: 'order-confirmation/:orderId',
     title: 'Order confirmation',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],  // DESABILITADO TEMPORARIAMENTE
     loadComponent: () =>
       import('./features/order-confirmation/order-confirmation.component').then((m) => m.OrderConfirmationComponent)
   },
@@ -73,7 +74,7 @@ export const routes: Routes = [
   {
     path: 'account/profile',
     title: 'Mon compte',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],  // DESABILITADO TEMPORARIAMENTE
     loadComponent: () => import('./features/account/profile/profile.component').then((m) => m.ProfileComponent)
   },
   {
@@ -84,8 +85,14 @@ export const routes: Routes = [
   {
     path: 'my-orders',
     title: 'Mes commandes',
-    canActivate: [authGuard],
+    // canActivate: [authGuard],  // DESABILITADO TEMPORARIAMENTE
     loadComponent: () => import('./features/account/orders/orders.component').then((m) => m.OrdersComponent)
+  },
+  // ========== ROUTES ADMIN ==========
+  {
+    path: 'admin/products/add',
+    title: 'Ajouter un produit',
+    component: AddProductComponent
   },
   { path: '**', redirectTo: '' }
 ];

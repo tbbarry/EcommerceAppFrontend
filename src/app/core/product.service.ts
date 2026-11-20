@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import type { CatalogResponse } from '../models/catalogResponse.model';
+import type { ProductCreateRequest, ProductResponse } from '../models/product-create.model';
 
 export interface CatalogSearchParams {
   page?: number;
@@ -59,6 +60,18 @@ export class ProductService {
     return this.http.get<CatalogResponse>(
       `${this.baseUrl}/api/catalog/products`,
       { params: httpParams }
+    );
+  }
+
+  /**
+   * Crée un nouveau produit
+   * @param request Les données du produit à créer
+   * @returns Observable contenant la réponse du serveur
+   */
+  createProduct(request: ProductCreateRequest) {
+    return this.http.post<ProductResponse>(
+      `${this.baseUrl}/api/products`,
+      request
     );
   }
 }

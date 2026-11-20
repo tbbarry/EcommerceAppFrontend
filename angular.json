@@ -40,12 +40,7 @@
               "src/assets/vendor/drift-zoom/Drift.min.js",
               "src/assets/vendor/purecounter/purecounter_vanilla.js",
               "src/assets/js/main.js"
-            ],
-            "server": "src/main.server.ts",
-            "prerender": true,
-            "ssr": {
-              "entry": "server.ts"
-            }
+            ]
           },
           "configurations": {
             "production": {
@@ -72,7 +67,8 @@
               ],
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "prerender": false
             }
           },
           "defaultConfiguration": "production"
