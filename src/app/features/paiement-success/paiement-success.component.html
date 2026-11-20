@@ -1,0 +1,399 @@
+<!-- Page Title -->
+<div class="page-title light-background">
+  <div class="container d-lg-flex justify-content-between align-items-center">
+
+    <h1 class="mb-2 mb-lg-0">
+      Order Confirmation
+    </h1>
+
+    <nav class="breadcrumbs">
+      <ol>
+        <li>
+          <a routerLink="/">Home</a>
+        </li>
+
+        <li>
+          <a routerLink="/cart">Cart</a>
+        </li>
+
+        <li class="current">
+          Confirmation
+        </li>
+      </ol>
+    </nav>
+
+  </div>
+</div>
+
+
+<!-- Confirmation Section -->
+<section class="section">
+
+  <div class="container">
+
+    <div class="row justify-content-center">
+
+      <div class="col-lg-8 col-xl-7">
+
+        <!-- ================================================= -->
+        <!-- PAYMENT VERIFICATION -->
+        <!-- ================================================= -->
+
+        @if (isLoading) {
+
+          <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+
+            <div class="mb-4">
+
+              <div
+                class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light"
+                style="width: 90px; height: 90px;"
+              >
+
+                <div
+                  class="spinner-border text-primary"
+                  role="status"
+                  aria-hidden="true"
+                ></div>
+
+              </div>
+
+            </div>
+
+            <h2 class="fw-bold mb-3">
+              Verifying your payment
+            </h2>
+
+            <p class="text-muted fs-5 mb-0">
+              Please wait while we confirm your payment and order.
+            </p>
+
+          </div>
+
+        }
+
+
+        <!-- ================================================= -->
+        <!-- PAYMENT SUCCESS -->
+        <!-- ================================================= -->
+
+        @else if (paymentConfirmed) {
+
+          <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+
+            <!-- Success Icon -->
+            <div class="mb-4">
+
+              <div
+                class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10"
+                style="width: 90px; height: 90px;"
+              >
+
+                <i
+                  class="bi bi-check-circle-fill text-success"
+                  style="font-size: 3.5rem;"
+                ></i>
+
+              </div>
+
+            </div>
+
+
+            <!-- Title -->
+            <h1 class="fw-bold mb-3">
+              Thank you for your order!
+            </h1>
+
+
+            <!-- Message -->
+            <p class="text-muted fs-5 mb-4">
+              Your payment has been successfully processed
+              and your order has been confirmed.
+            </p>
+
+
+            <!-- Order Information -->
+            <div class="bg-light rounded p-4 mb-4">
+
+              <div class="row gy-3">
+
+                <!-- Order Number -->
+                <div class="col-md-6">
+
+                  <div class="text-muted small mb-1">
+                    Order number
+                  </div>
+
+                  <div class="fw-bold fs-5">
+                    #{{ orderId }}
+                  </div>
+
+                </div>
+
+
+                <!-- Order Status -->
+                <div class="col-md-6">
+
+                  <div class="text-muted small mb-1">
+                    Order status
+                  </div>
+
+                  <span class="badge bg-success px-3 py-2">
+
+                    <i class="bi bi-check-circle me-1"></i>
+
+                    Confirmed
+
+                  </span>
+
+                </div>
+
+
+                <!-- Payment -->
+                <div class="col-md-6">
+
+                  <div class="text-muted small mb-1">
+                    Payment status
+                  </div>
+
+                  <div class="fw-semibold text-success">
+
+                    <i class="bi bi-credit-card me-1"></i>
+
+                    Paid
+
+                  </div>
+
+                </div>
+
+
+                <!-- Total -->
+                <div class="col-md-6">
+
+                  <div class="text-muted small mb-1">
+                    Total
+                  </div>
+
+                  <div class="fw-bold fs-5">
+
+                    {{ amount | currency }}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Confirmation Email -->
+            <div
+              class="d-flex align-items-start text-start bg-light rounded p-3 mb-4"
+            >
+
+              <div class="me-3">
+
+                <i
+                  class="bi bi-envelope-check text-success fs-3"
+                ></i>
+
+              </div>
+
+              <div>
+
+                <h6 class="fw-bold mb-1">
+                  Order confirmed
+                </h6>
+
+                <p class="text-muted mb-0">
+                  Your payment has been confirmed and your order
+                  is now being processed.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- Actions -->
+            <div
+              class="d-flex flex-column flex-sm-row justify-content-center gap-2"
+            >
+
+              <a
+                routerLink="/my-orders"
+                class="btn btn-primary px-4"
+              >
+
+                <i class="bi bi-bag-check me-2"></i>
+
+                View my order
+
+              </a>
+
+
+              <a
+                routerLink="/products"
+                class="btn btn-outline-secondary px-4"
+              >
+
+                <i class="bi bi-shop me-2"></i>
+
+                Continue shopping
+
+              </a>
+
+            </div>
+
+
+            <!-- Help -->
+            <div class="mt-4 pt-4 border-top">
+
+              <p class="text-muted small mb-0">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                Need help with your order?
+
+                <a
+                  routerLink="/contact"
+                  class="text-decoration-none"
+                >
+                  Contact our support team
+                </a>
+
+              </p>
+
+            </div>
+
+          </div>
+
+        }
+
+
+        <!-- ================================================= -->
+        <!-- PAYMENT FAILED -->
+        <!-- ================================================= -->
+
+        @else {
+
+          <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+
+            <!-- Error Icon -->
+            <div class="mb-4">
+
+              <div
+                class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10"
+                style="width: 90px; height: 90px;"
+              >
+
+                <i
+                  class="bi bi-x-circle-fill text-danger"
+                  style="font-size: 3.5rem;"
+                ></i>
+
+              </div>
+
+            </div>
+
+
+            <!-- Title -->
+            <h1 class="fw-bold mb-3">
+              Payment could not be confirmed
+            </h1>
+
+
+            <!-- Message -->
+            <p class="text-muted fs-5 mb-4">
+              We couldn't confirm your payment.
+              Your order has not been confirmed yet.
+            </p>
+
+
+            <!-- Error Information -->
+            <div
+              class="alert alert-warning text-start d-flex align-items-start"
+              role="alert"
+            >
+
+              <i class="bi bi-exclamation-triangle me-3 fs-4"></i>
+
+              <div>
+
+                <strong>
+                  Don't worry.
+                </strong>
+
+                <p class="mb-0 mt-1">
+                  If you have already been charged,
+                  please contact our support team before trying again.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- Actions -->
+            <div
+              class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-4"
+            >
+
+              <a
+                routerLink="/checkout"
+                class="btn btn-primary px-4"
+              >
+
+                <i class="bi bi-arrow-repeat me-2"></i>
+
+                Return to checkout
+
+              </a>
+
+
+              <a
+                routerLink="/products"
+                class="btn btn-outline-secondary px-4"
+              >
+
+                <i class="bi bi-shop me-2"></i>
+
+                Continue shopping
+
+              </a>
+
+            </div>
+
+
+            <!-- Help -->
+            <div class="mt-4 pt-4 border-top">
+
+              <p class="text-muted small mb-0">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                Need help?
+
+                <a
+                  routerLink="/"
+                  class="text-decoration-none"
+                >
+                  Contact our support team
+                </a>
+
+              </p>
+
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

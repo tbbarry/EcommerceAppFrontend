@@ -1,0 +1,81 @@
+.registration-form-wrapper {
+  position: relative;
+}
+
+.password-rules {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  padding: 0.9rem 1rem;
+}
+
+.password-rules-title {
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.65rem;
+}
+
+.password-rules ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.password-rules li {
+  color: #64748b;
+  font-size: 0.92rem;
+  padding-left: 1.35rem;
+  position: relative;
+}
+
+.password-rules li + li {
+  margin-top: 0.4rem;
+}
+
+.password-rules li::before {
+  color: #cbd5e1;
+  content: '•';
+  font-size: 1rem;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.password-rules li.rule-valid {
+  color: #166534;
+}
+
+.password-rules li.rule-valid::before {
+  color: #16a34a;
+  content: '✓';
+}
+
+.inline-error {
+  color: #b91c1c;
+  font-size: 0.92rem;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.btn-social:hover {
+  border-color: #ced4da;
+  background: #f8f9fa;
+}
+
+.alert {
+  border-radius: 10px;
+}

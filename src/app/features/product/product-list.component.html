@@ -1,0 +1,279 @@
+<main class="main catalog-page">
+  <div class="page-title light-background catalog-hero-banner">
+    <div class="container">
+      <nav class="breadcrumbs">
+        <ol>
+          <li><a routerLink="/">Home</a></li>
+          <li><a routerLink="/products">Products</a></li>
+          <ng-container *ngIf="activeCategoryTrail.length">
+            <li *ngFor="let segment of activeCategoryTrail; let last = last" [class.current]="last">
+              {{ segment }}
+            </li>
+          </ng-container>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container pt-0 pb-4">
+    <div class="row gx-4 gy-0 catalog-layout-row align-items-start">
+      <aside class="col-lg-4" [class.mobile-filters-open]="isMobileFiltersOpen">
+        <div class="filter-sidebar">
+          <div class="mobile-filters-head d-xl-none">
+            <div>
+              <p class="mobile-filters-kicker mb-1">Filters</p>
+              <h3 class="mb-0">Refine results</h3>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeMobileFilters()">Close</button>
+          </div>
+
+          <div class="filter-card">
+            <div class="filter-card-head">
+              <h3 class="widget-title mb-0">Categories</h3>
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearCategorySelection()">All categories</button>
+            </div>
+
+            <div class="category-tree" *ngIf="categories2.length; else noCategories">
+              <div class="category-parent" *ngFor="let parent of categories2">
+                <div class="category-parent-row">
+                  <label class="category-radio" [class.selected]="selectedCategoryId === parent.id">
+                    <input
+                      type="radio"
+                      name="category"
+                      [checked]="selectedCategoryId === parent.id"
+                      (change)="selectCategory(parent.id)"
+                    />
+                    <span>{{ parent.name }}</span>
+                  </label>
+
+                  <button
+                    *ngIf="parent.children.length > 0"
+                    type="button"
+                    class="category-parent-toggle"
+                    (click)="toggleCategoryBranch(parent.id)"
+                    [attr.aria-expanded]="isCategoryBranchOpen(parent.id)"
+                  >
+                    <i class="bi" [ngClass]="isCategoryBranchOpen(parent.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                  </button>
+                </div>
+
+                <div class="category-children" *ngIf="isCategoryBranchOpen(parent.id)">
+                  <label
+                    class="category-child"
+                    *ngFor="let child of parent.children"
+                    [class.selected]="selectedCategoryId === child.id"
+                  >
+                    <input
+                      type="radio"
+                      name="category"
+                      [checked]="selectedCategoryId === child.id"
+                      (change)="selectCategory(child.id)"
+                    />
+                    <span>{{ child.name }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noCategories>
+              <p class="text-muted mb-0">No categories available.</p>
+            </ng-template>
+          </div>
+
+          <div class="filter-card pricing-range-widget">
+            <div class="filter-card-head">
+              <h3 class="widget-title mb-0">Price Range</h3>
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFilters()">Reset</button>
+            </div>
+            <div class="price-range-container">
+              <div class="price-inputs row g-2">
+                <div class="col-6">
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input
+                      class="form-control min-price-input"
+                      type="number"
+                      [min]="priceSliderMin"
+                      [max]="priceSliderMax"
+                      [value]="minPriceValue"
+                      (change)="onMinPriceInputChange($any($event.target).value)"
+                    >
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input
+                      class="form-control max-price-input"
+                      type="number"
+                      [min]="priceSliderMin"
+                      [max]="priceSliderMax"
+                      [value]="maxPriceValue"
+                      (change)="onMaxPriceInputChange($any($event.target).value)"
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="facet-card" *ngFor="let facet of facets" open>
+            <summary>
+              <span>{{ facet.code }}</span>
+              <span class="facet-summary-badge">{{ getSelectedFacetCount(facet) }}/{{ facet.values.length }}</span>
+            </summary>
+
+            <div class="facet-body">
+              <div class="filter-list" *ngIf="facet.values.length; else noFacetValues">
+                <label class="filter-option" *ngFor="let value of facet.values">
+                  <input type="checkbox" [checked]="value.selected" (change)="toggleFacetValue(facet, value)">
+                  <span>{{ value.label }}</span>
+                </label>
+              </div>
+
+              <div class="facet-actions" *ngIf="getSelectedFacetCount(facet) > 0">
+                <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFacet(facet)">Clear facet</button>
+              </div>
+            </div>
+
+            <ng-template #noFacetValues>
+              <p class="text-muted mb-0">No {{ facet.code }} available.</p>
+            </ng-template>
+          </details>
+
+          <div class="mobile-filters-actions d-xl-none">
+            <button type="button" class="btn btn-dark" (click)="applyFiltersFromMobilePanel()">Apply filters</button>
+            <button type="button" class="btn btn-outline-secondary" (click)="clearFiltersFromMobilePanel()">Reset</button>
+          </div>
+        </div>
+      </aside>
+
+      <button
+        type="button"
+        class="mobile-filters-backdrop"
+        *ngIf="isMobileFiltersOpen"
+        (click)="closeMobileFilters()"
+        aria-label="Close filters"
+      ></button>
+
+      <section class="col-lg-8 catalog-results">
+        <div class="catalog-toolbar">
+          <div class="toolbar-main-row d-flex flex-column flex-xl-row align-items-xl-center gap-3">
+            <button type="button" class="btn btn-outline-dark mobile-filter-toggle d-xl-none" (click)="toggleMobileFilters()">
+              <i class="bi bi-sliders me-2"></i>
+              Filters
+            </button>
+
+            <form class="toolbar-search-form" [formGroup]="searchForm" (ngSubmit)="applyFilters()">
+              <label class="visually-hidden" for="toolbarProductSearch">Search products</label>
+              <input id="toolbarProductSearch" type="text" class="form-control" formControlName="query" placeholder="Search products...">
+              <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">Reset</button>
+            </form>
+
+            <div class="toolbar-sort-row d-flex align-items-md-center gap-2">
+              <label class="form-label mb-0" for="sortBy">Sort</label>
+              <select id="sortBy" class="form-select form-select-sm" [(ngModel)]="selectedSort" (change)="applyFilters()">
+                <option *ngFor="let sort of availableSorts" [value]="sort">{{ formatSortLabel(sort) }}</option>
+              </select>
+              <select class="form-select form-select-sm" [(ngModel)]="pageSize" (change)="applyFilters()">
+                <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} / page</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="active-filters mt-3" *ngIf="hasActiveFilters()">
+            <span class="active-filter-label">Active filters:</span>
+            <span class="filter-chip" *ngFor="let tag of getActiveFilterTags()">{{ tag }}</span>
+            <button class="btn btn-link btn-sm p-0 ms-2" type="button" (click)="clearFilters()">Clear all</button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+
+        <div *ngIf="!isLoading && products2.length; else noProducts" class="row g-4 mt-1">
+          <div *ngFor="let product of products2; let i = index" class="col-6 col-xxl-4">
+            <article class="product-card">
+              <div
+                class="product-image"
+                [class.image-feedback]="hasImageFeedback(product.id)"
+                (click)="openCatalogImageViewer2(product, i)"
+              >
+                <img [src]="getProductImage2(product, i)" [alt]="product.name" loading="lazy">
+                <div class="product-badge">Featured</div>
+                <div class="product-overlay">
+                  <div class="product-actions-floating">
+                    <button class="action-btn action-view" type="button" [routerLink]="['/products', product.slug]" (click)="$event.stopPropagation()">
+                      <span class="action-label">Quick View</span>
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="action-btn action-cart" type="button" [routerLink]="['/products', product.slug]" (click)="$event.stopPropagation()">
+                      <i class="bi bi-cart-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="product-details">
+                <div class="product-meta-top">
+                  <span class="product-chip">Catalog pick</span>
+                  <span class="product-brand" *ngIf="product.brand">
+                    <i class="bi bi-tag"></i>
+                    {{ product.brand }}
+                  </span>
+                </div>
+
+                <h4 class="product-title">
+                  <a [routerLink]="['/products', product.slug]">{{ product.name }}</a>
+                </h4>
+
+                <div class="product-meta">
+                  <app-product-price-display [product]="product" context="catalog"></app-product-price-display>
+                </div>
+
+                <div class="product-footer">
+                  <a class="btn btn-dark btn-sm" [routerLink]="['/products', product.slug]">View product</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <ng-template #noProducts>
+          <div class="empty-state">
+            <h3>No products match your filters.</h3>
+            <p>Try adjusting the category, facet selection, price range or search query.</p>
+          </div>
+        </ng-template>
+
+        <nav class="pagination-nav" aria-label="Pagination" *ngIf="pagination.totalPages > 1">
+          <ul>
+            <li>
+              <button type="button" [disabled]="selectedPage === 0" (click)="goToPage(selectedPage - 1)">
+                <i class="bi bi-arrow-left"></i><span class="d-none d-sm-inline">Previous</span>
+              </button>
+            </li>
+            <li *ngFor="let page of pageRange()">
+              <button type="button" [class.active]="page === selectedPage" (click)="goToPage(page)">{{ page + 1 }}</button>
+            </li>
+            <li>
+              <button type="button" [disabled]="selectedPage >= pagination.totalPages - 1" (click)="goToPage(selectedPage + 1)">
+                <span class="d-none d-sm-inline">Next</span><i class="bi bi-arrow-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="catalog-image-viewer-overlay" *ngIf="isCatalogImageViewerOpen" (click)="closeCatalogImageViewer()" aria-modal="true" role="dialog">
+  <div class="catalog-image-viewer-shell" (click)="$event.stopPropagation()">
+    <button type="button" class="catalog-image-viewer-close" (click)="closeCatalogImageViewer()" aria-label="Close image viewer">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <img class="catalog-image-viewer-photo" [src]="catalogViewerImageUrl" [alt]="catalogViewerImageAlt">
+  </div>
+</div>

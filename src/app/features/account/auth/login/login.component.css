@@ -1,0 +1,27 @@
+.auth-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.switch-btn {
+  background: none;
+  border: 0;
+  color: var(--accent-color, #0d6efd);
+  font-weight: 600;
+}
+
+.switch-btn:hover {
+  text-decoration: underline;
+}
+
+.alert {
+  border-radius: 10px;
+}
+
+@media (max-width: 767.98px) {
+  .auth-container {
+    padding: 1.25rem;
+  }
+}

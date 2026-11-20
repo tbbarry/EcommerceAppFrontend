@@ -1,0 +1,10 @@
+<div class="stock-indicator" [ngClass]="'stock-indicator--' + tone">
+  <i class="bi" [ngClass]="{
+      'bi-info-circle': tone === 'muted',
+      'bi-x-circle-fill': tone === 'danger',
+      'bi-exclamation-triangle-fill': tone === 'warning',
+      'bi-check-circle-fill': tone === 'success'
+    }"></i>
+  <span>{{ label }}</span>
+  <small *ngIf="selectionComplete && stock > 0">{{ stock }} dispo</small>
+</div>

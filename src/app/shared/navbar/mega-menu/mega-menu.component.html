@@ -1,0 +1,64 @@
+<nav class="mega-menu-shell" aria-label="Navigation principale">
+  <div class="mega-menu-strip container-fluid container-xl">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="mega-home-link"
+      (click)="hideMegaMenu()"
+    >
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+
+    <div
+      class="mega-menu-item"
+      *ngFor="let category of categories"
+      (mouseenter)="showMegaMenu(category)"
+    >
+      <button
+        type="button"
+        class="mega-category-trigger"
+        (click)="goToProducts(category.id)"
+        [attr.aria-expanded]="activeCategory?.id === category.id"
+      >
+        <span>{{ category.name }}</span>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="custom-mega-menu" *ngIf="activeCategory as category" (mouseenter)="showMegaMenu(category)" (mouseleave)="hideMegaMenu()">
+    <div class="container-fluid container-xl mega-menu-panel">
+      <div class="mega-menu-hero">
+        <div>
+          <h3>{{ category.name }}</h3>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" (click)="goToProducts(category.id)">
+          View all
+        </button>
+      </div>
+
+      <div class="mega-menu-grid">
+        <div class="mega-menu-column" *ngFor="let child of category.children">
+          <div class="mega-menu-group">
+            <button type="button" class="dropdown-header-button" (click)="goToProducts(child.id)">
+              {{ child.name }}
+            </button>
+
+            <ul class="list-unstyled">
+              <li>
+                <button type="button" class="dropdown-item-button" (click)="goToProducts(child.id)">View all</button>
+              </li>
+              <li *ngFor="let grandChild of child.children">
+                <button type="button" class="dropdown-item-button" (click)="goToProducts(grandChild.id)">
+                  {{ grandChild.name }}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

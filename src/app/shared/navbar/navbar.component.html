@@ -1,0 +1,241 @@
+<header id="header" class="header sticky-top">
+  <div class="main-header">
+    <div class="container-fluid container-xl">
+      <div class="d-flex py-3 align-items-center justify-content-between">
+        <div class="header-start d-flex align-items-center">
+          <a routerLink="/" class="logo d-flex align-items-center" (click)="closeMobileMenu()">
+            <h1 class="sitename">NiceShop</h1>
+          </a>
+
+          <button class="header-action-btn app-mobile-nav-toggle d-xl-none ms-1" type="button" aria-label="Toggle menu" (click)="toggleMobileMenu()">
+            <i class="bi" [ngClass]="isMobileMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
+          </button>
+        </div>
+
+        <form class="search-form desktop-search-form" (submit)="$event.preventDefault()">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search for products">
+            <button class="btn" type="submit" aria-label="Search">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <div class="header-actions d-flex align-items-center justify-content-end">
+          <button class="header-action-btn mobile-search-toggle d-xl-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileSearch" aria-expanded="false" aria-controls="mobileSearch">
+            <i class="bi bi-search"></i>
+          </button>
+
+          <div class="dropdown account-dropdown" *ngIf="user$ | async as user; else guestAccount">
+            <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Account menu">
+              <i class="bi bi-person"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <div class="dropdown-header">
+                <h6>Bienvenue {{ getDisplayName(user) }}</h6>
+                <p class="mb-0">Gerer votre compte et commandes</p>
+              </div>
+              <div class="dropdown-body">
+                <a class="dropdown-item d-flex align-items-center" routerLink="/account/profile">
+                  <i class="bi bi-person-circle me-2"></i>
+                  <span>Mon profil</span>
+                </a>
+                <a class="dropdown-item d-flex align-items-center" routerLink="/my-orders">
+                  <i class="bi bi-bag-check me-2"></i>
+                  <span>Mes commandes</span>
+                </a>
+    
+              </div>
+              <div class="dropdown-footer">
+                <button type="button" class="btn btn-primary w-100" (click)="logout()">Se deconnecter</button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #guestAccount>
+            <div class="dropdown account-dropdown">
+              <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Account menu">
+                <i class="bi bi-person"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end">
+                <div class="dropdown-header">
+                  <h6>Bienvenue sur <span class="sitename">NiceShop</span></h6>
+                  <p class="mb-0">Accedez au compte et vos commandes</p>
+                </div>
+                <div class="dropdown-footer">
+                  <a routerLink="/auth/login" class="btn btn-primary w-100 mb-2">Sign In</a>
+                  <a routerLink="/auth/register" class="btn btn-outline-primary w-100">Register</a>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Cart with mini-dropdown -->
+          <div class="dropdown cart-dropdown">
+            <button class="header-action-btn" data-bs-toggle="dropdown" aria-label="Cart" data-bs-auto-close="outside">
+              <i class="bi bi-cart3"></i>
+              <span class="badge badge-active" *ngIf="cartService.totalQuantity() > 0">
+                {{ cartService.totalQuantity() }}
+              </span>
+            </button>
+
+            <div class="dropdown-menu dropdown-menu-end cart-preview-panel">
+              <div class="cart-preview-header">
+                <span class="cart-preview-title">Cart ({{ cartService.totalQuantity() }})</span>
+                <a routerLink="/cart" class="cart-preview-view" data-bs-dismiss="dropdown">View all</a>
+              </div>
+
+              <div class="cart-preview-empty" *ngIf="cartService.isEmpty()">
+                <i class="bi bi-cart-x"></i>
+                <p>Your cart is empty</p>
+                <a routerLink="/products" class="btn btn-sm btn-dark" data-bs-dismiss="dropdown">Start Shopping</a>
+              </div>
+
+              <div class="cart-preview-items" *ngIf="!cartService.isEmpty()">
+                <div class="cart-preview-item" *ngFor="let item of cartService.cartItems()">
+                  <div class="cart-preview-img">
+                    <img *ngIf="item.imageUrl" [src]="item.imageUrl" [alt]="item.imageAlt || item.name">
+                    <i *ngIf="!item.imageUrl" class="bi bi-image"></i>
+                  </div>
+                  <div class="cart-preview-info">
+                    <a class="cart-preview-name" [routerLink]="['/products', item.slug]" data-bs-dismiss="dropdown">{{ item.name }}</a>
+                    <span class="cart-preview-variant" *ngIf="item.color || item.size">
+                      {{ item.color }}{{ item.color && item.size ? ' · ' : '' }}{{ item.size }}
+                    </span>
+                  </div>
+                  <div class="cart-preview-price">
+                    <span>{{ item.quantity }} × {{ item.price | currency:'USD':'symbol':'1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cart-preview-footer" *ngIf="!cartService.isEmpty()">
+                <div class="cart-preview-subtotal">
+                  <span>Subtotal</span>
+                  <strong>{{ cartService.subtotal() | currency:'USD':'symbol':'1.2-2' }}</strong>
+                </div>
+                <a routerLink="/cart" class="btn btn-dark w-100" data-bs-dismiss="dropdown">
+                  View Cart <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--
+
+  <div class="header-nav">
+    <div class="container-fluid container-xl position-relative">
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Home</a></li>
+          <li><a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Category</a></li>
+                   
+            <li class="products-megamenu-2"><a href="#"><span>Megamenu 2</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                         
+
+  
+        </ul>
+      </nav>
+    </div>
+  </div> --> 
+
+  <app-mega-menu [categories] = "categories"></app-mega-menu>
+
+
+  <button
+    type="button"
+    class="mobile-menu-backdrop d-xl-none"
+    *ngIf="isMobileMenuOpen"
+    (click)="closeMobileMenu()"
+    aria-label="Close menu"
+  ></button>
+
+  <div class="mobile-nav-panel d-xl-none" *ngIf="isMobileMenuOpen">
+    <div class="mobile-nav-surface container-fluid container-xl">
+      <div class="mobile-nav-head">
+        <div>
+          <p class="mobile-nav-kicker mb-1">Navigation</p>
+          <h2 class="mobile-nav-title mb-0">Explore NiceShop</h2>
+        </div>
+        <button type="button" class="header-action-btn mobile-nav-close" (click)="closeMobileMenu()" aria-label="Close menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <nav class="mobile-navmenu" aria-label="Mobile navigation">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link" (click)="closeMobileMenu()">
+          <i class="bi bi-house-door"></i>
+          <span>Home</span>
+        </a>
+
+        <a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link" (click)="closeMobileMenu()">
+          <i class="bi bi-grid"></i>
+          <span>Catalogue</span>
+        </a>
+
+        <div class="mobile-nav-section" *ngFor="let category of categories">
+          <button type="button" class="mobile-nav-parent" (click)="goToCategory(category.id)">
+            <span>{{ category.name }}</span>
+            <i class="bi bi-chevron-right"></i>
+          </button>
+
+          <div class="mobile-nav-children" *ngIf="category.children.length">
+            <button type="button" class="mobile-nav-child" *ngFor="let child of category.children" (click)="goToCategory(child.id)">
+              {{ child.name }}
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-nav-section mobile-nav-section--actions">
+          <a routerLink="/cart" class="mobile-nav-link mobile-nav-link--soft" (click)="closeMobileMenu()">
+            <i class="bi bi-cart3"></i>
+            <span>Cart</span>
+          </a>
+
+          <a routerLink="/checkout" class="mobile-nav-link mobile-nav-link--soft" (click)="closeMobileMenu()">
+            <i class="bi bi-credit-card"></i>
+            <span>Checkout</span>
+          </a>
+
+          <ng-container *ngIf="user$ | async as user; else guestMobileActions">
+            <div class="mobile-nav-auth-card">
+              <p class="mobile-nav-auth-label">Connecté en tant que</p>
+              <strong>{{ getDisplayName(user) }}</strong>
+              <div class="mobile-nav-auth-actions">
+                <a routerLink="/account/profile" class="btn btn-sm btn-outline-dark" (click)="closeMobileMenu()">Profile</a>
+                <a routerLink="/my-orders" class="btn btn-sm btn-dark" (click)="closeMobileMenu()">Orders</a>
+              </div>
+              <button type="button" class="btn btn-link p-0 mt-2 text-decoration-none" (click)="logout(); closeMobileMenu()">Se deconnecter</button>
+            </div>
+          </ng-container>
+
+          <ng-template #guestMobileActions>
+            <div class="mobile-nav-auth-card">
+              <p class="mobile-nav-auth-label">Bienvenue sur NiceShop</p>
+              <div class="mobile-nav-auth-actions">
+                <a routerLink="/auth/login" class="btn btn-sm btn-dark" (click)="closeMobileMenu()">Sign in</a>
+                <a routerLink="/auth/register" class="btn btn-sm btn-outline-dark" (click)="closeMobileMenu()">Register</a>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="collapse" id="mobileSearch">
+    <div class="container">
+      <form class="search-form" (submit)="$event.preventDefault()">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search for products">
+          <button class="btn" type="submit" aria-label="Search">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</header>

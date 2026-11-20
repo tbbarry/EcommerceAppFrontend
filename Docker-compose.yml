@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: angular-frontend
+    ports:
+      - "4400:80"  # Expose le port 80 du conteneur sur le 4400 local
+    restart: unless-stopped

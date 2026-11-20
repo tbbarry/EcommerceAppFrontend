@@ -1,0 +1,30 @@
+<div class="gallery-shell" *ngIf="images.length; else noImage">
+  <div class="main-image-wrap" (click)="openViewer.emit()">
+    <img *ngIf="currentImage as image" [src]="image.url" [alt]="image.alt || productName" class="main-image" />
+    <button type="button" class="gallery-nav gallery-nav--left" *ngIf="images.length > 1" (click)="$event.stopPropagation(); previous()" aria-label="Image précédente">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <button type="button" class="gallery-nav gallery-nav--right" *ngIf="images.length > 1" (click)="$event.stopPropagation(); next()" aria-label="Image suivante">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="thumb-row" *ngIf="images.length > 1">
+    <button
+      type="button"
+      class="thumb"
+      *ngFor="let image of images; let idx = index; trackBy: trackById"
+      [class.thumb--active]="idx === selectedIndex"
+      (click)="select(idx)"
+      [attr.aria-label]="'Miniature ' + (idx + 1)"
+    >
+      <img [src]="image.url" [alt]="image.alt || productName" />
+    </button>
+  </div>
+</div>
+
+<ng-template #noImage>
+  <div class="gallery-shell gallery-shell--empty">
+    <span>Aucune image disponible</span>
+  </div>
+</ng-template>
