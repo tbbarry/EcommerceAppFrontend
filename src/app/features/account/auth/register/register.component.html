@@ -1,0 +1,86 @@
+<main class="auth-page">
+  <div class="auth-shell">
+    <a routerLink="/products" class="auth-back"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to shopping</a>
+    <div class="auth-layout">
+      <aside class="auth-welcome" aria-label="Welcome">
+        <span class="auth-badge"><i class="bi bi-bag-heart" aria-hidden="true"></i> WELCOME TO {{ store.name() }}</span>
+        <h2>Glad you're here.</h2>
+        <p>Create an account to easily access your orders and information.</p>
+        <ul class="benefits">
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Find your orders in one place</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Save your shipping addresses</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Enjoy a simpler checkout</li>
+        </ul>
+      </aside>
+      <section class="auth-card" aria-labelledby="register-title">
+        <div class="auth-heading">
+          <span class="auth-eyebrow">NEW CUSTOMER</span>
+          <h1 id="register-title">Create an account</h1>
+          <p>Just a few details to get started.</p>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+        <form (ngSubmit)="register()" novalidate>
+          <div class="auth-fields two-columns">
+            <div class="auth-field">
+              <label for="firstName">First name <span aria-hidden="true">*</span></label>
+              <input id="firstName" name="firstName" type="text" class="form-control" autocomplete="given-name" required
+                [(ngModel)]="registerData.firstname" #firstName="ngModel" [attr.aria-invalid]="firstName.touched && !hasFirstName">
+              <small class="inline-error" *ngIf="firstName.touched && !hasFirstName">Enter your first name.</small>
+            </div>
+            <div class="auth-field">
+              <label for="lastName">Last name <span aria-hidden="true">*</span></label>
+              <input id="lastName" name="lastName" type="text" class="form-control" autocomplete="family-name" required
+                [(ngModel)]="registerData.lastname" #lastName="ngModel" [attr.aria-invalid]="lastName.touched && !hasLastName">
+              <small class="inline-error" *ngIf="lastName.touched && !hasLastName">Enter your last name.</small>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="email">Email address <span aria-hidden="true">*</span></label>
+            <input id="email" name="email" type="email" class="form-control" autocomplete="email" inputmode="email" required
+              placeholder="you@example.com" [(ngModel)]="registerData.email" #emailField="ngModel"
+              [attr.aria-invalid]="emailField.touched && !isEmailValid">
+            <small class="inline-error" *ngIf="emailField.touched && !isEmailValid">Enter a valid email address.</small>
+          </div>
+          <div class="auth-field">
+            <label for="password">Password <span aria-hidden="true">*</span></label>
+            <div class="password-input">
+              <input id="password" name="password" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                required minlength="8" autocomplete="new-password" [(ngModel)]="registerData.password"
+                (focus)="passwordFocused = true" (blur)="passwordFocused = false"
+                [attr.aria-describedby]="passwordFocused ? 'password-rules' : null">
+              <button type="button" class="password-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div id="password-rules" class="password-rules" *ngIf="passwordFocused">
+              <p>Your password must contain:</p>
+              <ul>
+                <li [class.rule-valid]="hasMinLength"><span class="visually-hidden">{{ hasMinLength ? 'Met:' : 'Required:' }}</span> At least 8 characters</li>
+                <li [class.rule-valid]="hasUppercase"><span class="visually-hidden">{{ hasUppercase ? 'Met:' : 'Required:' }}</span> An uppercase letter</li>
+                <li [class.rule-valid]="hasDigit"><span class="visually-hidden">{{ hasDigit ? 'Met:' : 'Required:' }}</span> A number</li>
+                <li [class.rule-valid]="hasSpecialCharacter"><span class="visually-hidden">{{ hasSpecialCharacter ? 'Met:' : 'Required:' }}</span> A special character: &#64; # $ % ^ &amp; + =</li>
+              </ul>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="confirmPassword">Confirm password <span aria-hidden="true">*</span></label>
+            <div class="password-input">
+              <input id="confirmPassword" name="confirmPassword" [type]="showConfirmation ? 'text' : 'password'" class="form-control"
+                required autocomplete="new-password" [(ngModel)]="registerData.confirmPassword" #confirmation="ngModel"
+                [attr.aria-invalid]="confirmation.touched && !passwordsMatch">
+              <button type="button" class="password-toggle" (click)="showConfirmation = !showConfirmation" [attr.aria-label]="showConfirmation ? 'Hide confirmation' : 'Show confirmation'">
+                <i class="bi" [ngClass]="showConfirmation ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <small class="inline-error" *ngIf="confirmation.touched && !passwordsMatch">Passwords must match.</small>
+          </div>
+          <p class="form-hint">* Required fields</p>
+          <button type="submit" class="auth-submit" [disabled]="loading || !canSubmit">
+            {{ loading ? 'Creating account…' : 'Create account' }} <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+          <p class="auth-switch">Already have an account? <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }">Sign in</a></p>
+        </form>
+      </section>
+    </div>
+  </div>
+</main>

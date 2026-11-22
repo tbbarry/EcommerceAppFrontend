@@ -1,0 +1,29 @@
+# Étape 1 : Build de l'application Angular
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copier package.json et package-lock.json
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm install
+
+# Copier tout le code source
+COPY . .
+
+# Construire l'application pour la production (Angular 19 optimise le build par défaut)
+RUN npm run build 
+
+# Étape 2 : Servir avec NGINX
+FROM nginx:alpine
+
+# Copier le build vers NGINX
+COPY --from=build /app/dist/ecommerce-app/browser /usr/share/nginx/html
+
+# Configuration NGINX pour Angular (routes SPA)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

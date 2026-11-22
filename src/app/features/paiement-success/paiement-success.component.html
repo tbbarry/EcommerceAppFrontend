@@ -1,0 +1,39 @@
+<section class="section light-background">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm text-center p-4 p-md-5" aria-live="polite">
+          @if (isLoading) {
+            <div class="spinner-border text-primary mx-auto mb-4" role="status"><span class="visually-hidden">Checking payment</span></div>
+            <h1 class="h2 fw-bold">Checking your payment</h1>
+            <p class="text-muted mb-0">We're checking your order. Please do not pay again while we verify it.</p>
+          } @else if (paymentConfirmed) {
+            <i class="bi bi-check-circle-fill text-success display-3 mb-3" aria-hidden="true"></i>
+            <h1 class="h2 fw-bold">Thank you for your order!</h1>
+            <p class="text-muted">Your payment has been confirmed.</p>
+            <div class="bg-light rounded p-4 my-3">
+              <p class="mb-2">Order <strong>{{ orderId }}</strong></p>
+              <p class="mb-0">Total <strong>{{ amount | currency:'USD':'symbol':'1.2-2' }}</strong></p>
+            </div>
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-3">
+              <a routerLink="/my-orders" class="btn btn-primary px-4">View my orders</a>
+              <a routerLink="/products" class="btn btn-outline-secondary px-4">Continue shopping</a>
+            </div>
+          } @else {
+            <i class="bi bi-hourglass-split text-warning display-3 mb-3" aria-hidden="true"></i>
+            <h1 class="h2 fw-bold">Confirmation pending</h1>
+            <p class="text-muted">{{ errorMessage || 'Your payment has not yet been confirmed by the store.' }}</p>
+            <div class="alert alert-warning text-start" role="alert">
+              If you've already been charged, do not pay again. Check the payment again or contact the store with your order number.
+            </div>
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+              <button *ngIf="sessionId && !needsLogin" type="button" class="btn btn-primary px-4" (click)="verify()">Check payment again</button>
+              <a *ngIf="needsLogin" routerLink="/auth/login" [queryParams]="{ returnUrl: '/payment/success?session_id=' + sessionId }" class="btn btn-primary px-4">Sign in again</a>
+              <a routerLink="/my-orders" class="btn btn-outline-secondary px-4">My orders</a>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

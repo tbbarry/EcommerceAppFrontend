@@ -1,0 +1,59 @@
+<main class="promotions-page">
+  <div class="promotions-shell">
+    <header class="page-header">
+      <div>
+        <a routerLink="/admin/products" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Products</a>
+        <p class="eyebrow">ADMINISTRATION</p>
+        <h1>Shipping methods</h1>
+        <p class="page-intro">Manage the options available to customers at checkout.</p>
+      </div>
+      <button type="button" class="btn btn-primary primary-action" [disabled]="busy" (click)="openEditor()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add method
+      </button>
+    </header>
+
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="alert alert-success" role="status">{{ successMessage }}</div>
+
+    <section class="panel editor-panel" *ngIf="editorOpen" aria-labelledby="shipping-editor-title">
+      <div class="section-heading">
+        <div><span class="section-kicker">SHIPPING</span><h2 id="shipping-editor-title">{{ editingId === null ? 'New shipping method' : 'Edit shipping method' }}</h2></div>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <fieldset [disabled]="busy">
+          <div class="form-grid">
+            <div class="field"><label for="shipping-name">Name *</label><input id="shipping-name" class="form-control" formControlName="name" maxlength="255" placeholder="Standard shipping"></div>
+            <div class="field"><label for="shipping-code">Unique code *</label><input id="shipping-code" class="form-control" formControlName="code" maxlength="60" placeholder="STANDARD"><small>Letters, numbers, hyphens, and underscores.</small></div>
+            <div class="field"><label for="shipping-type">Type *</label><select id="shipping-type" class="form-select" formControlName="deliveryType"><option *ngFor="let type of deliveryTypes" [value]="type.value">{{ type.label }}</option></select></div>
+            <div class="field"><label for="shipping-price">Price ($) *</label><input id="shipping-price" type="number" min="0" step="0.01" class="form-control" formControlName="price"></div>
+            <div class="field"><label for="shipping-min">Minimum delivery (business days) *</label><input id="shipping-min" type="number" min="0" step="1" class="form-control" formControlName="minDeliveryDays"></div>
+            <div class="field"><label for="shipping-max">Maximum delivery (business days) *</label><input id="shipping-max" type="number" min="0" step="1" class="form-control" formControlName="maxDeliveryDays"></div>
+            <div class="field"><label for="shipping-threshold">Free shipping threshold ($)</label><input id="shipping-threshold" type="number" min="0" step="0.01" class="form-control" formControlName="freeShippingThreshold"><small>Leave blank if no threshold applies.</small></div>
+            <div class="field field-wide"><label for="shipping-description">Description (optional)</label><textarea id="shipping-description" rows="2" class="form-control" formControlName="description"></textarea></div>
+          </div>
+          <div class="form-check form-switch mt-3"><input id="shipping-active" class="form-check-input" type="checkbox" formControlName="active"><label class="form-check-label" for="shipping-active">Offer this method to customers</label></div>
+          <p class="form-text" *ngIf="form.controls.deliveryType.value === 'PICKUP_POINT' || form.controls.deliveryType.value === 'LOCKER'">Pickup points and lockers are unavailable at checkout until location selection is supported.</p>
+          <div class="form-actions"><button type="submit" class="btn btn-primary">Save</button><button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancel</button></div>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="shipping-list-title">
+      <div class="section-heading"><div><span class="section-kicker">YOUR OPTIONS</span><h2 id="shipping-list-title">Configured methods</h2><p>Disable a method to remove it from checkout while keeping its history.</p></div><span class="count-pill">{{ methods.length }} method(s)</span></div>
+      <div *ngIf="loading" class="loading-state" role="status">Loading shipping methods…</div>
+      <button *ngIf="!loading && loadFailed" type="button" class="btn btn-outline-secondary" (click)="load()">Try again</button>
+      <div *ngIf="!loading && !loadFailed && !methods.length" class="empty-state"><i class="bi bi-truck" aria-hidden="true"></i><strong>No shipping methods</strong><span>Add an option so customers can place orders.</span><button type="button" class="btn btn-outline-primary btn-sm" (click)="openEditor()">Add method</button></div>
+      <div *ngIf="!loading && !loadFailed && methods.length" class="promo-list">
+        <article class="promo-card" *ngFor="let method of methods">
+          <span class="summary-icon"><i class="bi bi-truck" aria-hidden="true"></i></span>
+          <div class="promo-details">
+            <div class="promo-title"><h3>{{ method.name }}</h3><span class="status" [class.active]="method.active && method.deliveryType !== 'PICKUP_POINT' && method.deliveryType !== 'LOCKER'">{{ !method.active ? 'Disabled' : (method.deliveryType === 'PICKUP_POINT' || method.deliveryType === 'LOCKER' ? 'Unavailable' : 'Active') }}</span></div>
+            <p>{{ method.code }} · {{ typeLabel(method.deliveryType) }} · {{ method.minDeliveryDays }}–{{ method.maxDeliveryDays }} business days</p>
+            <p>{{ method.price | currency:'USD':'symbol':'1.2-2' }}<span *ngIf="method.freeShippingThreshold !== null"> · Free on orders of {{ method.freeShippingThreshold | currency:'USD':'symbol':'1.2-2' }} or more</span></p>
+          </div>
+          <div class="promo-actions"><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="openEditor(method)">Edit</button></div>
+        </article>
+      </div>
+    </section>
+  </div>
+</main>

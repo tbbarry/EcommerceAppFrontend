@@ -1,0 +1,34 @@
+<main class="messages">
+  <header><p class="eyebrow">CUSTOMER COMMUNICATIONS</p><h1>Email messages</h1><p>Customize order updates, account activation, and password reset emails. Order details and secure account links are added automatically.</p></header>
+  <p *ngIf="loading" role="status">Loading messages...</p>
+  <div *ngIf="error" class="alert" role="alert">{{ error }} <button *ngIf="!templates.length" type="button" (click)="load()">Try again</button></div>
+  <p *ngIf="success" class="success" role="status">{{ success }}</p>
+  <div class="workspace" *ngIf="selected as item">
+    <nav class="tabs" aria-label="Email message types">
+      <button *ngFor="let template of templates" type="button" [disabled]="saving" [class.active]="item.key === template.key" [attr.aria-current]="item.key === template.key ? 'true' : null" (click)="select(template)">{{ labels[template.key] }}</button>
+    </nav>
+    <form class="editor" (ngSubmit)="save()">
+      <h2>{{ labels[item.key] }}</h2>
+      <label for="subject">Email subject</label>
+      <input id="subject" name="subject" [(ngModel)]="item.subject" maxlength="200" required [disabled]="saving">
+      <label for="message">Email body message</label>
+      <textarea id="message" name="message" [(ngModel)]="item.message" maxlength="2000" rows="6" required [disabled]="saving"></textarea>
+      <p class="help" *ngIf="isAccountTemplate(item.key)">Available variables: <code [textContent]="'{{user_name}}'"></code> and <code [textContent]="'{{site_name}}'"></code>. The secure link, action button, and expiration notice are inserted automatically and cannot be changed here.</p>
+      <p class="help" *ngIf="!isAccountTemplate(item.key)">Optional variables: <code [textContent]="'{{customer_name}}'"></code> and <code [textContent]="'{{order_number}}'"></code>.</p>
+      <button class="save" type="submit" [disabled]="saving || !dirty || !item.subject.trim() || !item.message.trim()">{{ saving ? 'Saving...' : 'Save message' }}</button>
+    </form>
+    <section class="preview" aria-labelledby="preview-title">
+      <p class="eyebrow">PREVIEW</p><h2 id="preview-title">{{ preview(item.subject) || 'Email subject' }}</h2>
+      <p>{{ item.key === 'ADMIN_PAID' ? 'Hello,' : 'Hi Alex,' }}</p><p class="message-text">{{ preview(item.message) }}</p>
+      <ng-container *ngIf="isAccountTemplate(item.key); else orderPreview">
+        <span class="preview-button">{{ item.key === 'ACCOUNT_ACTIVATION' ? 'Activate my account' : 'Reset password' }}</span>
+        <p class="help">A unique secure link will be included automatically. It expires in {{ item.key === 'ACCOUNT_ACTIVATION' ? '24 hours' : '30 minutes' }}. No real token is shown in this preview.</p>
+      </ng-container>
+      <ng-template #orderPreview>
+      <div class="order-summary"><strong>Order ORD-1001</strong><span>Order details and items appear here.</span></div>
+      <span class="preview-button">{{ item.key === 'ADMIN_PAID' ? 'Manage orders' : 'View my orders' }}</span>
+      <p class="help">Example only. Actual order details are added when the email is sent.</p>
+      </ng-template>
+    </section>
+  </div>
+</main>

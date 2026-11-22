@@ -1,0 +1,29 @@
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a class="admin-brand" routerLink="/admin/dashboard">
+      <span class="brand-icon"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i></span>
+      <span><strong>{{ store.name() }}</strong><small>ADMIN</small></span>
+    </a>
+    <p class="nav-caption">STORE MANAGEMENT</p>
+    <nav class="admin-nav" aria-label="Administration">
+      <a routerLink="/admin/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-grid-1x2" aria-hidden="true"></i><span>Dashboard</span></a>
+      <a routerLink="/admin/orders" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-bag-check" aria-hidden="true"></i><span>Orders</span></a>
+      <a routerLink="/admin/products" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-box-seam" aria-hidden="true"></i><span>Products</span></a>
+      <a routerLink="/admin/categories" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-grid" aria-hidden="true"></i><span>Categories</span></a>
+      <a routerLink="/admin/promotions" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-tag" aria-hidden="true"></i><span>Promotions</span></a>
+      <a routerLink="/admin/shipping-methods" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-truck" aria-hidden="true"></i><span>Shipping</span></a>
+      <a routerLink="/admin/reviews" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span>Reviews</span></a>
+      <a routerLink="/admin/contact-messages" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Customer messages</span></a>
+      <a routerLink="/admin/order-messages" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-envelope" aria-hidden="true"></i><span>Notifications</span></a>
+      <a routerLink="/admin/store-settings" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="bi bi-gear" aria-hidden="true"></i><span>Store settings</span></a>
+    </nav>
+    <a class="store-link" routerLink="/"><i class="bi bi-arrow-left" aria-hidden="true"></i> View store</a>
+  </aside>
+  <div class="admin-workspace">
+    <header class="admin-topbar">
+      <div><span class="topbar-label">{{ store.name() }}</span><strong>Administration</strong></div>
+      <button type="button" class="logout-button" (click)="logout()"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Log out</button>
+    </header>
+    <div class="admin-content"><router-outlet></router-outlet></div>
+  </div>
+</div>

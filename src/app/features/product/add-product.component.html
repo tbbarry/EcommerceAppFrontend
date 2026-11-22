@@ -1,0 +1,369 @@
+<div class="add-product-wrapper">
+  <div class="container-fluid bg-light border-bottom py-4">
+    <div class="container">
+      <h1 class="h2 mb-2"><i class="bi bi-plus-circle"></i> Ajouter un nouveau produit</h1>
+      <p class="text-muted mb-0">Étape {{ currentStep }} sur 4</p>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="container-fluid bg-white border-bottom sticky-top" style="top: 0; z-index: 100;" *ngIf="!isLoadingData">
+    <div class="container">
+      <div class="product-steps py-3">
+        <div *ngFor="let step of [1, 2, 3, 4]; let i = index" class="flex-grow-1">
+          <button 
+            type="button" 
+            class="btn w-100 btn-sm"
+            [class.btn-primary]="currentStep === step"
+            [class.btn-light]="currentStep !== step"
+            [disabled]="step > currentStep"
+            [attr.aria-current]="currentStep === step ? 'step' : null"
+            (click)="currentStep = step">
+            <i class="bi" [ngClass]="step <= currentStep ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            {{ ['Infos', 'Variantes', 'Images', 'Confirmation'][i] }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isLoadingData" class="container py-5 text-center">
+    <div class="spinner-border" role="status"><span class="visually-hidden">Chargement...</span></div>
+    <p class="mt-3 text-muted">Chargement des données...</p>
+  </div>
+
+  <div *ngIf="!isLoadingData" class="container py-5">
+    <!-- STEP 1: INFOS DE BASE -->
+    <div *ngIf="currentStep === 1" class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form [formGroup]="productForm">
+          <div class="mb-4">
+            <label for="productName" class="form-label">Nom du produit <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="productName" formControlName="name" placeholder="ex: T-shirt coton premium" [class.is-invalid]="isFieldInvalid('name')">
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('name') && productForm.get('name')?.hasError('required')">Le nom est obligatoire</div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('name') && productForm.get('name')?.hasError('minlength')">Minimum 3 caractères</div>
+          </div>
+
+          <div class="mb-4">
+            <label for="productDesc" class="form-label">Description <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="productDesc" formControlName="description" placeholder="Décrivez votre produit en détail..." rows="6" [class.is-invalid]="isFieldInvalid('description')"></textarea>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('description') && productForm.get('description')?.hasError('required')">La description est obligatoire</div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="productBrand" class="form-label">Marque <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="productBrand" formControlName="brand" placeholder="ex: Nike, Adidas...">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('brand')">La marque est obligatoire</div>
+            </div>
+            <div class="col-md-6">
+              <label for="productCategory" class="form-label">Catégorie <span class="text-danger">*</span></label>
+              <select class="form-select" id="productCategory" formControlName="categoryId" [class.is-invalid]="isFieldInvalid('categoryId')">
+                <option value="">Sélectionnez une catégorie...</option>
+                <option *ngFor="let category of categoryOptions" [value]="category.id">{{ category.label }}</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('categoryId') && productForm.get('categoryId')?.hasError('required')">La catégorie est obligatoire</div>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="productPrice" class="form-label">Prix de base (USD) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="productPrice" formControlName="price" placeholder="0.00" min="0" step="0.01" [class.is-invalid]="isFieldInvalid('price')">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('price') && productForm.get('price')?.hasError('required')">Le prix est obligatoire</div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('price') && productForm.get('price')?.hasError('min')">Le prix doit être positif</div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- STEP 2: VARIANTES -->
+    <div *ngIf="currentStep === 2" class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="mb-4">
+          <button class="btn btn-primary" (click)="openVariantModal()"><i class="bi bi-plus-lg"></i> Ajouter une variante</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover" *ngIf="variants.length > 0">
+            <thead class="table-light">
+              <tr>
+                <th>Combinaison d'attributs</th>
+                <th>Prix (USD)</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let variant of variants">
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span *ngFor="let attr of variant.attributeValueSelection" class="badge bg-info">{{ attr.attributeName }}: {{ attr.valueName }}</span>
+                  </div>
+                </td>
+                <td><input type="number" class="form-control form-control-sm" [value]="variant.price" (change)="updateVariantPrice(variant.id || '', $any($event.target).value)" min="0" step="0.01" style="width: 100px;"></td>
+                <td><input type="number" class="form-control form-control-sm" [value]="variant.quantity" (change)="updateVariantQuantity(variant.id || '', $any($event.target).value)" min="0" style="width: 80px;"></td>
+                <td><button class="btn btn-sm btn-danger" (click)="removeVariant(variant.id || '')"><i class="bi bi-trash"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="variants.length === 0" class="alert alert-info"><i class="bi bi-info-circle"></i> Aucune variante. Cliquez sur "Ajouter une variante" pour commencer.</div>
+        </div>
+
+        <div *ngIf="variants.length > 0" class="mt-4 p-3 bg-light rounded">
+          <strong>Total stock disponible: {{ totalStock }} unités</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ajouter Variante -->
+    <div class="modal" [class.show]="showVariantModal" [style.display]="showVariantModal ? 'block' : 'none'" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Sélectionner les attributs de la variante</h5>
+            <button type="button" class="btn-close" (click)="closeVariantModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div *ngFor="let attr of attributes" class="mb-4">
+              <label class="form-label fw-bold">{{ attr.name }}</label>
+              <div class="d-flex flex-wrap gap-2">
+                <div *ngFor="let value of attr.values" class="form-check">
+                  <input class="form-check-input" type="radio" [name]="'attr-' + attr.id" [id]="'value-' + value.id" [value]="value.id" (change)="selectAttributeValue(attr.id, value.id)">
+                  <label class="form-check-label" [for]="'value-' + value.id">{{ value.value }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeVariantModal()">Annuler</button>
+            <button type="button" class="btn btn-primary" (click)="createVariant()">Créer variante</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: IMAGES -->
+    <div *ngIf="currentStep === 3" class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="border-2 border-dashed rounded p-5 text-center bg-light mb-4">
+          <i class="bi bi-cloud-arrow-up fs-1 text-primary mb-3"></i>
+          <p class="mb-2 fw-semibold">Ajoutez les images de votre produit</p>
+          <small class="text-muted">Sélectionnez une ou plusieurs images</small>
+          <div class="mt-3">
+            <input type="file" #fileInput hidden multiple accept="image/*" (change)="onFilesSelected($event)">
+            <button type="button" class="btn btn-primary" (click)="fileInput.click()"><i class="bi bi-plus-lg"></i> Choisir des images</button>
+          </div>
+          <small class="text-muted d-block mt-2">JPG, PNG · 10 Mo par image · 10 images maximum</small>
+        </div>
+
+        <div *ngIf="uploadedImages.length > 0" class="mt-4">
+          <label class="form-label mb-3 fw-bold">Images uploadées ({{ uploadedImages.length }}/10)</label>
+          <div class="row g-3">
+            <div *ngFor="let image of uploadedImages; let i = index" class="col-md-6 col-lg-4">
+              <div class="card border">
+                <div class="position-relative">
+                  <img [src]="image.url" [alt]="productForm.get('name')?.value || 'Aperçu du produit'" class="card-img-top" style="height: 200px; object-fit: cover;">
+                  <div *ngIf="image.isMain" class="badge bg-success position-absolute top-0 start-0 m-2">Principal</div>
+                  <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" (click)="removeImage(image.id)"><i class="bi bi-trash"></i></button>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <button type="button" class="btn btn-sm" [ngClass]="image.isMain ? 'btn-success' : 'btn-outline-success'" (click)="setMainImage(image.id)"><i class="bi bi-star"></i> Principale</button>
+                  </div>
+                  <div>
+                    <label class="form-label small">Attribut visuel (optionnel)</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="image.visualAttributeValueId" (ngModelChange)="updateImageAttribute(image.id, $event || 0)">
+                      <option [ngValue]="undefined">Aucun</option>
+                      <optgroup *ngFor="let attr of getVisualAttributesByVariants()" [label]="attr.name">
+                        <option *ngFor="let value of attr.values" [ngValue]="value.id">{{ value.value }}</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="uploadedImages.length === 0" class="alert alert-info"><i class="bi bi-info-circle"></i> Aucune image. Uploadez au moins une image pour votre produit.</div>
+      </div>
+    </div>
+
+    <!-- STEP 4: CONFIRMATION -->
+    <div *ngIf="currentStep === 4" class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-4">Vérification avant publication</h5>
+
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <h5 class="mb-4 fw-bold d-flex align-items-center gap-2">
+              <i class="bi bi-box fs-5"></i> Aperçu du Produit
+            </h5>
+            
+            <div class="card border-1 mb-4">
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Nom</small>
+                    <p class="fs-5 fw-bold">{{ productForm.get('name')?.value || 'Non défini' }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Marque</small>
+                    <p class="fs-5 fw-bold">{{ productForm.get('brand')?.value || '-' }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Prix de base</small>
+                    <p class="fs-5 fw-bold text-success">{{ (productForm.get('price')?.value || 0) | currency:'USD':'symbol':'1.2-2' }}</p>
+                  </div>
+                  <div class="col-12">
+                    <small class="text-muted d-block">Description</small>
+                    <p class="text-muted lh-sm">{{ productForm.get('description')?.value || 'Non définie' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section Variantes -->
+            <h5 class="mb-4 fw-bold d-flex align-items-center gap-2">
+              <i class="bi bi-layers-fill fs-5"></i> Variantes ({{ variants.length }})
+            </h5>
+            
+            <div *ngIf="variants.length > 0" class="row g-3 mb-4">
+              <div *ngFor="let variant of variants; let i = index" class="col-md-6">
+                <div class="card border-info h-100">
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-2">Attributs</small>
+                      <div class="d-flex flex-wrap gap-2">
+                        <span *ngFor="let attr of variant.attributeValueSelection" class="badge bg-info">
+                          {{ attr.attributeName }}: {{ attr.valueName }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <small class="text-muted d-block">Prix</small>
+                        <p class="fw-bold mb-0">{{ variant.price | currency:'USD':'symbol':'1.2-2' }}</p>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted d-block">Stock</small>
+                        <p class="fw-bold mb-0">{{ variant.quantity }} unités</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="variants.length === 0" class="alert alert-warning mb-4">
+              <i class="bi bi-exclamation-triangle"></i> Aucune variante créée
+            </div>
+
+            <!-- Section Images -->
+            <h5 class="mb-4 fw-bold d-flex align-items-center gap-2">
+              <i class="bi bi-images fs-5"></i> Images ({{ uploadedImages.length }}/10)
+            </h5>
+            
+            <div *ngIf="uploadedImages.length > 0" class="row g-3">
+              <div *ngFor="let image of uploadedImages; let i = index" class="col-md-4">
+                <div class="position-relative">
+                  <img [src]="image.url" [alt]="productForm.get('name')?.value || 'Aperçu du produit'" class="img-fluid rounded border" style="height: 150px; object-fit: cover; width: 100%;">
+                  <div *ngIf="image.isMain" class="badge bg-success position-absolute top-0 start-0 m-2">Principale</div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="uploadedImages.length === 0" class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i> Aucune image uploadée
+            </div>
+          </div>
+
+          <!-- Sidebar Statistiques -->
+          <div class="col-lg-4">
+            <div class="sticky-top" style="top: 20px;">
+              <h5 class="mb-4 fw-bold d-flex align-items-center gap-2">
+                <i class="bi bi-graph-up fs-5"></i> Statistiques
+              </h5>
+
+              <div class="row g-2 mb-4">
+                <div class="col-6">
+                  <div class="card border-0 text-center">
+                    <div class="card-body">
+                      <p class="text-muted small mb-1">Total Stock</p>
+                      <p class="fs-4 fw-bold text-success mb-0">{{ totalAvailableStock }}</p>
+                      <small class="text-muted">unités</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card border-0 text-center">
+                    <div class="card-body">
+                      <p class="text-muted small mb-1">Prix moyen</p>
+                      <p class="fs-4 fw-bold text-info mb-0">{{ (productForm.get('price')?.value || 0) | number: '1.2-2' }}</p>
+                      <small class="text-muted">USD</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress -->
+              <div class="mb-4">
+                <small class="text-muted d-block mb-2">Progression globale</small>
+                <div class="progress" style="height: 20px;">
+                  <div class="progress-bar bg-success" role="progressbar" [style.width.%]="completedSections * 25"></div>
+                </div>
+                <small class="text-muted d-block mt-2">{{ completedSections }}/4 étapes</small>
+              </div>
+
+              <!-- Buttons -->
+              <div class="d-flex gap-2">
+                <button 
+                  type="button" 
+                  class="btn btn-secondary w-100 fw-bold py-3" 
+                  (click)="onCancel()">
+                  <i class="bi bi-x-circle me-2"></i> Annuler
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-success w-100 fw-bold py-3" 
+                  (click)="submitForm()" 
+                  [disabled]="isSubmitting || !isFormComplete">
+                  <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                  <i class="bi bi-check-circle me-2"></i>
+                  {{ isSubmitting ? 'Création...' : 'Publier' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Navigation -->
+  <div class="sticky-bottom bg-white border-top py-3 shadow-lg" *ngIf="!isLoadingData">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">Étape {{ currentStep }} sur 4</small>
+        <div class="d-flex gap-3">
+          <button type="button" class="btn btn-secondary" (click)="previousStep()" [disabled]="currentStep === 1"><i class="bi bi-chevron-left"></i> Précédent</button>
+          <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="currentStep === 4"><i class="bi bi-chevron-right"></i> Suivant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop fade" [class.show]="showVariantModal" *ngIf="showVariantModal"></div>
+</div>

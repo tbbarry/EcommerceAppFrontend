@@ -1,0 +1,18 @@
+<div class="selector-block" *ngIf="sizes.length">
+  <h3>Taille</h3>
+  <div class="size-grid">
+    <button
+      type="button"
+      class="size-chip"
+      *ngFor="let size of sizes"
+      [class.size-chip--active]="selectedSize === size.value"
+      [class.size-chip--disabled]="isDisabled(size.value, size.available)"
+      [attr.aria-selected]="selectedSize === size.value"
+      [attr.aria-disabled]="isDisabled(size.value, size.available)"
+      [disabled]="isDisabled(size.value, size.available)"
+      (click)="select(size.value, size.available)"
+    >
+      {{ size.value }}
+    </button>
+  </div>
+</div>

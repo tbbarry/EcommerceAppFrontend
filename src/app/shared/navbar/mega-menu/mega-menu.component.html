@@ -1,0 +1,39 @@
+<nav class="mega-menu-shell" aria-label="Main navigation" (mouseleave)="hideMegaMenu()" (focusout)="onFocusOut($event)">
+  <div class="mega-menu-strip container-fluid container-xl">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mega-home-link" (click)="hideMegaMenu()">Home</a>
+    <a routerLink="/products" class="mega-home-link" (click)="hideMegaMenu()">Shop all</a>
+    <div class="mega-menu-item" *ngFor="let category of categories" (mouseenter)="showMegaMenu(category)">
+      <button *ngIf="category.children.length" type="button" class="mega-category-trigger"
+        (click)="toggleMegaMenu(category)" [attr.aria-expanded]="activeCategory?.id === category.id" aria-controls="mega-menu-panel">
+        <span>{{ category.name }}</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+      </button>
+      <a *ngIf="!category.children.length" class="mega-category-trigger" [routerLink]="['/products']"
+        [queryParams]="{ categoryId: category.id }" (click)="hideMegaMenu()">{{ category.name }}</a>
+    </div>
+  </div>
+
+  <div id="mega-menu-panel" class="custom-mega-menu" *ngIf="activeCategory as category">
+    <div class="container-fluid container-xl mega-menu-panel">
+      <div class="mega-menu-hero">
+        <div><p class="mega-menu-kicker">EXPLORE</p><h2>{{ category.name }}</h2></div>
+        <a class="btn btn-dark btn-sm" [routerLink]="['/products']" [queryParams]="{ categoryId: category.id }" (click)="hideMegaMenu()">
+          Shop all <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      <div class="mega-menu-grid">
+        <div class="mega-menu-column" *ngFor="let child of category.children">
+          <a class="dropdown-header-button" [routerLink]="['/products']" [queryParams]="{ categoryId: child.id }" (click)="hideMegaMenu()">{{ child.name }}</a>
+          <ng-container *ngTemplateOutlet="branches; context: { $implicit: child.children }"></ng-container>
+        </div>
+      </div>
+      <ng-template #branches let-items>
+        <ul class="mega-branches" *ngIf="items.length">
+          <li *ngFor="let item of items">
+            <a class="dropdown-item-button" [routerLink]="['/products']" [queryParams]="{ categoryId: item.id }" (click)="hideMegaMenu()">{{ item.name }}</a>
+            <ng-container *ngTemplateOutlet="branches; context: { $implicit: item.children }"></ng-container>
+          </li>
+        </ul>
+      </ng-template>
+    </div>
+  </div>
+</nav>
