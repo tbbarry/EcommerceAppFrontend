@@ -4,6 +4,15 @@
   padding-bottom: 100px;
 }
 
+.product-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.product-steps > div { min-width: 0; }
+.product-steps .btn { white-space: normal; }
+
 .add-product-wrapper .h2 {
   color: #2c3e50;
   font-weight: 700;
@@ -427,6 +436,9 @@ code {
     padding: 10px 15px;
     font-size: 0.9rem;
   }
+
+  .product-steps { gap: .25rem; }
+  .product-steps .btn { padding: .5rem .15rem; font-size: .72rem; }
 
   .card-body {
     padding: 1.5rem !important;

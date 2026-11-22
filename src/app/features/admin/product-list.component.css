@@ -1,0 +1,7 @@
+.admin-products {
+  min-height: 60vh;
+}
+
+.admin-products .table th {
+  white-space: nowrap;
+}

@@ -1,0 +1,104 @@
+<main class="promotions-page">
+  <div class="promotions-shell">
+    <header class="page-header">
+      <div>
+        <a routerLink="/admin/products" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Produits</a>
+        <p class="eyebrow">ESPACE ADMINISTRATION</p>
+        <h1>Vos promotions</h1>
+        <p class="page-intro">Créez vos offres et choisissez les produits ou variantes concernés.</p>
+      </div>
+      <button type="button" class="btn btn-primary primary-action" [disabled]="busy" (click)="openEditor()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> Nouvelle promotion
+      </button>
+    </header>
+
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="alert alert-success" role="status">{{ successMessage }}</div>
+
+    <section class="summary-grid" aria-label="Résumé des promotions">
+      <div class="summary-card"><span class="summary-icon"><i class="bi bi-tags" aria-hidden="true"></i></span><div><span>Total</span><strong>{{ promos.length }}</strong></div></div>
+      <div class="summary-card"><span class="summary-icon green"><i class="bi bi-lightning-charge" aria-hidden="true"></i></span><div><span>En cours</span><strong>{{ activeCount }}</strong></div></div>
+      <div class="summary-card"><span class="summary-icon amber"><i class="bi bi-calendar-event" aria-hidden="true"></i></span><div><span>À venir</span><strong>{{ upcomingCount }}</strong></div></div>
+    </section>
+
+    <div class="rule-note">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <div><strong>Une seule offre, toujours la plus avantageuse.</strong>
+        Pour chaque variante, la meilleure remise produit ou variante s’applique. Au paiement, le meilleur total entre les promotions et le coupon est retenu, sans cumul.</div>
+    </div>
+
+    <section class="panel editor-panel" *ngIf="editorOpen" aria-labelledby="editor-title">
+      <div class="section-heading">
+        <div><span class="section-kicker">ÉTAPE 1</span><h2 id="editor-title">{{ editingId === null ? 'Créer une promotion' : 'Modifier la promotion' }}</h2>
+          <p>Définissez la remise et sa période de validité.</p></div>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <fieldset [disabled]="busy">
+          <div class="form-grid">
+            <div class="field field-wide">
+              <label for="promo-name">Nom de la promotion <span aria-hidden="true">*</span></label>
+              <input id="promo-name" type="text" class="form-control" formControlName="code" placeholder="Ex. SOLDES-ETE">
+              <small>Un nom simple pour retrouver votre offre.</small>
+            </div>
+            <div class="field">
+              <label for="promo-discount">Remise (%) <span aria-hidden="true">*</span></label>
+              <input id="promo-discount" type="number" class="form-control" formControlName="discountValue" min="0.01" max="100" step="0.01">
+              <small>De 0,01 % à 100 %.</small>
+            </div>
+            <div class="field">
+              <label for="promo-start">Début <span aria-hidden="true">*</span></label>
+              <input id="promo-start" type="datetime-local" class="form-control" formControlName="startDate" step="1">
+            </div>
+            <div class="field">
+              <label for="promo-end">Fin <span aria-hidden="true">*</span></label>
+              <input id="promo-end" type="datetime-local" class="form-control" formControlName="endDate" step="1">
+              <small>Les dates utilisent l’heure du serveur.</small>
+            </div>
+          </div>
+          <div class="form-check form-switch mt-3">
+            <input id="promo-active" class="form-check-input" type="checkbox" formControlName="isActive">
+            <label class="form-check-label" for="promo-active">Activer pendant cette période</label>
+          </div>
+          <p *ngIf="form.invalid && form.touched" class="text-danger mt-3 mb-0" role="alert">Vérifiez le nom, les dates et la remise.</p>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelEditor()">Annuler</button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="promotions-title">
+      <div class="section-heading">
+        <div><span class="section-kicker">VOS OFFRES</span><h2 id="promotions-title">Toutes les promotions</h2>
+          <p>Choisissez une promotion pour gérer les produits concernés.</p></div>
+        <span class="count-pill">{{ promos.length }} offre(s)</span>
+      </div>
+      <div *ngIf="loading" class="loading-state" role="status">Chargement des promotions…</div>
+      <button *ngIf="!loading && loadFailed" type="button" class="btn btn-outline-secondary" (click)="loadPromos()">Réessayer</button>
+      <div *ngIf="!loading && !loadFailed && !promos.length" class="empty-state">
+        <i class="bi bi-tag" aria-hidden="true"></i><strong>Aucune promotion pour le moment</strong>
+        <span>Créez votre première offre pour commencer.</span>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="openEditor()">Créer une promotion</button>
+      </div>
+      <div class="promo-list" *ngIf="!loading && !loadFailed && promos.length">
+        <article class="promo-card" *ngFor="let promo of promos">
+          <div class="discount-tile">−{{ promo.discountValue }}<small>%</small></div>
+          <div class="promo-details">
+            <div class="promo-title"><h3>{{ promo.code }}</h3>
+              <span class="status" [class.active]="status(promo) === 'En cours'" [class.future]="status(promo) === 'À venir'">{{ status(promo) }}</span>
+            </div>
+            <p><i class="bi bi-calendar3" aria-hidden="true"></i> {{ promo.startDate | date:'dd/MM/yyyy HH:mm' }} — {{ promo.endDate | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+          <div class="promo-actions">
+            <a class="btn btn-sm btn-primary" [routerLink]="['/admin/promotions', promo.id, 'assignments']"
+              [attr.aria-label]="'Gérer les produits de ' + promo.code">Gérer les produits <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="openEditor(promo)">Modifier</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="delete(promo)">Supprimer</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </div>
+</main>

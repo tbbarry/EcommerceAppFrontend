@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService } from '../../../core/order.service';
 import { Order } from '../../../models/order.model';
+import { ReviewEditorComponent } from '../../reviews/review-editor.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReviewEditorComponent],
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.css']
 })
@@ -22,12 +23,13 @@ export class OrdersComponent implements OnInit {
   selectedStatus = 'ALL';
 
   readonly statusTabs = [
-    { value: 'ALL', label: 'Toutes', icon: 'bi bi-receipt' },
-    { value: 'PENDING', label: 'En attente', icon: 'bi bi-hourglass-split' },
-    { value: 'PAID', label: 'Payées', icon: 'bi bi-credit-card' },
-    { value: 'SHIPPED', label: 'Expédiées', icon: 'bi bi-box-seam' },
-    { value: 'DELIVERED', label: 'Livrées', icon: 'bi bi-check2-circle' },
-    { value: 'CANCELLED', label: 'Annulées', icon: 'bi bi-x-circle' }
+    { value: 'ALL', label: 'All', icon: 'bi bi-receipt' },
+    { value: 'PENDING', label: 'Pending', icon: 'bi bi-hourglass-split' },
+    { value: 'PAID', label: 'Paid', icon: 'bi bi-credit-card' },
+    { value: 'PROCESSING', label: 'Processing', icon: 'bi bi-box' },
+    { value: 'SHIPPED', label: 'Shipped', icon: 'bi bi-box-seam' },
+    { value: 'DELIVERED', label: 'Delivered', icon: 'bi bi-check2-circle' },
+    { value: 'CANCELLED', label: 'Canceled', icon: 'bi bi-x-circle' }
   ];
 
   ngOnInit(): void {
@@ -47,7 +49,7 @@ export class OrdersComponent implements OnInit {
       error: (error) => {
         console.error('Error fetching orders:', error);
 
-        this.error = 'Impossible de récupérer vos commandes.';
+        this.error = 'Could not load your orders.';
         this.loading = false;
       }
     });
@@ -80,22 +82,22 @@ export class OrdersComponent implements OnInit {
   getStatusLabel(status: string): string {
     switch (status) {
       case 'PENDING':
-        return 'En attente';
+        return 'Pending';
 
       case 'PAID':
-        return 'Payée';
+        return 'Paid';
 
       case 'SHIPPED':
-        return 'Expédiée';
+        return 'Shipped';
 
       case 'DELIVERED':
-        return 'Livrée';
+        return 'Delivered';
 
       case 'CANCELLED':
-        return 'Annulée';
+        return 'Canceled';
 
       case 'PROCESSING':
-        return 'En préparation';
+        return 'Processing';
 
       default:
         return status;
@@ -155,16 +157,16 @@ export class OrdersComponent implements OnInit {
   getDeliveryTypeLabel(type: string | null | undefined): string {
     switch (type) {
       case 'PICKUP_POINT':
-        return 'Point relais';
+        return 'Pickup point';
 
       case 'LOCKER':
-        return 'Consigne';
+        return 'Locker';
 
       case 'HAND_TO_HAND':
-        return 'Livraison à domicile';
+        return 'Home delivery';
 
       default:
-        return type || 'Livraison';
+        return type || 'Shipping';
     }
   }
 
@@ -200,11 +202,11 @@ export class OrdersComponent implements OnInit {
       return '';
     }
 
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
+    return new Intl.DateTimeFormat('en-US', {
+      day: 'numeric',
       month: 'long',
       year: 'numeric',
-      hour: '2-digit',
+      hour: 'numeric',
       minute: '2-digit'
     }).format(new Date(date));
   }

@@ -59,17 +59,17 @@ export class ResetPasswordComponent {
     this.successMessage = '';
 
     if (!this.token) {
-      this.errorMessage = 'Le lien de réinitialisation est invalide.';
+      this.errorMessage = 'The reset link is invalid.';
       return;
     }
 
     if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.errorMessage = 'Passwords do not match.';
       return;
     }
 
     if (!this.isPasswordValid) {
-      this.errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres, une majuscule, un chiffre et un caractere special (@#$%^&+=).';
+      this.errorMessage = 'Your password must contain at least 8 characters, an uppercase letter, a number, and a special character (@#$%^&+=).';
       return;
     }
 
@@ -77,7 +77,7 @@ export class ResetPasswordComponent {
     this.authService.resetPassword(this.token, this.newPassword).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Votre mot de passe a été réinitialisé avec succès.';
+        this.successMessage = 'Your password has been reset.';
         setTimeout(() => this.router.navigate(['/auth/login']), 1500);
       },
       error: (err) => {
@@ -88,7 +88,7 @@ export class ResetPasswordComponent {
   }
 
   private extractErrorMessage(err: any): string {
-    const fallback = 'Impossible de réinitialiser le mot de passe.';
+    const fallback = 'Could not reset your password.';
 
     if (!err) {
       return fallback;

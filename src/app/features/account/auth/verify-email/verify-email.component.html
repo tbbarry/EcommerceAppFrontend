@@ -7,27 +7,27 @@
             <div class="icon-wrap">
               <i class="bi bi-envelope-check"></i>
             </div>
-            <h1>Vérifiez votre email</h1>
+            <h1>Check your email</h1>
             <p class="lead">
-              Nous avons envoyé un message à
+              We sent a message to
               <strong *ngIf="email; else noEmail">{{ email }}</strong>
-              <ng-template #noEmail>l'adresse fournie</ng-template>
+              <ng-template #noEmail>the address you provided</ng-template>
             </p>
             <p>
-              Cliquez sur le lien reçu pour activer votre compte puis revenez vous connecter.
+              Follow the link to activate your account, then come back to sign in.
             </p>
 
             <div class="tips mx-auto text-start">
-              <h2>Si vous ne voyez pas l’email :</h2>
+              <h2>Don't see the email?</h2>
               <ul>
-                <li>Vérifiez le dossier spam ou promotions.</li>
-                <li>Patientez quelques instants avant de réessayer.</li>
-                <li>Contactez le support si rien n’arrive.</li>
+                <li>Check your spam or promotions folder.</li>
+                <li>Wait a few moments before trying again.</li>
+                <li>Contact support if it doesn't arrive.</li>
               </ul>
             </div>
 
             <div class="mt-4">
-              <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }" class="btn btn-primary">Retour à la connexion</a>
+              <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }" class="btn btn-primary">Back to sign in</a>
             </div>
           </div>
         </div>

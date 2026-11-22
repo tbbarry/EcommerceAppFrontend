@@ -1,0 +1,34 @@
+<main class="dashboard">
+  <header class="heading">
+    <div><p class="eyebrow">STORE OVERVIEW</p><h1>Dashboard</h1><p>Keep track of what needs your attention.</p></div>
+    <a class="button" routerLink="/admin/orders">View all orders <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  </header>
+  <p *ngIf="loading" role="status">Loading dashboard...</p>
+  <div *ngIf="error" class="error" role="alert">{{ error }} <button type="button" (click)="load()">Try again</button></div>
+  <ng-container *ngIf="!loading && !error && data as dashboard">
+    <section class="cards" aria-label="Store overview">
+      <a routerLink="/admin/orders" class="card"><span>Ready to prepare</span><strong>{{ dashboard.readyToPrepare }}</strong><small>Paid orders</small></a>
+      <a routerLink="/admin/orders" class="card"><span>In preparation</span><strong>{{ dashboard.processing }}</strong><small>Orders being processed</small></a>
+      <a routerLink="/admin/products" class="card"><span>Unavailable variants</span><strong>{{ dashboard.unavailableVariants }}</strong><small>Available stock is zero</small></a>
+    </section>
+    <section class="recent" aria-labelledby="recent-heading">
+      <div class="section-title"><div><p class="eyebrow">YOUR STORE</p><h2 id="recent-heading">Recent orders</h2></div><a routerLink="/admin/orders">View all</a></div>
+      <p *ngIf="!dashboard.recentOrders.length" class="empty">No orders yet. New orders will appear here.</p>
+      <a *ngFor="let order of dashboard.recentOrders" class="order" routerLink="/admin/orders" [queryParams]="{orderId: order.id}">
+        <span><strong>{{ order.orderNumber }}</strong><small>{{ order.customerName }} · {{ order.dateOrder | date:'MMM d, y' }}</small></span>
+        <span class="order-end"><strong>{{ order.total | currency:'USD':'symbol':'1.2-2':'en-US' }}</strong><small>{{ statusLabel(order.status) }}</small></span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </a>
+    </section>
+    <section class="recent inventory" aria-labelledby="inventory-heading">
+      <div class="section-title"><div><p class="eyebrow">INVENTORY</p><h2 id="inventory-heading">Unavailable variants</h2></div><a routerLink="/admin/products">View products</a></div>
+      <p *ngIf="!dashboard.unavailableItems.length" class="empty">No unavailable variants.</p>
+      <a *ngFor="let item of dashboard.unavailableItems" class="order" [routerLink]="['/admin/products', item.productId]">
+        <span><strong>{{ item.productName }}</strong><small>SKU: {{ item.sku }}</small></span>
+        <span class="order-end"><small>Out of stock</small></span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </a>
+      <p *ngIf="dashboard.unavailableVariants > dashboard.unavailableItems.length" class="empty">Showing {{ dashboard.unavailableItems.length }} of {{ dashboard.unavailableVariants }} unavailable variants.</p>
+    </section>
+  </ng-container>
+</main>

@@ -6,6 +6,9 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { environment } from '../../../environments/environment';
 import { CartService } from '../../core/cart.service';
+import { ReviewSummary } from '../../core/review.service';
+import { formatUsd } from '../../shared/pricing/pricing-view-model';
+import { ProductReviewsComponent } from '../reviews/product-reviews.component';
 import {
   ApiProductDetail,
   ProductDetailViewModel,
@@ -17,7 +20,7 @@ import {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, ProductReviewsComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
@@ -28,6 +31,7 @@ export class ProductDetailComponent implements OnInit {
   private readonly router = inject(Router);
 
   vm: ProductDetailViewModel | null = null;
+  reviewSummary: ReviewSummary | null = null;
   isLoading = true;
   isAddingToCart = false;
 
@@ -61,6 +65,7 @@ export class ProductDetailComponent implements OnInit {
   private loadBySlug(slug: string): void {
     this.isLoading = true;
     this.vm = null;
+    this.reviewSummary = null;
 
     const baseUrl = (environment as { apiBaseUrl?: string }).apiBaseUrl || '';
 
@@ -173,7 +178,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   get selectedVariant(): ProductVariantViewModel | null {
-    if (!this.vm) {
+    if (!this.vm || !this.isSelectionComplete) {
       return null;
     }
 
@@ -189,11 +194,11 @@ export class ProductDetailComponent implements OnInit {
       ) || null;
     }
 
-    if (!this.requiresColor && !this.requiresSize && this.vm.variants.length === 1) {
-      return this.vm.variants[0];
-    }
-
-    return null;
+    const matches = this.vm.variants.filter((variant) =>
+      (!this.requiresColor || this.sameValue(variant.color, this.selectedColor))
+      && (!this.requiresSize || this.sameValue(variant.size, this.selectedSize))
+    );
+    return matches.length === 1 ? matches[0] : null;
   }
 
   get selectedVariantStock(): number {
@@ -220,7 +225,7 @@ export class ProductDetailComponent implements OnInit {
     }
 
     if (!this.isSelectionComplete) {
-      return 'Sélectionnez une couleur et une taille pour activer le panier.';
+      return `${this.selectionPrompt} pour activer le panier.`;
     }
 
     if (!this.selectedVariant) {
@@ -232,22 +237,26 @@ export class ProductDetailComponent implements OnInit {
 
   get stockLabel(): string {
     if (!this.isSelectionComplete) {
-      return 'Sélectionnez une couleur et une taille';
+      return this.selectionPrompt;
+    }
+
+    if (!this.selectedVariant) {
+      return 'Variante indisponible';
     }
 
     if (this.selectedVariantStock <= 0) {
-      return 'Rupture de stock';
+      return 'Out of stock';
     }
 
     if (this.selectedVariantStock <= 3) {
-      return 'Stock faible';
+      return 'Low stock';
     }
 
-    return 'En stock';
+    return 'In stock';
   }
 
   get stockToneClass(): string {
-    if (!this.isSelectionComplete) {
+    if (!this.isSelectionComplete || !this.selectedVariant) {
       return 'stock-indicator--muted';
     }
 
@@ -260,6 +269,15 @@ export class ProductDetailComponent implements OnInit {
     }
 
     return 'stock-indicator--success';
+  }
+
+  private get selectionPrompt(): string {
+    if (this.requiresColor && !this.selectedColor && this.requiresSize && !this.selectedSize) {
+      return 'Select a color and size';
+    }
+    return this.requiresColor && !this.selectedColor
+      ? 'Select a color'
+      : 'Select a size';
   }
 
   colorSwatch(name: string): string {
@@ -280,50 +298,36 @@ export class ProductDetailComponent implements OnInit {
   }
 
   priceToDisplay(): string {
-    const formatter = new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-
     if (!this.vm) {
-      return formatter.format(0);
+      return formatUsd(0);
     }
 
     if (this.selectedVariant) {
-      return formatter.format(this.selectedVariant.finalPrice);
+      return formatUsd(this.selectedVariant.finalPrice);
     }
 
     if (!this.vm.pricing.hasDiscount) {
       if (this.vm.pricing.finalPriceMin === this.vm.pricing.finalPriceMax) {
-        return formatter.format(this.vm.pricing.finalPriceMin);
+        return formatUsd(this.vm.pricing.finalPriceMin);
       }
 
-      return `À partir de ${formatter.format(this.vm.pricing.finalPriceMin)}`;
+      return `From ${formatUsd(this.vm.pricing.finalPriceMin)}`;
     }
 
-    return `À partir de ${formatter.format(this.vm.pricing.finalPriceMin)}`;
+    return `From ${formatUsd(this.vm.pricing.finalPriceMin)}`;
   }
 
   strikePriceToDisplay(): string | null {
-    const formatter = new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-
     if (!this.vm) {
       return null;
     }
 
     if (this.selectedVariant && this.selectedVariant.appliedDiscountPercent > 0) {
-      return formatter.format(this.selectedVariant.price);
+      return formatUsd(this.selectedVariant.price);
     }
 
     if (!this.selectedVariant && this.vm.pricing.hasDiscount) {
-      return formatter.format(this.vm.pricing.basePriceMin);
+      return formatUsd(this.vm.pricing.basePriceMin);
     }
 
     return null;
@@ -347,7 +351,7 @@ export class ProductDetailComponent implements OnInit {
     }
 
     if (this.vm.pricing.promoScope === 'VARIANT' && this.vm.pricing.discountPercentMax != null) {
-      return `Jusqu'à -${this.vm.pricing.discountPercentMax}%`;
+      return `Up to ${this.vm.pricing.discountPercentMax}% off`;
     }
 
     return null;
@@ -364,7 +368,7 @@ export class ProductDetailComponent implements OnInit {
       && this.vm.pricing.discountPercentMax != null
       && this.vm.pricing.discountPercentMin !== this.vm.pricing.discountPercentMax
     ) {
-      return 'Réduction variable selon la variante';
+      return 'Discount varies by option';
     }
 
     return null;
@@ -375,18 +379,15 @@ export class ProductDetailComponent implements OnInit {
       return null;
     }
 
-    if (this.selectedVariant) {
-      const promo = this.vm.variantPromotions.find(
-        (item) => item.variantId === this.selectedVariant?.id && !!item.code
-      );
-
-      if (promo?.code) {
-        return promo.code;
-      }
+    if (this.selectedVariant?.appliedPromoScope === 'VARIANT') {
+      return this.vm.variantPromotions
+        .filter(item => item.variantId === this.selectedVariant?.id && !!item.code)
+        .sort((left, right) => (right.percent ?? 0) - (left.percent ?? 0))[0]?.code ?? null;
     }
 
-    const globalPromo = this.vm.globalPromotions.find((item) => !!item.code);
-    return globalPromo?.code || null;
+    return this.vm.globalPromotions
+      .filter(item => !!item.code)
+      .sort((left, right) => (right.percent ?? 0) - (left.percent ?? 0))[0]?.code ?? null;
   }
 
   onColorChoose(colorName: string): void {
@@ -694,6 +695,7 @@ export class ProductDetailComponent implements OnInit {
       slug: this.vm.slug,
       name: this.vm.name,
       price: this.selectedVariant.finalPrice,
+      basePrice: this.selectedVariant.price,
       imageUrl: image?.url ?? null,
       imageAlt: image?.alt ?? null,
       color: this.selectedColor,

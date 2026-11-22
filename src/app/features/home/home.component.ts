@@ -1,44 +1,84 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
+
+import { ProductService } from '../../core/product.service';
+import { ProductCard } from '../../models/catalogResponse.model';
+import { ProductPriceDisplayComponent } from '../../shared/pricing/product-price-display.component';
+import { resolveProductImageUrl } from '../../shared/product-image-url';
+import { StoreSettingsService } from '../../core/store-settings.service';
+import { Category, MenuService } from '../../core/menu.service';
+import { EMPTY, catchError, startWith, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <section class="hero py-5 bg-light text-center">
-      <div class="container">
-        <h1>Bienvenue sur votre boutique e-commerce</h1>
-        <p class="lead">Découvre les meilleurs produits, gérer ton panier et finalise tes commandes.</p>
-        <a routerLink="/products" class="btn btn-primary btn-lg mt-3">Voir les produits</a>
-      </div>
-    </section>
-
-    <section class="container py-5">
-      <div class="row gap-4 justify-content-center">
-        <div class="col-md-4 p-4 border rounded bg-white">
-          <h2>Catalogue produit</h2>
-          <p>Parcourir les produits, voir les détails et ajouter au panier.</p>
-          <a routerLink="/products" class="btn btn-outline-primary">Shop</a>
-        </div>
-        <div class="col-md-4 p-4 border rounded bg-white">
-          <h2>Mon panier</h2>
-          <p>Ton panier est accessible à tout moment, prêt pour le checkout.</p>
-          <a routerLink="/cart" class="btn btn-outline-primary">Panier</a>
-        </div>
-        <div class="col-md-4 p-4 border rounded bg-white">
-          <h2>Mon compte</h2>
-          <p>Connecte-toi pour voir ton profil, tes commandes et tes infos.</p>
-          <a routerLink="/auth/login" class="btn btn-outline-primary">Login</a>
-        </div>
-      </div>
-    </section>
-  `,
-  styles: [
-    `.hero { min-height: 320px; display: flex; align-items: center; }
-     .hero h1 { margin-bottom: 0.75rem; }
-    `
-  ]
+  imports: [CommonModule, RouterModule, ProductPriceDisplayComponent],
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
 })
-export class HomeComponent {}
+export class HomeComponent implements OnInit {
+  readonly store = inject(StoreSettingsService);
+  private readonly productService = inject(ProductService);
+  private readonly menuService = inject(MenuService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  products: ProductCard[] = [];
+  categories: Category[] = [];
+  categoriesLoading = true;
+  categoriesError = false;
+  loading = true;
+  loadError = false;
+  brokenImages = new Set<number>();
+
+  ngOnInit(): void {
+    this.loadCatalog();
+    this.menuService.changes$.pipe(
+      startWith(undefined),
+      switchMap(() => {
+        this.categoriesLoading = true;
+        return this.menuService.getMenu().pipe(catchError(error => {
+          console.error('Could not load categories', error);
+          this.categoriesLoading = false;
+          this.categoriesError = true;
+          return EMPTY;
+        }));
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(categories => {
+      this.categories = categories;
+      this.categoriesLoading = false;
+      this.categoriesError = false;
+    });
+  }
+
+  loadCatalog(): void {
+    this.loading = true;
+    this.loadError = false;
+    this.productService.getCatalog({ page: 0, size: 8 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (catalog) => {
+          this.products = catalog.products;
+          this.brokenImages.clear();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Impossible de charger le catalogue sur la page d’accueil', error);
+          this.loadError = true;
+          this.loading = false;
+        }
+      });
+  }
+
+  reloadCategories(): void {
+    this.menuService.refresh();
+  }
+
+  imageUrl(product: ProductCard): string | null {
+    return product.imageUrl && !this.brokenImages.has(product.id)
+      ? resolveProductImageUrl(product.imageUrl)
+      : null;
+  }
+}

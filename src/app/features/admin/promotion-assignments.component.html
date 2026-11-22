@@ -1,0 +1,119 @@
+<main class="promotions-page">
+  <div class="promotions-shell">
+    <header class="page-header">
+      <div>
+        <a routerLink="/admin/promotions" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Toutes les promotions</a>
+        <p class="eyebrow">GESTION DES PROMOTIONS</p>
+        <h1>Produits concernés</h1>
+        <p class="page-intro">Choisissez où appliquer votre promotion et retirez-la quand vous le souhaitez.</p>
+      </div>
+    </header>
+
+    <div *ngIf="loadingPromo" class="panel loading-state" role="status">Chargement de la promotion…</div>
+    <div *ngIf="promoError" class="alert alert-danger" role="alert">
+      {{ promoError }}
+      <button *ngIf="promoId !== null" type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadPromo()">Réessayer</button>
+    </div>
+
+    <ng-container *ngIf="promo as offer">
+      <div class="offer-summary">
+        <div class="discount-tile">−{{ offer.discountValue }}<small>%</small></div>
+        <div><span class="offer-label">PROMOTION</span><h2>{{ offer.code }}</h2>
+          <p>Du {{ offer.startDate | date:'dd/MM/yyyy HH:mm' }} au {{ offer.endDate | date:'dd/MM/yyyy HH:mm' }}</p>
+          <span *ngIf="!offer.isActive" class="status">Désactivée</span>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert alert-success" role="status">{{ successMessage }}</div>
+
+      <section class="panel" aria-labelledby="assignments-title">
+        <div class="section-heading assignment-heading">
+          <div><span class="section-kicker">VOS ATTRIBUTIONS</span><h2 id="assignments-title">Produits et variantes associés</h2>
+            <p>Retirer une attribution ne supprime pas la promotion.</p></div>
+          <button type="button" class="btn btn-primary" [disabled]="busy || loadingAssignments || !!assignmentsError"
+            (click)="openAdd()" *ngIf="!addOpen"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter une attribution</button>
+        </div>
+        <p *ngIf="loadingAssignments" class="loading-state" role="status">Chargement des attributions…</p>
+        <div *ngIf="assignmentsError" class="alert alert-danger" role="alert">
+          {{ assignmentsError }}
+          <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadAssignments()" [disabled]="loadingAssignments">Réessayer</button>
+        </div>
+        <div *ngIf="!loadingAssignments && !assignmentsError && !assignments.length" class="empty-state">
+          <i class="bi bi-box-seam" aria-hidden="true"></i>
+          <strong>Aucun produit associé</strong>
+          <span>Ajoutez un produit entier ou une variante pour appliquer cette promotion.</span>
+        </div>
+        <div *ngIf="!loadingAssignments && !assignmentsError" class="assigned-items">
+          <div class="assignment-row" *ngFor="let assignment of assignments">
+            <span class="assignment-icon"><i [class]="assignment.type === 'PRODUCT' ? 'bi bi-box-seam' : 'bi bi-tag'" aria-hidden="true"></i></span>
+            <div class="assignment-info"><strong>{{ assignment.productName }}</strong>
+              <small>{{ assignment.type === 'PRODUCT' ? 'Tout le produit · toutes les variantes' : 'Variante : ' + assignment.variantSku }}</small></div>
+            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy"
+              [attr.aria-label]="'Retirer la promotion de ' + assignment.productName + (assignment.variantSku ? ' ' + assignment.variantSku : '')"
+              (click)="removeAssignment(assignment)">Retirer</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel add-panel" *ngIf="addOpen" aria-labelledby="add-title">
+        <div class="section-heading assignment-heading">
+          <div><span class="section-kicker">NOUVELLE ATTRIBUTION</span><h2 id="add-title">Ajouter un produit ou une variante</h2>
+            <p>Suivez les deux étapes, puis confirmez votre choix.</p></div>
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="addOpen = false">Fermer</button>
+        </div>
+        <div class="assignment-layout">
+          <div>
+            <h3 class="subheading">1. Choisissez un produit</h3>
+            <p class="helper">Parcourez la liste et sélectionnez un produit.</p>
+            <div *ngIf="loadingProducts" class="loading-state" role="status">Chargement des produits…</div>
+            <div *ngIf="productsError" class="alert alert-danger" role="alert">{{ productsError }}
+              <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadProducts(requestedProductPage)">Réessayer</button>
+            </div>
+            <div class="product-options" *ngIf="!loadingProducts && !productsError">
+              <button *ngFor="let product of products" type="button" class="product-option"
+                [class.chosen]="selectedProduct?.id === product.id" [attr.aria-pressed]="selectedProduct?.id === product.id"
+                [disabled]="busy || loadingProduct" (click)="selectProduct(product)">
+                <span><strong>{{ product.name }}</strong><small>{{ product.brand || 'Sans marque' }} · {{ product.totalVariants }} variante(s)</small></span>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+              <p *ngIf="!products.length" class="helper">Aucun produit disponible.</p>
+            </div>
+            <nav class="product-pagination" *ngIf="productPages > 1" aria-label="Pages des produits">
+              <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="productPage === 0 || loadingProducts || busy" (click)="loadProducts(productPage - 1)">Précédent</button>
+              <span>Page {{ productPage + 1 }} / {{ productPages }}</span>
+              <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="productPage + 1 >= productPages || loadingProducts || busy" (click)="loadProducts(productPage + 1)">Suivant</button>
+            </nav>
+          </div>
+          <div class="target-box">
+            <h3 class="subheading">2. Choisissez où appliquer la remise</h3>
+            <div *ngIf="loadingProduct" class="loading-state" role="status">Chargement du produit…</div>
+            <p *ngIf="productError" class="text-danger" role="alert">{{ productError }}</p>
+            <div *ngIf="!selectedProduct && !loadingProduct && !productError" class="target-placeholder"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i> Sélectionnez d’abord un produit.</div>
+            <div *ngIf="selectedProduct as product">
+              <p class="chosen-product">{{ product.name }}</p>
+              <div class="target-options">
+                <button type="button" [class.chosen]="targetType === 'PRODUCT'" [attr.aria-pressed]="targetType === 'PRODUCT'" [disabled]="busy" (click)="setTarget('PRODUCT')"><strong>Tout le produit</strong><small>Toutes ses variantes</small></button>
+                <button type="button" [class.chosen]="targetType === 'VARIANT'" [attr.aria-pressed]="targetType === 'VARIANT'" [disabled]="busy" (click)="setTarget('VARIANT')"><strong>Une variante</strong><small>Une référence précise</small></button>
+              </div>
+              <div class="field mt-3" *ngIf="targetType === 'VARIANT'">
+                <label for="promo-variant">Variante</label>
+                <select #variantSelect id="promo-variant" class="form-select" [disabled]="busy" (change)="selectedVariantId = +variantSelect.value">
+                  <option value="0">Choisir une variante</option>
+                  <option *ngFor="let variant of product.variants" [value]="variant.id">{{ variantLabel(variant) }}</option>
+                </select>
+                <small *ngIf="!product.variants.length">Ce produit n’a pas de variante.</small>
+              </div>
+              <p *ngIf="targetType === 'PRODUCT' && isAssigned('PRODUCT', product.id)" class="helper mt-3">Cette promotion est déjà attribuée à ce produit.</p>
+              <p *ngIf="targetType === 'VARIANT' && selectedVariantId && isAssigned('VARIANT', selectedVariantId)" class="helper mt-3">Cette promotion est déjà attribuée à cette variante.</p>
+              <button type="button" class="btn btn-primary mt-3 w-100" (click)="assign()"
+                [disabled]="busy || loadingAssignments || !!assignmentsError || (targetType === 'PRODUCT' ? isAssigned('PRODUCT', product.id) : !selectedVariantId || isAssigned('VARIANT', selectedVariantId))">
+                <i class="bi bi-check2" aria-hidden="true"></i> Confirmer l’attribution
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</main>

@@ -1,0 +1,16 @@
+.admin-product-detail {
+  min-height: 60vh;
+}
+
+.product-image {
+  height: 220px;
+  object-fit: cover;
+}
+
+.image-preview {
+  max-height: 120px;
+}
+
+.stock-input {
+  max-width: 16rem;
+}

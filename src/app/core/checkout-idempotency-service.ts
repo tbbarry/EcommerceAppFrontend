@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core';
 export class CheckoutIdempotencyService {
 
   private readonly STORAGE_KEY = 'checkout_idempotency_key';
+  private readonly ORDER_KEY = 'checkout_idempotency_order';
 
   /**
    * Retourne la clé actuelle.
@@ -32,6 +33,16 @@ export class CheckoutIdempotencyService {
    */
   clear(): void {
     sessionStorage.removeItem(this.STORAGE_KEY);
+    sessionStorage.removeItem(this.ORDER_KEY);
+  }
+
+  bindOrder(orderId: number): void {
+    sessionStorage.setItem(this.ORDER_KEY, String(orderId));
+  }
+
+  clearForOrder(orderId: number): void {
+    const boundOrder = sessionStorage.getItem(this.ORDER_KEY);
+    if (!boundOrder || boundOrder === String(orderId)) this.clear();
   }
 }
 

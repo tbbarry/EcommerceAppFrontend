@@ -1,4 +1,7 @@
 <main class="main" *ngIf="user$ | async as user; else noUser">
+  <div *ngIf="user.mustChangePassword" class="container alert alert-warning mt-3" role="alert">
+    Change your temporary password in the Security section before continuing.
+  </div>
   <div class="page-title light-background">
     <div class="container d-lg-flex justify-content-between align-items-center">
       <h1 class="mb-2 mb-lg-0">Account</h1>
@@ -79,7 +82,7 @@
                 <div class="alert alert-danger mt-2" *ngIf="addressesError">{{ addressesError }}</div>
                 <div class="alert alert-danger mt-2" *ngIf="addressFormError">{{ addressFormError }}</div>
                 <div class="alert alert-success mt-2" *ngIf="addressFormSuccess">{{ addressFormSuccess }}</div>
-                <div class="text-muted mt-2 mb-2" *ngIf="isAddressesLoading">Chargement des adresses...</div>
+                <div class="text-muted mt-2 mb-2" *ngIf="isAddressesLoading">Loading addresses...</div>
 
                 <div class="address-form-card" *ngIf="isAddressEditorOpen">
                   <h4 class="mb-3">{{ editingAddressId ? 'Edit Address' : 'Add New Address' }}</h4>
@@ -88,17 +91,17 @@
                       <div class="col-md-6">
                         <label class="form-label" for="addressLabel">Label</label>
                         <input id="addressLabel" type="text" class="form-control" formControlName="label" [class.is-invalid]="isAddressFieldInvalid('label')">
-                        <div class="form-text">Optionnel (ex: Home, Office)</div>
+                        <div class="form-text">Optional (e.g. Home, Office)</div>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label" for="addressPhone">Phone</label>
                         <input id="addressPhone" type="tel" class="form-control" formControlName="phone" [class.is-invalid]="isAddressFieldInvalid('phone')">
-                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('phone')">Telephone US invalide.</div>
+                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('phone')">Enter a valid US phone number.</div>
                       </div>
                       <div class="col-md-12">
                         <label class="form-label" for="addressLine1">Address Line 1</label>
                         <input id="addressLine1" type="text" class="form-control" formControlName="line1" [class.is-invalid]="isAddressFieldInvalid('line1')">
-                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('line1')">Adresse requise (max 120 caracteres).</div>
+                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('line1')">Address is required (120 characters maximum).</div>
                       </div>
                       <div class="col-md-12">
                         <label class="form-label" for="addressLine2">Address Line 2</label>
@@ -107,22 +110,22 @@
                       <div class="col-md-6">
                         <label class="form-label" for="addressCity">City</label>
                         <input id="addressCity" type="text" class="form-control" formControlName="city" [class.is-invalid]="isAddressFieldInvalid('city')">
-                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('city')">Ville invalide.</div>
+                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('city')">Enter a valid city.</div>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label" for="addressState">State</label>
                         <input id="addressState" type="text" class="form-control text-uppercase" formControlName="state" maxlength="2" [class.is-invalid]="isAddressFieldInvalid('state')">
-                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('state')">Code US a 2 lettres (ex: CA).</div>
+                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('state')">Enter a two-letter state code (e.g. CA).</div>
                       </div>
                       <div class="col-md-6">
-                        <label class="form-label" for="addressPostalCode">Postal Code</label>
+                        <label class="form-label" for="addressPostalCode">ZIP Code</label>
                         <input id="addressPostalCode" type="text" class="form-control" formControlName="postalCode" [class.is-invalid]="isAddressFieldInvalid('postalCode')">
-                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('postalCode')">Zipcode US invalide (12345 ou 12345-6789).</div>
+                        <div class="invalid-feedback" *ngIf="isAddressFieldInvalid('postalCode')">Enter a valid ZIP code (12345 or 12345-6789).</div>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label" for="addressCountry">Country</label>
                         <input id="addressCountry" type="text" class="form-control" formControlName="country" [class.is-invalid]="isAddressFieldInvalid('country')">
-                        <div class="form-text">Optionnel</div>
+                        <div class="form-text">Optional</div>
                       </div>
                       <div class="col-md-12">
                         <div class="form-check form-switch">
@@ -188,7 +191,7 @@
                 </div>
 
                 <ng-template #noAddressData>
-                  <div class="alert alert-info mt-3">Aucune adresse enregistree pour le moment.</div>
+                  <div class="alert alert-info mt-3">No saved addresses yet.</div>
                 </ng-template>
               </div>
 
@@ -205,12 +208,12 @@
                         <div class="col-md-6">
                           <label for="firstName" class="form-label">First Name</label>
                           <input type="text" class="form-control" id="firstName" formControlName="firstname" [class.is-invalid]="isFieldInvalid('firstname')">
-                          <div class="invalid-feedback" *ngIf="isFieldInvalid('firstname')">Le prenom doit contenir au moins 2 caracteres.</div>
+                          <div class="invalid-feedback" *ngIf="isFieldInvalid('firstname')">First name must contain at least 2 characters.</div>
                         </div>
                         <div class="col-md-6">
                           <label for="lastName" class="form-label">Last Name</label>
                           <input type="text" class="form-control" id="lastName" formControlName="lastname" [class.is-invalid]="isFieldInvalid('lastname')">
-                          <div class="invalid-feedback" *ngIf="isFieldInvalid('lastname')">Le nom doit contenir au moins 2 caracteres.</div>
+                          <div class="invalid-feedback" *ngIf="isFieldInvalid('lastname')">Last name must contain at least 2 characters.</div>
                         </div>
                         <div class="col-md-6">
                           <label for="email" class="form-label">Email</label>
@@ -219,7 +222,7 @@
                         <div class="col-md-6">
                           <label for="phone" class="form-label">Phone</label>
                           <input type="tel" class="form-control" id="phone" formControlName="phone" [class.is-invalid]="isFieldInvalid('phone')">
-                          <div class="invalid-feedback" *ngIf="isFieldInvalid('phone')">Le numero doit etre valide.</div>
+                          <div class="invalid-feedback" *ngIf="isFieldInvalid('phone')">Enter a valid phone number.</div>
                         </div>
                       </div>
 
@@ -329,9 +332,9 @@
     </div>
     <section class="account section">
       <div class="container">
-        <div class="alert alert-warning mb-3">Aucun utilisateur connecté.</div>
-        <a routerLink="/auth/login" class="btn btn-primary me-2">Aller a la connexion</a>
-        <a routerLink="/auth/register" class="btn btn-outline-primary">Creer un compte</a>
+        <div class="alert alert-warning mb-3">You are not signed in.</div>
+        <a routerLink="/auth/login" class="btn btn-primary me-2">Sign in</a>
+        <a routerLink="/auth/register" class="btn btn-outline-primary">Create account</a>
       </div>
     </section>
   </main>

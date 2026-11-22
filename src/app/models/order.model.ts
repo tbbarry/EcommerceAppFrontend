@@ -8,6 +8,7 @@ export type OrderStatus =
   | 'REFUNDED';
 
 export type DeliveryType =
+  | 'HOME'
   | 'PICKUP_POINT'
   | 'LOCKER'
   | 'HAND_TO_HAND';

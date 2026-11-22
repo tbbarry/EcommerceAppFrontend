@@ -1,0 +1,27 @@
+<main class="admin-reviews">
+  <div class="shell">
+    <header>
+      <div><p class="eyebrow">Administration</p><h1>Customer reviews</h1><p>View and moderate reviews of your products.</p></div>
+      <a routerLink="/admin/products">Back to products</a>
+    </header>
+    <section class="panel" aria-labelledby="list-title">
+      <div class="panel-header"><h2 id="list-title">All reviews</h2><span>{{ total }} reviews</span></div>
+      <p *ngIf="loading" class="state" role="status">Loading…</p>
+      <p *ngIf="error" class="state error" role="alert">{{ error }} <button type="button" (click)="load(page)">Try again</button></p>
+      <p *ngIf="!loading && !error && !reviews.length" class="state">No reviews yet.</p>
+      <article class="review" *ngFor="let review of reviews">
+        <div class="review-content">
+          <div class="review-heading"><h3>{{ review.productName }}</h3><span class="badge" [class.hidden]="!review.visible">{{ review.visible ? 'Visible' : 'Hidden' }}</span></div>
+          <p class="meta"><span class="stars" [attr.aria-label]="review.rating + ' out of 5'">{{ '★★★★★'.slice(0, review.rating) }}</span> · Verified purchase · {{ review.createdAt | date:'MMM d, y' }}</p>
+          <p class="comment">{{ review.comment || 'No comment' }}</p>
+        </div>
+        <button type="button" class="toggle" [disabled]="savingId !== null" (click)="toggle(review)">{{ review.visible ? 'Hide' : 'Restore' }}</button>
+      </article>
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button type="button" (click)="load(page - 1)" [disabled]="page === 0 || loading">Previous</button>
+        <span>Page {{ page + 1 }} / {{ totalPages }}</span>
+        <button type="button" (click)="load(page + 1)" [disabled]="page + 1 >= totalPages || loading">Next</button>
+      </div>
+    </section>
+  </div>
+</main>

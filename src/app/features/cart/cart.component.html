@@ -4,7 +4,7 @@
   <div class="cart-loading-overlay" *ngIf="cartService.isLoadingCart()">
     <div class="cart-loading-spinner">
       <div class="spinner-border text-dark" role="status">
-        <span class="visually-hidden">Chargement…</span>
+        <span class="visually-hidden">Loading…</span>
       </div>
     </div>
   </div>
@@ -13,7 +13,7 @@
   <div class="container" *ngIf="cartService.cartError()">
     <div class="alert alert-danger alert-dismissible mt-3" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ cartService.cartError() }}
-      <button type="button" class="btn-close" (click)="dismissError()" aria-label="Fermer"></button>
+      <button type="button" class="btn-close" (click)="dismissError()" aria-label="Close"></button>
     </div>
   </div>
 
@@ -36,9 +36,9 @@
           <i class="bi bi-cart-x"></i>
         </div>
         <h2>Your cart is empty</h2>
-        <p>Looks like you haven't added anything yet.</p>
+        <p>Explore our collection and add your favorite pieces.</p>
         <a routerLink="/products" class="btn btn-dark btn-lg">
-          <i class="bi bi-bag me-2"></i>Start Shopping
+          <i class="bi bi-bag me-2"></i>Shop products
         </a>
       </div>
 
@@ -88,7 +88,7 @@
               <div class="cart-qty">
                 <span class="mobile-label d-lg-none">Quantity</span>
                 <div class="qty-control">
-                  <button type="button" class="qty-btn" (click)="decrease(item)" aria-label="Decrease">
+                  <button type="button" class="qty-btn" (click)="decrease(item)" aria-label="Decrease quantity">
                     <i class="bi bi-dash"></i>
                   </button>
                   <input
@@ -100,7 +100,7 @@
                     (change)="setQuantity(item, $any($event.target).value)"
                     aria-label="Quantity"
                   >
-                  <button type="button" class="qty-btn" (click)="increase(item)" [disabled]="item.quantity >= item.maxStock" aria-label="Increase">
+                  <button type="button" class="qty-btn" (click)="increase(item)" [disabled]="item.quantity >= item.maxStock" aria-label="Increase quantity">
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
@@ -121,10 +121,10 @@
             <!-- Cart actions -->
             <div class="cart-actions">
               <a routerLink="/products" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Continue Shopping
+                <i class="bi bi-arrow-left me-1"></i>Continue shopping
               </a>
               <button type="button" class="btn btn-outline-danger btn-sm ms-auto" (click)="clearAll()">
-                <i class="bi bi-trash3 me-1"></i>Clear Cart
+                <i class="bi bi-trash3 me-1"></i>Clear cart
               </button>
             </div>
 
@@ -134,7 +134,7 @@
         <!-- Right: order summary -->
         <div class="col-lg-4">
           <div class="order-summary">
-            <h4 class="summary-heading">Order Summary</h4>
+            <h4 class="summary-heading">Order summary</h4>
 
             <div class="summary-line">
               <span>Subtotal ({{ cartService.totalQuantity() }} items)</span>
@@ -142,38 +142,29 @@
             </div>
 
             <div class="summary-line shipping-line">
-              <span>Shipping</span>
+              <span>Shipping and taxes</span>
               <span class="shipping-note">Calculated at checkout</span>
             </div>
 
             <div class="summary-divider"></div>
 
             <div class="summary-total">
-              <span>Estimated Total</span>
+              <span>Subtotal before shipping and taxes</span>
               <span>{{ cartService.subtotal() | currency:'USD':'symbol':'1.2-2' }}</span>
             </div>
 
             <a routerLink="/checkout" class="btn btn-dark w-100 checkout-btn">
-              Proceed to Checkout <i class="bi bi-arrow-right ms-1"></i>
+              Checkout <i class="bi bi-arrow-right ms-1"></i>
             </a>
 
-            <div class="summary-payments">
-              <p>We accept</p>
-              <div class="payment-icons">
-                <i class="bi bi-credit-card" aria-label="Credit Card"></i>
-                <i class="bi bi-paypal" aria-label="PayPal"></i>
-                <i class="bi bi-apple" aria-label="Apple Pay"></i>
-                <i class="bi bi-google" aria-label="Google Pay"></i>
-              </div>
-            </div>
           </div>
         </div>
 
       </div>
 
       <div class="cart-bottom-actions" *ngIf="!cartService.isEmpty()">
-        <a routerLink="/products" class="btn btn-outline-secondary bottom-shop-btn">Go shopping</a>
-        <a routerLink="/checkout" class="btn btn-dark bottom-checkout-btn">Proceed to Checkout</a>
+        <a routerLink="/products" class="btn btn-outline-secondary bottom-shop-btn">Continue shopping</a>
+        <a routerLink="/checkout" class="btn btn-dark bottom-checkout-btn">Checkout</a>
       </div>
     </div>
   </section>

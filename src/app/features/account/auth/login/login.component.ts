@@ -1,34 +1,44 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
+import { StoreSettingsService } from '../../../../core/store-settings.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['../register/register.component.css', './login.component.css']
 })
 export class LoginComponent {
+  readonly store = inject(StoreSettingsService);
   credentials = { email: '', password: '' };
   loading = false;
   errorMessage = '';
+  showPassword = false;
   readonly returnUrl: string;
+  readonly passwordChanged: boolean;
 
   constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/products';
+    this.passwordChanged = this.route.snapshot.queryParamMap.get('passwordChanged') === '1';
   }
 
   login(): void {
+    if (this.loading) return;
+    if (!this.credentials.email.trim() || !this.credentials.password) {
+      this.errorMessage = 'Enter your email address and password.';
+      return;
+    }
     this.loading = true;
     this.errorMessage = '';
 
     this.auth.login(this.credentials).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigateByUrl(this.returnUrl);
+        this.router.navigateByUrl(this.auth.currentUser?.mustChangePassword ? '/account/profile' : this.returnUrl);
       },
       error: (err) => {
         this.loading = false;
@@ -39,18 +49,18 @@ export class LoginComponent {
 
   private extractErrorMessage(err: any): string {
     if (!err) {
-      return 'Impossible de se connecter.';
+      return 'Unable to sign in.';
     }
 
     if (typeof err.error === 'string') {
       const trimmed = err.error.trim();
       if (!trimmed) {
-        return err.message || 'Impossible de se connecter.';
+        return err.message || 'Unable to sign in.';
       }
 
       try {
         const parsed = JSON.parse(trimmed);
-        return parsed.message || parsed.error || err.message || 'Impossible de se connecter.';
+        return parsed.message || parsed.error || err.message || 'Unable to sign in.';
       } catch {
         return trimmed;
       }
@@ -64,11 +74,7 @@ export class LoginComponent {
       return err.error.error;
     }
 
-    return err.message || 'Impossible de se connecter.';
+    return err.message || 'Unable to sign in.';
   }
 
-  loginWithGoogle(): void {
-    this.errorMessage = '';
-    this.errorMessage = 'Connexion Google a brancher avec ton backend OAuth.';
-  }
 }

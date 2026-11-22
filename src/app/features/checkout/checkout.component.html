@@ -13,11 +13,16 @@
 
   <section class="checkout-section section">
     <div class="container">
+      <header class="checkout-intro">
+        <p class="checkout-kicker">YOUR ORDER</p>
+        <h1>Checkout</h1>
+        <p>A few more details and your favorites are on their way.</p>
+      </header>
       <div class="checkout-empty" *ngIf="cartService.isEmpty()">
         <i class="bi bi-bag-x"></i>
         <h2>Your cart is empty</h2>
-        <p>Add products to continue with checkout.</p>
-        <a routerLink="/products" class="btn btn-dark">Browse products</a>
+        <p>Add items to continue.</p>
+        <a routerLink="/products" class="btn btn-dark">Shop products</a>
       </div>
 
       <div class="row g-4" *ngIf="!cartService.isEmpty()">
@@ -25,7 +30,7 @@
           <div class="checkout-panel checkout-stack">
             <div class="section-card customer-section" *ngIf="currentUser as user">
               <div class="checkout-panel-head section-header">
-                <h3>Customer</h3>
+                <h3>Your account</h3>
                 <span class="section-hint">Signed in</span>
               </div>
               <div class="customer-card customer-card-hero">
@@ -37,56 +42,65 @@
 
             <div class="section-card">
               <div class="checkout-panel-head section-header">
-                <h3>Shipping Address</h3>
-                <button class="btn btn-outline-dark btn-sm" type="button" (click)="toggleAddAddress()">
+                <h3><span class="section-number">1</span> Shipping address</h3>
+                <button class="btn btn-outline-dark btn-sm" type="button" [disabled]="isSavingAddress" (click)="toggleAddAddress()">
                   <i class="bi" [ngClass]="showAddAddressForm ? 'bi-x-lg' : 'bi-plus-lg'"></i>
-                  {{ showAddAddressForm ? 'Cancel' : 'New Address' }}
+                  {{ showAddAddressForm ? 'Cancel' : 'Add' }}
                 </button>
               </div>
 
               <div class="address-loading" *ngIf="isLoadingAddresses">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
-                <span>Loading addresses...</span>
+                <span>Loading your addresses…</span>
               </div>
 
-              <div class="alert alert-warning" *ngIf="addressError">{{ addressError }}</div>
+              <div class="alert alert-warning" *ngIf="addressError" role="alert">
+                {{ addressError }}
+                <button *ngIf="addressLoadFailed" type="button" class="btn btn-sm btn-outline-dark ms-2" (click)="loadAddresses(true)">Try again</button>
+              </div>
 
               <div class="address-list" *ngIf="!isLoadingAddresses && addresses.length">
-                <label class="address-card" *ngFor="let address of addresses; let index = index; trackBy: trackByAddress" [class.active]="address.id === selectedAddressId">
+                <div class="address-card" *ngFor="let address of addresses; let index = index; trackBy: trackByAddress" [class.active]="address.id === selectedAddressId">
                   <input
                     type="radio"
                     name="selectedAddress"
+                    [id]="'address-choice-' + index"
+                    [attr.aria-describedby]="'address-details-' + index"
                     [checked]="address.id === selectedAddressId"
                     (change)="selectAddress(address.id)"
                   >
                   <div class="address-card-body">
                     <div class="address-card-head">
-                      <h4>{{ getAddressTitle(address, index) }}</h4>
+                      <h4><label [for]="'address-choice-' + index">{{ getAddressTitle(address, index) }}</label></h4>
                       <div class="address-card-actions">
                         <span class="default-pill" *ngIf="address.isDefault">Default</span>
                         <button
                           class="btn btn-link btn-sm address-edit-btn"
                           type="button"
-                          (click)="startEditAddress(index); $event.stopPropagation()"
+                          [disabled]="isSavingAddress"
+                          (click)="startEditAddress(index)"
                         >
                           Edit
                         </button>
                       </div>
                     </div>
-                    <p class="mb-1" *ngIf="getAddressContact(address)">{{ getAddressContact(address) }}</p>
-                    <p>{{ getAddressLine(address) }}</p>
-                    <small *ngIf="address.phone">{{ address.phone }}</small>
+                    <div [id]="'address-details-' + index">
+                      <p class="mb-1" *ngIf="getAddressContact(address)">{{ getAddressContact(address) }}</p>
+                      <p>{{ getAddressLine(address) }}</p>
+                      <small *ngIf="address.phone">{{ address.phone }}</small>
+                    </div>
                   </div>
-                </label>
+                </div>
               </div>
 
-              <div class="no-address" *ngIf="!isLoadingAddresses && !addresses.length && !showAddAddressForm">
-                <p>You do not have a saved address yet.</p>
-                <button class="btn btn-dark btn-sm" type="button" (click)="toggleAddAddress()">Add first address</button>
+              <div class="no-address" *ngIf="!isLoadingAddresses && !addressLoadFailed && !addresses.length && !showAddAddressForm">
+                <p>You don't have any saved addresses yet.</p>
+                <button class="btn btn-dark btn-sm" type="button" (click)="toggleAddAddress()">Add an address</button>
               </div>
 
               <div class="add-address-form" *ngIf="showAddAddressForm">
-                <h4>{{ isEditingAddress ? 'Edit address' : 'Add a new address' }}</h4>
+                <h4>{{ isEditingAddress ? 'Edit address' : 'Add an address' }}</h4>
+                <p class="address-format-hint">All fields are required unless marked optional. Use US address and phone formats.</p>
 
                 <div class="row g-3">
                   <div class="col-md-6">
@@ -101,24 +115,24 @@
                   </div>
 
                   <div class="col-md-6">
-                    <label class="form-label" for="addressLabel">Label</label>
-                    <input id="addressLabel" type="text" maxlength="30" class="form-control" placeholder="Home, Office..." [(ngModel)]="newAddress.label" name="newAddressLabel">
+                    <label class="form-label" for="addressLabel">Address label</label>
+                    <input id="addressLabel" type="text" maxlength="30" class="form-control" placeholder="Home, work…" [(ngModel)]="newAddress.label" name="newAddressLabel">
                     <small class="field-error" *ngIf="newAddress.label && getLabelError()">{{ getLabelError() }}</small>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label" for="addressPhone">Phone</label>
-                    <input id="addressPhone" type="text" class="form-control" placeholder="(212) 555-0102" [(ngModel)]="newAddress.phone" name="newAddressPhone">
+                    <label class="form-label" for="addressPhone">US phone number</label>
+                    <input id="addressPhone" type="tel" class="form-control" placeholder="(212) 555-0102" [(ngModel)]="newAddress.phone" name="newAddressPhone">
                     <small class="field-error" *ngIf="newAddress.phone && getPhoneError()">{{ getPhoneError() }}</small>
                   </div>
 
                   <div class="col-12">
-                    <label class="form-label" for="addressLine1">Address line 1</label>
-                    <input id="addressLine1" type="text" class="form-control" placeholder="Street and number" [(ngModel)]="newAddress.line1" name="newAddressLine1">
+                    <label class="form-label" for="addressLine1">Street address</label>
+                    <input id="addressLine1" type="text" class="form-control" placeholder="Street address" [(ngModel)]="newAddress.line1" name="newAddressLine1">
                   </div>
 
                   <div class="col-12">
-                    <label class="form-label" for="addressLine2">Address line 2 (optional)</label>
-                    <input id="addressLine2" type="text" class="form-control" placeholder="Apartment, floor, details" [(ngModel)]="newAddress.line2" name="newAddressLine2">
+                    <label class="form-label" for="addressLine2">Apartment, suite, etc. (optional)</label>
+                    <input id="addressLine2" type="text" class="form-control" placeholder="Apartment, suite, etc." [(ngModel)]="newAddress.line2" name="newAddressLine2">
                   </div>
 
                   <div class="col-md-3">
@@ -126,17 +140,17 @@
                     <input id="addressCity" type="text" class="form-control" [(ngModel)]="newAddress.city" name="newAddressCity">
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label" for="addressState">State</label>
-                    <input id="addressState" type="text" maxlength="2" class="form-control" [(ngModel)]="newAddress.state" name="newAddressState">
+                    <label class="form-label" for="addressState">State (2 letters)</label>
+                    <input id="addressState" type="text" maxlength="2" class="form-control" placeholder="CA" [(ngModel)]="newAddress.state" name="newAddressState">
                     <small class="field-error" *ngIf="newAddress.state && getStateError()">{{ getStateError() }}</small>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label" for="addressPostal">Zip code</label>
-                    <input id="addressPostal" type="text" class="form-control" [(ngModel)]="newAddress.postalCode" name="newAddressPostal">
+                    <label class="form-label" for="addressPostal">ZIP code</label>
+                    <input id="addressPostal" type="text" inputmode="numeric" class="form-control" placeholder="12345" [(ngModel)]="newAddress.postalCode" name="newAddressPostal">
                     <small class="field-error" *ngIf="newAddress.postalCode && getZipCodeError()">{{ getZipCodeError() }}</small>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label" for="addressCountry">Country</label>
+                    <label class="form-label" for="addressCountry">Country (2 letters)</label>
                     <input id="addressCountry" type="text" maxlength="2" class="form-control" placeholder="US" [(ngModel)]="newAddress.country" name="newAddressCountry">
                     <small class="field-error" *ngIf="newAddress.country && getCountryError()">{{ getCountryError() }}</small>
                   </div>
@@ -154,8 +168,8 @@
                     Cancel
                   </button>
                   <button class="btn btn-dark" type="button" [disabled]="isSavingAddress" (click)="saveAddress()">
-                    <span *ngIf="!isSavingAddress">{{ isEditingAddress ? 'Update Address' : 'Save Address' }}</span>
-                    <span *ngIf="isSavingAddress">Saving...</span>
+                    <span *ngIf="!isSavingAddress">{{ isEditingAddress ? 'Save changes' : 'Save address' }}</span>
+                    <span *ngIf="isSavingAddress">Saving…</span>
                   </button>
                 </div>
               </div>
@@ -163,15 +177,18 @@
 
             <div class="section-card">
               <div class="checkout-panel-head section-header">
-                <h3>Shipping & Preferences</h3>
+                <h3><span class="section-number">2</span> Shipping method</h3>
               </div>
 
               <div class="address-loading" *ngIf="isLoadingShippingMethods">
                 <div class="spinner-border spinner-border-sm" role="status"></div>
-                <span>Loading shipping methods...</span>
+                <span>Loading shipping methods…</span>
               </div>
 
-              <div class="alert alert-warning" *ngIf="shippingError">{{ shippingError }}</div>
+              <div class="alert alert-warning" *ngIf="shippingError" role="alert">
+                {{ shippingError }}
+                <button *ngIf="shippingLoadFailed" type="button" class="btn btn-sm btn-outline-dark ms-2" (click)="loadShippingMethods(true)">Try again</button>
+              </div>
 
               <div class="shipping-methods-grid" *ngIf="!isLoadingShippingMethods && shippingMethods.length">
                 <label class="shipping-card" *ngFor="let method of shippingMethods; trackBy: trackByShippingMethod" [class.active]="method.id === selectedShippingMethodId">
@@ -197,17 +214,17 @@
               </div>
 
               <div class="delivery-preferences mt-3">
-                <h4>Delivery preferences</h4>
+                <h4>Delivery preferences (optional)</h4>
                 <label class="form-check d-flex align-items-center gap-2 mb-2">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="leaveAtDoor" (ngModelChange)="onDeliveryPreferencesChanged()" name="leaveAtDoor">
-                  <span>Leave at door</span>
+                  <span>Leave at the door</span>
                 </label>
                 <label class="form-check d-flex align-items-center gap-2 mb-3">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="requireSignature" (ngModelChange)="onDeliveryPreferencesChanged()" name="requireSignature">
-                  <span>Require signature</span>
+                  <span>Require a signature</span>
                 </label>
 
-                <label class="form-label" for="deliveryNote">Delivery note (optional)</label>
+                <label class="form-label" for="deliveryNote">Delivery instructions (optional)</label>
                 <textarea
                   id="deliveryNote"
                   rows="3"
@@ -216,7 +233,7 @@
                   [(ngModel)]="deliveryNote"
                   (ngModelChange)="onDeliveryPreferencesChanged()"
                   name="deliveryNote"
-                  placeholder="Leave with neighbor if absent..."
+                  placeholder="For example: leave with a neighbor if I'm away"
                 ></textarea>
                 <div class="note-meta">
                   <small class="field-error" *ngIf="getDeliveryNoteError()">{{ getDeliveryNoteError() }}</small>
@@ -229,58 +246,9 @@
         </div>
 
         <div class="col-lg-5">
-          <div class="section-card promo-section mb-3">
-            <div class="checkout-panel-head section-header">
-              <h3><i class="bi bi-ticket-perforated"></i> Promo Code</h3>
-              <span class="section-hint">Save instantly</span>
-            </div>
-            <p class="promo-subtitle">Apply your coupon after selecting address and delivery options.</p>
-
-            <div class="coupon-input-row promo-input-row">
-              <input
-                id="checkoutCouponCode"
-                type="text"
-                class="form-control"
-                placeholder="WELCOME10"
-                [(ngModel)]="couponCode"
-                (ngModelChange)="onCouponCodeInputChange($event)"
-                name="checkoutCouponCode"
-              >
-              <button type="button" class="btn apply-coupon-btn" [disabled]="!canApplyCoupon" (click)="applyCoupon()">
-                {{ isApplyingCoupon ? 'Checking...' : 'Apply' }}
-              </button>
-            </div>
-
-            <small class="coupon-note" *ngIf="!selectedAddressId || !selectedShippingMethodId">
-              Select address and shipping first to validate coupon and get exact discount.
-            </small>
-
-            <small class="field-error coupon-error" *ngIf="couponError">{{ couponError }}</small>
-            <div class="coupon-feedback success" *ngIf="couponValidationStatus === 'valid' && appliedCouponCode && !couponError">
-              <i class="bi bi-check2-circle"></i>
-              <span>Coupon {{ appliedCouponCode }} applied.</span>
-              <strong *ngIf="discountPreview > 0">-{{ discountPreview | currency:'USD':'symbol':'1.2-2' }}</strong>
-            </div>
-            <div class="coupon-feedback info" *ngIf="couponValidationStatus !== 'valid' && couponInfoMessage && !couponError">
-              <i class="bi bi-info-circle"></i>
-              <span>{{ couponInfoMessage }}</span>
-            </div>
-
-            <div class="coupon-impact" *ngIf="couponValidationStatus === 'valid' && exactCouponPreview?.total !== undefined && !couponError">
-              <div class="coupon-impact-line">
-                <span>Reduction appliquee</span>
-                <strong>-{{ discountPreview | currency:'USD':'symbol':'1.2-2' }}</strong>
-              </div>
-              <div class="coupon-impact-line total">
-                <span>Nouveau total preview</span>
-                <strong>{{ estimatedTotal | currency:'USD':'symbol':'1.2-2' }}</strong>
-              </div>
-            </div>
-          </div>
-
           <div class="order-summary-panel">
             <div class="order-summary-head">
-              <h3>Order Summary</h3>
+              <h3><span class="section-number">3</span> Order summary</h3>
               <span>{{ cartService.totalQuantity() }} item(s)</span>
             </div>
 
@@ -296,38 +264,59 @@
                     {{ item.color }}{{ item.color && item.size ? ' | ' : '' }}{{ item.size }}
                   </p>
                   <div class="order-item-prices">
-                    <span>{{ item.quantity }} x {{ item.price | currency:'USD':'symbol':'1.2-2' }}</span>
+                    <span>{{ item.quantity }} x {{ getItemUnitPrice(item) | currency:'USD':'symbol':'1.2-2' }}</span>
                     <strong>{{ getItemLineTotal(item) | currency:'USD':'symbol':'1.2-2' }}</strong>
                   </div>
                 </div>
               </div>
             </div>
 
+            <details class="promo-section">
+              <summary><i class="bi bi-ticket-perforated" aria-hidden="true"></i> Have a promo code?</summary>
+              <p class="promo-subtitle">Apply your code after choosing an address and shipping method.</p>
+              <div class="coupon-input-row promo-input-row">
+                <label for="checkoutCouponCode" class="visually-hidden">Promo code</label>
+                <input id="checkoutCouponCode" type="text" class="form-control" placeholder="Promo code" [(ngModel)]="couponCode" (ngModelChange)="onCouponCodeInputChange($event)" name="checkoutCouponCode">
+                <button type="button" class="btn apply-coupon-btn" [disabled]="!canApplyCoupon" (click)="applyCoupon()">{{ isApplyingCoupon ? 'Checking…' : 'Apply' }}</button>
+              </div>
+              <small class="coupon-note" *ngIf="!selectedAddressId || !selectedShippingMethodId">Choose an address and shipping method first.</small>
+              <small class="field-error coupon-error" *ngIf="couponError" role="alert">{{ couponError }}</small>
+              <div class="coupon-feedback success" *ngIf="couponValidationStatus === 'valid' && appliedCouponCode && !couponError">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                <span *ngIf="exactCouponPreview?.couponApplied !== false">Code {{ appliedCouponCode }} applied.</span>
+                <span *ngIf="exactCouponPreview?.couponApplied === false">{{ couponInfoMessage }}</span>
+              </div>
+              <div class="coupon-feedback info" *ngIf="couponValidationStatus !== 'valid' && couponInfoMessage && !couponError">
+                <i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ couponInfoMessage }}</span>
+              </div>
+            </details>
+
             <div class="order-totals">
-              <div class="coupon-line" *ngIf="couponValidationStatus === 'valid' && appliedCouponCode && !couponError">
+              <div class="coupon-line" *ngIf="couponValidationStatus === 'valid' && appliedCouponCode && exactCouponPreview?.couponApplied !== false && !couponError">
                 <span>Coupon</span>
                 <strong>{{ appliedCouponCode }}</strong>
               </div>
 
               <div class="order-line">
                 <span>Subtotal</span>
-                <span>{{ cartService.subtotal() | currency:'USD':'symbol':'1.2-2' }}</span>
+                <span>{{ originalSubtotal | currency:'USD':'symbol':'1.2-2' }}</span>
               </div>
               <div class="order-line">
                 <span>Shipping</span>
-                <span *ngIf="shippingPreview > 0">{{ shippingPreview | currency:'USD':'symbol':'1.2-2' }}</span>
-                <span *ngIf="shippingPreview === 0" class="free">Free</span>
+                <span *ngIf="!selectedShippingMethod">Select a method</span>
+                <span *ngIf="selectedShippingMethod && shippingPreview > 0">{{ shippingPreview | currency:'USD':'symbol':'1.2-2' }}</span>
+                <span *ngIf="selectedShippingMethod && shippingPreview === 0" class="free">Free</span>
               </div>
               <div class="order-line">
-                <span>Tax ({{ taxPercentLabel }}%)</span>
+                <span>Taxes ({{ taxPercentLabel }}%)</span>
                 <span>{{ taxPreview | currency:'USD':'symbol':'1.2-2' }}</span>
               </div>
-              <div class="order-line">
-                <span>Coupon discount</span>
-                <span>{{ discountPreview > 0 ? ('-' + (discountPreview | currency:'USD':'symbol':'1.2-2')) : '-' }}</span>
+              <div class="order-line savings-line" *ngIf="totalSavings > 0">
+                <span>Your savings</span>
+                <span>-{{ totalSavings | currency:'USD':'symbol':'1.2-2' }}</span>
               </div>
               <div class="order-line total">
-                <span>Estimated Total</span>
+                <span>Estimated total</span>
                 <strong>{{ estimatedTotal | currency:'USD':'symbol':'1.2-2' }}</strong>
               </div>
             </div>
@@ -337,20 +326,21 @@
              <!-- Checkout error --> 
               <div class="checkout-error alert alert-danger mb-3" *ngIf="checkoutError" role="alert" aria-live="assertive" > 
                 <div class="checkout-error-content"> 
-                    <div class="checkout-error-message"> <i class="bi bi-exclamation-triangle-fill"></i>  <strong>We couldn't place your order</strong> 
+                    <div class="checkout-error-message"> <i class="bi bi-exclamation-triangle-fill"></i>  <strong>Unable to continue</strong>
                         <p class="mb-3">{{ checkoutError }}</p> 
                         
                         <a *ngIf="checkoutErrorAction =='CART'" routerLink="/cart" class="btn btn-sm btn-danger checkout-cart-btn" > 
-                            <i class="bi bi-cart3 me-1"></i> Review cart 
+                            <i class="bi bi-cart3 me-1"></i> Review cart
                         </a> 
                     </div> 
                 </div> 
               </div>
+              <p *ngIf="confirmationHint" class="confirmation-hint" aria-live="polite">{{ confirmationHint }}</p>
               <div class="confirm-actions">
                 <a routerLink="/products" class="btn btn-outline-secondary continue-shopping-btn">Continue shopping</a>
                 <button class="btn btn-dark confirm-btn" type="button" [disabled]="!canConfirmOrder || isPlacingOrder" (click)="placeOrder()">
-                  <span *ngIf="!isPlacingOrder">Confirm order</span>
-                  <span *ngIf="isPlacingOrder">Placing order...</span>
+                  <span *ngIf="!isPlacingOrder">Continue to payment</span>
+                  <span *ngIf="isPlacingOrder">Preparing payment…</span>
                 </button>
               </div>
             </div>

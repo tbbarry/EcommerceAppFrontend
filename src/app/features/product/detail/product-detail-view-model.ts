@@ -1,3 +1,5 @@
+import { resolveProductImageUrl } from '../../../shared/product-image-url';
+
 export type PromoScope = 'NONE' | 'GLOBAL' | 'VARIANT';
 
 export interface ApiProductDetail {
@@ -244,7 +246,7 @@ function normalizeImages(images: ApiImage[] | null | undefined): ProductImageVie
     .filter((image) => !!image?.url)
     .map((image) => ({
       id: image.id,
-      url: image.url,
+      url: resolveProductImageUrl(image.url),
       alt: asString(image.alt, ''),
       isMain: !!image.isMain,
       color: image.color ?? null

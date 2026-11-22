@@ -27,7 +27,7 @@ export class ForgotPasswordComponent {
     this.authService.requestPasswordReset(this.email).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Si un compte existe pour cette adresse, un email de réinitialisation a été envoyé.';
+        this.successMessage = 'If an account exists for this address, a reset email has been sent.';
       },
       error: (err) => {
         this.loading = false;
@@ -38,18 +38,18 @@ export class ForgotPasswordComponent {
 
   private extractErrorMessage(err: any): string {
     if (!err) {
-      return 'Impossible de traiter la demande.';
+      return 'Could not process your request.';
     }
 
     if (typeof err.error === 'string') {
       const trimmed = err.error.trim();
       if (!trimmed) {
-        return err.message || 'Impossible de traiter la demande.';
+        return err.message || 'Could not process your request.';
       }
 
       try {
         const parsed = JSON.parse(trimmed);
-        return parsed.message || parsed.error || err.message || 'Impossible de traiter la demande.';
+        return parsed.message || parsed.error || err.message || 'Could not process your request.';
       } catch {
         return trimmed;
       }
@@ -63,6 +63,6 @@ export class ForgotPasswordComponent {
       return err.error.error;
     }
 
-    return err.message || 'Impossible de traiter la demande.';
+    return err.message || 'Could not process your request.';
   }
 }

@@ -24,9 +24,9 @@ export interface PricingViewModel {
   detailRangeText: string | null;
 }
 
-const EUR_FORMATTER = new Intl.NumberFormat('fr-FR', {
+const USD_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'EUR',
+  currency: 'USD',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
@@ -39,8 +39,8 @@ function safeNumber(value: unknown): number | null {
   return value;
 }
 
-function formatEur(value: number): string {
-  return EUR_FORMATTER.format(value);
+export function formatUsd(value: number): string {
+  return USD_FORMATTER.format(value);
 }
 
 function clampPercent(value: number | null): number | null {
@@ -104,7 +104,7 @@ function makeVariantDiscountLabel(min: number | null, max: number | null): strin
     return `-${resolvedMax}%`;
   }
 
-  return `-${resolvedMin}% à -${resolvedMax}%`;
+  return `${resolvedMin}%–${resolvedMax}% off`;
 }
 
 export function mapPricingViewModel(product: PricingSource): PricingViewModel {
@@ -142,12 +142,12 @@ export function mapPricingViewModel(product: PricingSource): PricingViewModel {
   const discountMin = clampPercent(safeNumber(product.discountPercentMin));
   const discountMax = clampPercent(safeNumber(product.discountPercentMax));
 
-  const baseMinText = formatEur(base.min);
-  const baseMaxText = formatEur(base.max);
-  const finalMinText = formatEur(final.min);
-  const finalMaxText = formatEur(final.max);
+  const baseMinText = formatUsd(base.min);
+  const baseMaxText = formatUsd(base.max);
+  const finalMinText = formatUsd(final.min);
+  const finalMaxText = formatUsd(final.max);
 
-  const rangePrefix = 'À partir de\u00a0';
+  const rangePrefix = 'From\u00a0';
 
   if (!hasDiscount || scope === 'NONE') {
     return {
@@ -157,7 +157,7 @@ export function mapPricingViewModel(product: PricingSource): PricingViewModel {
       hasDiscount: false,
       promoScope: 'NONE',
       detailNote: null,
-      detailRangeText: samePrice(base.min, base.max) ? null : `Prix: ${baseMinText} à ${baseMaxText}`
+      detailRangeText: samePrice(base.min, base.max) ? null : `Price: ${baseMinText}–${baseMaxText}`
     };
   }
 
@@ -178,22 +178,22 @@ export function mapPricingViewModel(product: PricingSource): PricingViewModel {
 
     return {
       primaryText: `${rangePrefix}${finalMinText}`,
-      secondaryText: `au lieu de ${baseMinText}`,
+      secondaryText: `was ${baseMinText}`,
       discountBadge: badge,
       hasDiscount: true,
       promoScope: 'GLOBAL',
       detailNote: null,
-      detailRangeText: `Prix: ${finalMinText} à ${finalMaxText}`
+      detailRangeText: `Price: ${finalMinText}–${finalMaxText}`
     };
   }
 
   return {
     primaryText: `${rangePrefix}${finalMinText}`,
-    secondaryText: `au lieu de ${baseMinText}`,
+    secondaryText: `was ${baseMinText}`,
     discountBadge: makeVariantDiscountLabel(discountMin, discountMax),
     hasDiscount: true,
     promoScope: 'VARIANT',
-    detailNote: 'Remise variable selon la variante',
-    detailRangeText: samePrice(final.min, final.max) ? null : `Prix: ${finalMinText} à ${finalMaxText}`
+    detailNote: 'Discount varies by option',
+    detailRangeText: samePrice(final.min, final.max) ? null : `Price: ${finalMinText}–${finalMaxText}`
   };
 }
