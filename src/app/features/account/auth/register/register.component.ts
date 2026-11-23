@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/auth.service';
+import { StoreSettingsService } from '../../../../core/store-settings.service';
 
 @Component({
   selector: 'app-register',
@@ -12,6 +13,7 @@ import { AuthService } from '../../../../core/auth.service';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
+  readonly store = inject(StoreSettingsService);
   private readonly strongPasswordPattern = /^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$/;
   readonly returnUrl: string;
 
@@ -24,6 +26,9 @@ export class RegisterComponent {
   };
   loading = false;
   errorMessage = '';
+  passwordFocused = false;
+  showPassword = false;
+  showConfirmation = false;
 
   constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/account/profile';
@@ -42,7 +47,7 @@ export class RegisterComponent {
       return false;
     }
 
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.registerData.email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.registerData.email.trim());
   }
 
   get hasMinLength(): boolean {
@@ -74,35 +79,40 @@ export class RegisterComponent {
   }
 
   register(): void {
+    if (this.loading) return;
     this.errorMessage = '';
 
+    if (!this.hasFirstName || !this.hasLastName) {
+      this.errorMessage = 'Enter your first and last name.';
+      return;
+    }
     if (this.registerData.password !== this.registerData.confirmPassword) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.errorMessage = 'Passwords do not match.';
       return;
     }
 
     if (!this.isPasswordValid) {
-      this.errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres, une majuscule, un chiffre et un caractere special (@#$%^&+=).';
+      this.errorMessage = 'Your password must contain at least 8 characters, an uppercase letter, a number, and a special character (@#$%^&+=).';
       return;
     }
 
     if (!this.isEmailValid) {
-      this.errorMessage = 'Veuillez saisir une adresse email valide.';
+      this.errorMessage = 'Enter a valid email address.';
       return;
     }
 
     this.loading = true;
 
     this.auth.register({
-      firstname: this.registerData.firstname,
-      lastname: this.registerData.lastname,
-      email: this.registerData.email,
+      firstname: this.registerData.firstname.trim(),
+      lastname: this.registerData.lastname.trim(),
+      email: this.registerData.email.trim(),
       password: this.registerData.password
     }).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/auth/verify-email'], {
-          queryParams: { email: this.registerData.email, returnUrl: this.returnUrl }
+          queryParams: { email: this.registerData.email.trim(), returnUrl: this.returnUrl }
         });
       },
       error: (err) => {
@@ -113,7 +123,7 @@ export class RegisterComponent {
   }
 
   private extractErrorMessage(err: any): string {
-    const fallback = 'Impossible de créer le compte.';
+    const fallback = 'Could not create your account.';
 
     if (!err) {
       return fallback;
@@ -126,13 +136,13 @@ export class RegisterComponent {
       }
 
       if (this.isDuplicateEmailError(trimmed)) {
-        return 'Cette adresse email est déjà utilisée.';
+        return 'This email address is already in use.';
       }
 
       try {
         const parsed = JSON.parse(trimmed);
         if (this.isDuplicateEmailError(parsed)) {
-          return 'Cette adresse email est déjà utilisée.';
+          return 'This email address is already in use.';
         }
 
         return parsed.message || parsed.error || err.message || fallback;
@@ -142,7 +152,7 @@ export class RegisterComponent {
     }
 
     if (this.isDuplicateEmailError(err.error)) {
-      return 'Cette adresse email est déjà utilisée.';
+      return 'This email address is already in use.';
     }
 
     if (err.error?.message) {
@@ -183,7 +193,4 @@ export class RegisterComponent {
     }
   }
 
-  registerWithGoogle(): void {
-    this.errorMessage = 'Inscription Google a brancher avec ton backend OAuth.';
-  }
 }

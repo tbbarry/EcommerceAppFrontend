@@ -1,86 +1,49 @@
-<main class="main">
-  <div class="page-title light-background">
-    <div class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Login</h1>
-      <nav class="breadcrumbs">
-        <ol>
-          <li><a routerLink="/">Home</a></li>
-          <li class="current">Login</li>
-        </ol>
-      </nav>
+<main class="auth-page">
+  <div class="auth-shell">
+    <a routerLink="/products" class="auth-back"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to shopping</a>
+    <div class="auth-layout">
+      <aside class="auth-welcome" aria-label="Welcome">
+        <span class="auth-badge"><i class="bi bi-bag-heart" aria-hidden="true"></i> WELCOME BACK</span>
+        <h2>Your store, at your fingertips.</h2>
+        <p>Sign in to access your account and keep shopping.</p>
+        <ul class="benefits">
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Track your orders easily</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Access your saved addresses</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Check out more easily</li>
+        </ul>
+      </aside>
+      <section class="auth-card" aria-labelledby="login-title">
+        <div class="auth-heading"><span class="auth-eyebrow">MY ACCOUNT</span><h1 id="login-title">Welcome back</h1>
+          <p>Sign in to continue.</p></div>
+        <div *ngIf="passwordChanged" class="alert alert-success" role="status">Password updated. Sign in to continue.</div>
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+        <form #loginForm="ngForm" (ngSubmit)="loginForm.valid && login()" novalidate>
+          <div class="auth-field">
+            <label for="login-email">Email address</label>
+            <input id="login-email" name="loginEmail" type="email" class="form-control" placeholder="you@example.com"
+              autocomplete="email" inputmode="email" required email [(ngModel)]="credentials.email" #emailField="ngModel"
+              [attr.aria-invalid]="emailField.touched && emailField.invalid">
+            <small class="inline-error" *ngIf="emailField.touched && emailField.invalid">Enter a valid email address.</small>
+          </div>
+          <div class="auth-field">
+            <div class="label-row"><label for="login-password">Password</label>
+              <a routerLink="/auth/forgot-password">Forgot password?</a></div>
+            <div class="password-input">
+              <input id="login-password" name="loginPassword" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                autocomplete="current-password" required [(ngModel)]="credentials.password" #password="ngModel"
+                [attr.aria-invalid]="password.touched && password.invalid">
+              <button type="button" class="password-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <small class="inline-error" *ngIf="password.touched && password.invalid">Enter your password.</small>
+          </div>
+          <button type="submit" class="auth-submit" [disabled]="loading || loginForm.invalid">
+            {{ loading ? 'Signing in…' : 'Sign in' }} <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+          <p class="auth-switch">New to {{ store.name() }}? <a routerLink="/auth/register" [queryParams]="{ returnUrl: returnUrl }">Create an account</a></p>
+        </form>
+      </section>
     </div>
   </div>
-
-  <section id="login" class="login section">
-    <div class="container" data-aos="fade-up" data-aos-delay="100">
-      <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
-          <div class="auth-container" data-aos="fade-in" data-aos-delay="200">
-            <div class="form-header">
-              <h3>Welcome Back</h3>
-              <p>Sign in to your account</p>
-            </div>
-
-            <form class="auth-form-content" (ngSubmit)="login()">
-              <div class="input-group mb-3">
-                <span class="input-icon">
-                  <i class="bi bi-envelope"></i>
-                </span>
-                <input
-                  type="email"
-                  class="form-control"
-                  placeholder="Email address"
-                  required
-                  autocomplete="email"
-                  [(ngModel)]="credentials.email"
-                  name="loginEmail"
-                >
-              </div>
-
-              <div class="input-group mb-3">
-                <span class="input-icon">
-                  <i class="bi bi-lock"></i>
-                </span>
-                <input
-                  type="password"
-                  class="form-control"
-                  placeholder="Password"
-                  required
-                  autocomplete="current-password"
-                  [(ngModel)]="credentials.password"
-                  name="loginPassword"
-                >
-              </div>
-
-              <div class="d-flex justify-content-end mb-3">
-                <a routerLink="/auth/forgot-password" class="switch-btn">Forgot password?</a>
-              </div>
-
-              <button type="submit" class="auth-btn primary-btn mb-3" [disabled]="loading">
-                <span *ngIf="!loading">Sign In</span>
-                <span *ngIf="loading">Signing In...</span>
-                <i class="bi bi-arrow-right"></i>
-              </button>
-
-              <div class="divider">
-                <span>or</span>
-              </div>
-
-              <button type="button" class="auth-btn social-btn mb-3" (click)="loginWithGoogle()">
-                <i class="bi bi-google"></i>
-                Continue with Google
-              </button>
-
-              <div class="switch-form">
-                <span>Don't have an account?</span>
-                <a routerLink="/auth/register" [queryParams]="{ returnUrl: returnUrl }" class="switch-btn">Create account</a>
-              </div>
-            </form>
-
-            <div *ngIf="errorMessage" class="alert alert-danger mt-3 mb-0">{{ errorMessage }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>

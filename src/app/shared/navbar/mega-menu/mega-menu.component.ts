@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Component, HostListener, Input } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 import { Category } from '../../../core/menu.service';
 
@@ -14,33 +14,32 @@ import { Category } from '../../../core/menu.service';
 export class MegaMenuComponent {
   @Input({ required: true }) categories: Category[] = [];
   activeCategory: Category | null = null;
-
-  constructor(private router: Router) {}
+  private openedByHover = false;
 
   showMegaMenu(category: Category): void {
-    this.activeCategory = category;
+    this.activeCategory = category.children.length ? category : null;
+    this.openedByHover = this.activeCategory !== null;
   }
 
+  toggleMegaMenu(category: Category): void {
+    if (this.activeCategory?.id === category.id && !this.openedByHover) {
+      this.hideMegaMenu();
+    } else {
+      this.activeCategory = category;
+      this.openedByHover = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape')
   hideMegaMenu(): void {
     this.activeCategory = null;
+    this.openedByHover = false;
   }
 
-  getGroups(items: Category[], size: number): Category[][] {
-    const groups: Category[][] = [];
-
-    for (let index = 0; index < items.length; index += size) {
-      groups.push(items.slice(index, index + size));
+  onFocusOut(event: FocusEvent): void {
+    const shell = event.currentTarget;
+    if (shell instanceof HTMLElement && !shell.contains(event.relatedTarget as Node | null)) {
+      this.hideMegaMenu();
     }
-
-    return groups;
-  }
-
-  goToProducts(categoryId: number): void {
-    this.hideMegaMenu();
-    this.router.navigate(['/products'], {
-      queryParams: {
-        categoryId
-      }
-    });
   }
 }

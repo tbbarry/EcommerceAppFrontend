@@ -1,0 +1,14 @@
+.offer-summary { display: flex; align-items: center; gap: 1rem; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; padding: 1.15rem 1.3rem; margin-bottom: 1.3rem; box-shadow: 0 8px 26px rgba(28, 49, 80, .045); }
+.offer-summary h2 { font-size: 1.1rem; font-weight: 800; margin: .15rem 0; overflow-wrap: anywhere; }
+.offer-summary p { color: #728098; font-size: .83rem; margin: .25rem 0; }
+.offer-label { color: #61728d; font-size: .7rem; font-weight: 800; letter-spacing: .08em; }
+.assignment-heading .btn { flex-shrink: 0; }
+.assignment-row { padding: .9rem 0; }
+.assignment-icon { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; border-radius: 11px; background: #edf2ff; color: #315cd3; font-size: 1.1rem; }
+.assignment-info { flex: 1; }
+.add-panel { border-color: #d7e3fc; }
+@media (max-width: 767px) {
+  .assignment-heading { flex-direction: column; }
+  .assignment-heading .btn { width: 100%; }
+  .offer-summary { padding: 1rem; }
+}

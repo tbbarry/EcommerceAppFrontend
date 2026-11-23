@@ -1,176 +1,86 @@
-<main class="main">
-  <div class="page-title light-background">
-    <div class="container d-lg-flex justify-content-between align-items-center">
-      <h1 class="mb-2 mb-lg-0">Register</h1>
-      <nav class="breadcrumbs">
-        <ol>
-          <li><a routerLink="/">Home</a></li>
-          <li class="current">Register</li>
-        </ol>
-      </nav>
-    </div>
-  </div>
-
-  <section id="register" class="register section">
-    <div class="container" data-aos="fade-up" data-aos-delay="100">
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <div class="registration-form-wrapper">
-            <div class="form-header text-center">
-              <h2>Create Your Account</h2>
-              <p>Create your account and start shopping with us</p>
+<main class="auth-page">
+  <div class="auth-shell">
+    <a routerLink="/products" class="auth-back"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to shopping</a>
+    <div class="auth-layout">
+      <aside class="auth-welcome" aria-label="Welcome">
+        <span class="auth-badge"><i class="bi bi-bag-heart" aria-hidden="true"></i> WELCOME TO {{ store.name() }}</span>
+        <h2>Glad you're here.</h2>
+        <p>Create an account to easily access your orders and information.</p>
+        <ul class="benefits">
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Find your orders in one place</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Save your shipping addresses</li>
+          <li><i class="bi bi-check-circle" aria-hidden="true"></i> Enjoy a simpler checkout</li>
+        </ul>
+      </aside>
+      <section class="auth-card" aria-labelledby="register-title">
+        <div class="auth-heading">
+          <span class="auth-eyebrow">NEW CUSTOMER</span>
+          <h1 id="register-title">Create an account</h1>
+          <p>Just a few details to get started.</p>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+        <form (ngSubmit)="register()" novalidate>
+          <div class="auth-fields two-columns">
+            <div class="auth-field">
+              <label for="firstName">First name <span aria-hidden="true">*</span></label>
+              <input id="firstName" name="firstName" type="text" class="form-control" autocomplete="given-name" required
+                [(ngModel)]="registerData.firstname" #firstName="ngModel" [attr.aria-invalid]="firstName.touched && !hasFirstName">
+              <small class="inline-error" *ngIf="firstName.touched && !hasFirstName">Enter your first name.</small>
             </div>
-
-            <div class="row">
-              <div class="col-lg-8 mx-auto">
-                <form (ngSubmit)="register()">
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          [class.is-invalid]="registerData.firstname.length > 0 && !hasFirstName"
-                          [class.is-valid]="hasFirstName"
-                          id="firstName"
-                          placeholder="First Name"
-                          required
-                          autocomplete="given-name"
-                          [(ngModel)]="registerData.firstname"
-                          name="firstName"
-                        >
-                        <label for="firstName">First Name</label>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          [class.is-invalid]="registerData.lastname.length > 0 && !hasLastName"
-                          [class.is-valid]="hasLastName"
-                          id="lastName"
-                          placeholder="Last Name"
-                          required
-                          autocomplete="family-name"
-                          [(ngModel)]="registerData.lastname"
-                          name="lastName"
-                        >
-                        <label for="lastName">Last Name</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-floating mb-3">
-                    <input
-                      type="email"
-                      class="form-control"
-                      [class.is-invalid]="registerData.email.length > 0 && !isEmailValid"
-                      [class.is-valid]="isEmailValid"
-                      id="email"
-                      placeholder="Email Address"
-                      required
-                      autocomplete="email"
-                      [(ngModel)]="registerData.email"
-                      name="email"
-                    >
-                    <label for="email">Email Address</label>
-                  </div>
-
-                  <div *ngIf="registerData.email.length > 0 && !isEmailValid" class="inline-error mb-3">
-                    Veuillez saisir une adresse email valide.
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input
-                          type="password"
-                          class="form-control"
-                          [class.is-invalid]="registerData.password.length > 0 && !isPasswordValid"
-                          [class.is-valid]="registerData.password.length > 0 && isPasswordValid"
-                          id="password"
-                          placeholder="Password"
-                          required
-                          minlength="8"
-                          autocomplete="new-password"
-                          [(ngModel)]="registerData.password"
-                          name="password"
-                        >
-                        <label for="password">Password</label>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input
-                          type="password"
-                          class="form-control"
-                          [class.is-invalid]="registerData.confirmPassword.length > 0 && !passwordsMatch"
-                          [class.is-valid]="registerData.confirmPassword.length > 0 && passwordsMatch"
-                          id="confirmPassword"
-                          placeholder="Confirm Password"
-                          required
-                          minlength="8"
-                          autocomplete="new-password"
-                          [(ngModel)]="registerData.confirmPassword"
-                          name="confirmPassword"
-                        >
-                        <label for="confirmPassword">Confirm Password</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="password-rules mb-3">
-                    <p class="password-rules-title">Le mot de passe doit contenir :</p>
-                    <ul>
-                      <li [class.rule-valid]="hasMinLength">Au moins 8 caracteres</li>
-                      <li [class.rule-valid]="hasUppercase">Une lettre majuscule</li>
-                      <li [class.rule-valid]="hasDigit">Un chiffre</li>
-                      <li [class.rule-valid]="hasSpecialCharacter">Un caractere special parmi &#64; # $ % ^ &amp; + =</li>
-                    </ul>
-                  </div>
-
-                  <div *ngIf="registerData.confirmPassword.length > 0 && !passwordsMatch" class="inline-error mb-3">
-                    Les mots de passe ne correspondent pas.
-                  </div>
-
-                  <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-register" [disabled]="loading || !canSubmit">
-                      <span *ngIf="!loading">Create Account</span>
-                      <span *ngIf="loading">Creating...</span>
-                    </button>
-                  </div>
-
-                  <div class="divider">
-                    <span>or sign up with</span>
-                  </div>
-
-                  <div class="social-buttons mb-4">
-                    <button type="button" class="btn btn-social" (click)="registerWithGoogle()">
-                      <i class="bi bi-google"></i>
-                      <span>Google</span>
-                    </button>
-                  </div>
-
-                  <div class="login-link text-center">
-                    <p>Already have an account? <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }">Sign in</a></p>
-                  </div>
-                </form>
-
-                <div *ngIf="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
-              </div>
-            </div>
-
-            <div class="decorative-elements">
-              <div class="circle circle-1"></div>
-              <div class="circle circle-2"></div>
-              <div class="circle circle-3"></div>
-              <div class="square square-1"></div>
-              <div class="square square-2"></div>
+            <div class="auth-field">
+              <label for="lastName">Last name <span aria-hidden="true">*</span></label>
+              <input id="lastName" name="lastName" type="text" class="form-control" autocomplete="family-name" required
+                [(ngModel)]="registerData.lastname" #lastName="ngModel" [attr.aria-invalid]="lastName.touched && !hasLastName">
+              <small class="inline-error" *ngIf="lastName.touched && !hasLastName">Enter your last name.</small>
             </div>
           </div>
-        </div>
-      </div>
+          <div class="auth-field">
+            <label for="email">Email address <span aria-hidden="true">*</span></label>
+            <input id="email" name="email" type="email" class="form-control" autocomplete="email" inputmode="email" required
+              placeholder="you@example.com" [(ngModel)]="registerData.email" #emailField="ngModel"
+              [attr.aria-invalid]="emailField.touched && !isEmailValid">
+            <small class="inline-error" *ngIf="emailField.touched && !isEmailValid">Enter a valid email address.</small>
+          </div>
+          <div class="auth-field">
+            <label for="password">Password <span aria-hidden="true">*</span></label>
+            <div class="password-input">
+              <input id="password" name="password" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                required minlength="8" autocomplete="new-password" [(ngModel)]="registerData.password"
+                (focus)="passwordFocused = true" (blur)="passwordFocused = false"
+                [attr.aria-describedby]="passwordFocused ? 'password-rules' : null">
+              <button type="button" class="password-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div id="password-rules" class="password-rules" *ngIf="passwordFocused">
+              <p>Your password must contain:</p>
+              <ul>
+                <li [class.rule-valid]="hasMinLength"><span class="visually-hidden">{{ hasMinLength ? 'Met:' : 'Required:' }}</span> At least 8 characters</li>
+                <li [class.rule-valid]="hasUppercase"><span class="visually-hidden">{{ hasUppercase ? 'Met:' : 'Required:' }}</span> An uppercase letter</li>
+                <li [class.rule-valid]="hasDigit"><span class="visually-hidden">{{ hasDigit ? 'Met:' : 'Required:' }}</span> A number</li>
+                <li [class.rule-valid]="hasSpecialCharacter"><span class="visually-hidden">{{ hasSpecialCharacter ? 'Met:' : 'Required:' }}</span> A special character: &#64; # $ % ^ &amp; + =</li>
+              </ul>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="confirmPassword">Confirm password <span aria-hidden="true">*</span></label>
+            <div class="password-input">
+              <input id="confirmPassword" name="confirmPassword" [type]="showConfirmation ? 'text' : 'password'" class="form-control"
+                required autocomplete="new-password" [(ngModel)]="registerData.confirmPassword" #confirmation="ngModel"
+                [attr.aria-invalid]="confirmation.touched && !passwordsMatch">
+              <button type="button" class="password-toggle" (click)="showConfirmation = !showConfirmation" [attr.aria-label]="showConfirmation ? 'Hide confirmation' : 'Show confirmation'">
+                <i class="bi" [ngClass]="showConfirmation ? 'bi-eye-slash' : 'bi-eye'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <small class="inline-error" *ngIf="confirmation.touched && !passwordsMatch">Passwords must match.</small>
+          </div>
+          <p class="form-hint">* Required fields</p>
+          <button type="submit" class="auth-submit" [disabled]="loading || !canSubmit">
+            {{ loading ? 'Creating account…' : 'Create account' }} <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+          <p class="auth-switch">Already have an account? <a routerLink="/auth/login" [queryParams]="{ returnUrl: returnUrl }">Sign in</a></p>
+        </form>
+      </section>
     </div>
-  </section>
+  </div>
 </main>

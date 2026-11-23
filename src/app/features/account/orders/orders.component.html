@@ -14,7 +14,7 @@
           </li>
 
           <li class="current">
-            Mes commandes
+            My orders
           </li>
         </ol>
       </nav>
@@ -44,12 +44,12 @@
           role="status"
         >
           <span class="visually-hidden">
-            Chargement…
+            Loading…
           </span>
         </div>
 
         <p>
-          Chargement de vos commandes...
+          Loading your orders...
         </p>
 
       </div>
@@ -76,7 +76,7 @@
             class="btn btn-sm btn-outline-danger"
             (click)="loadOrders()"
           >
-            Réessayer
+            Try again
           </button>
 
         </div>
@@ -103,11 +103,11 @@
           </div>
 
           <h2>
-            Aucune commande
+            No orders yet
           </h2>
 
           <p>
-            Vous n'avez pas encore passé de commande.
+            You haven't placed an order yet.
           </p>
 
           <a
@@ -115,7 +115,7 @@
             class="btn btn-dark btn-lg"
           >
             <i class="bi bi-bag me-2"></i>
-            Commencer mes achats
+            Start shopping
           </a>
 
         </div>
@@ -173,11 +173,11 @@
             </div>
 
             <h3>
-              Aucune commande dans cette catégorie
+              No orders in this category
             </h3>
 
             <p>
-              Aucune commande ne correspond au filtre sélectionné.
+              No orders match the selected filter.
             </p>
 
             <button
@@ -185,7 +185,7 @@
               class="btn btn-outline-secondary"
               (click)="selectStatus('ALL')"
             >
-              Voir toutes les commandes
+              View all orders
             </button>
 
           </div>
@@ -217,7 +217,7 @@
                   <div class="order-number">
 
                     <span class="order-label">
-                      Commande
+                      Order
                     </span>
 
                     <strong>
@@ -276,7 +276,7 @@
                     <div class="delivery-info-content">
 
                       <span>
-                        Livraison
+                        Shipping
                       </span>
 
                       <strong>
@@ -304,14 +304,14 @@
                     <div class="delivery-info-content">
 
                       <span>
-                        Délai estimé
+                        Estimated delivery
                       </span>
 
                       <strong>
                         {{ order.deliveryMinDays }}
                         -
                         {{ order.deliveryMaxDays }}
-                        jours
+                        days
                       </strong>
 
                     </div>
@@ -329,12 +329,12 @@
                     <div class="delivery-info-content">
 
                       <span>
-                        Articles
+                        Items
                       </span>
 
                       <strong>
                         {{ getItemsCount(order) }}
-                        article{{ getItemsCount(order) > 1 ? 's' : '' }}
+                        item{{ getItemsCount(order) !== 1 ? 's' : '' }}
                       </strong>
 
                     </div>
@@ -356,7 +356,7 @@
                     <div>
 
                       <span>
-                        Adresse de livraison
+                        Shipping address
                       </span>
 
                       <strong>
@@ -377,7 +377,6 @@
 
                     <span>
 
-                      {{ order.shippingZipCode }}
                       {{ order.shippingCity }}
 
                       <ng-container
@@ -385,6 +384,7 @@
                       >
                         , {{ order.shippingState }}
                       </ng-container>
+                      {{ order.shippingZipCode }}
 
                     </span>
 
@@ -419,7 +419,7 @@
                     <i class="bi bi-bag"></i>
 
                     <span>
-                      Articles commandés
+                      Order items
                     </span>
 
                   </div>
@@ -427,7 +427,7 @@
                   <span class="items-count">
 
                     {{ order.items.length || 0 }}
-                    référence{{ (order.items.length || 0) > 1 ? 's' : '' }}
+                    item{{ (order.items.length || 0) !== 1 ? 's' : '' }}
 
                   </span>
 
@@ -473,7 +473,7 @@
 
                     <div class="order-item-sku">
 
-                      Réf.
+                      SKU
                       {{ item.variantSkuSnapshot }}
 
                     </div>
@@ -498,7 +498,7 @@
 
                         <i class="bi bi-rulers"></i>
 
-                        Taille {{ item.sizeSnapshot }}
+                        Size {{ item.sizeSnapshot }}
 
                       </span>
 
@@ -508,7 +508,7 @@
                     <div class="order-item-quantity">
 
                       <span>
-                        Quantité
+                        Quantity
                       </span>
 
                       <strong>
@@ -517,6 +517,8 @@
 
                     </div>
 
+                    <app-review-editor *ngIf="order.status === 'DELIVERED'" [itemId]="item.id"></app-review-editor>
+
                   </div>
 
 
@@ -524,7 +526,7 @@
                   <div class="order-item-price">
 
                     <span class="item-price-label">
-                      Prix
+                      Price
                     </span>
 
                     <strong>
@@ -535,7 +537,7 @@
                       *ngIf="item.quantity > 1"
                     >
                       {{ item.unitPrice | currency:'USD':'symbol':'1.2-2' }}
-                      / unité
+                      / each
                     </small>
 
                   </div>
@@ -555,7 +557,7 @@
                   <div class="summary-line">
 
                     <span>
-                      Sous-total
+                      Subtotal
                     </span>
 
                     <strong>
@@ -568,7 +570,7 @@
                   <div class="summary-line">
 
                     <span>
-                      Livraison
+                      Shipping
                     </span>
 
                     <strong
@@ -585,7 +587,7 @@
                       </ng-container>
 
                       <ng-template #freeShipping>
-                        Gratuite
+                        Free
                       </ng-template>
 
                     </strong>
@@ -599,7 +601,7 @@
                   >
 
                     <span>
-                      Réduction
+                      Discount
                     </span>
 
                     <strong>

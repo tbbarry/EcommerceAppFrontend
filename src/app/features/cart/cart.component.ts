@@ -51,11 +51,11 @@ export class CartComponent {
   getVariantLabel(item: CartItem): string {
     const parts: string[] = [];
     if (item.color) {
-      parts.push(`Color: ${item.color}`);
+      parts.push(`Couleur : ${item.color}`);
     }
     if (item.size) {
-      parts.push(`Size: ${item.size}`);
+      parts.push(`Taille : ${item.size}`);
     }
-    return parts.join(' · ');
+    return parts.join(' Â· ');
   }
 }

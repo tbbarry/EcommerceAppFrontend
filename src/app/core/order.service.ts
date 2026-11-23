@@ -2,14 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import type { Order } from '../models/order.model';
-
-export interface PaymentConfirmationResponse {
-  orderId: number;
-  paymentIntentId: string;
-  amount: number;
-  status: string;
-  paid: boolean;
-}
+import type { PaymentConfirmationResponse } from './payment.service';
 
 @Injectable({
   providedIn: 'root'

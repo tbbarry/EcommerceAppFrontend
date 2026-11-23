@@ -83,7 +83,7 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadAddresses();
+    if (!this.authService.currentUser?.mustChangePassword) this.loadAddresses();
   }
 
   getDisplayName(user: User): string {
@@ -199,8 +199,8 @@ export class ProfileComponent implements OnInit {
     this.authService.changePassword(payload).subscribe({
       next: () => {
         this.isPasswordSaving = false;
-        this.passwordSuccess = 'Mot de passe mis a jour avec succes.';
         this.passwordForm.reset({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        this.authService.logout('/auth/login?passwordChanged=1');
       },
       error: (error) => {
         this.isPasswordSaving = false;

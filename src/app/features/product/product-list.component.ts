@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CatalogSearchParams, ProductService } from '../../core/product.service';
 import { CategoryNode, Facet, FacetValue, ProductCard } from '../../models/catalogResponse.model';
 import { ProductPriceDisplayComponent } from '../../shared/pricing/product-price-display.component';
+import { resolveProductImageUrl } from '../../shared/product-image-url';
+import { StoreSettingsService } from '../../core/store-settings.service';
 
 
 interface ProductItem {
@@ -71,6 +73,7 @@ interface CatalogResponse {
   styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent implements OnInit, OnDestroy {
+readonly store = inject(StoreSettingsService);
 toggleFacet2(arg0: string,arg1: any) {
 throw new Error('Method not implemented.');
 }
@@ -123,6 +126,7 @@ throw new Error('Method not implemented.');
 
  ngOnInit(): void {
   this.route.queryParams.subscribe(params => {
+    this.searchForm.patchValue({ query: params['query'] || '' }, { emitEvent: false });
 
     this.selectedCategoryId = params['categoryId']
       ? Number(params['categoryId'])
@@ -448,7 +452,7 @@ isFacetValueSelected(facetId: number, valueId: number): boolean {
 
   getProductImage(product: ProductItem, index: number): string {
     if (product.defaultImageUrl) {
-      return product.defaultImageUrl;
+      return resolveProductImageUrl(product.defaultImageUrl);
     }
 
     const fallbackImages = [
@@ -465,7 +469,7 @@ isFacetValueSelected(facetId: number, valueId: number): boolean {
 
    getProductImage2(product: ProductCard, index: number): string {
     if (product.imageUrl) {
-      return product.imageUrl;
+      return resolveProductImageUrl(product.imageUrl);
     }
 
     const fallbackImages = [
@@ -527,6 +531,13 @@ isFacetValueSelected(facetId: number, valueId: number): boolean {
   closeCatalogImageViewer(): void {
     this.isCatalogImageViewerOpen = false;
     this.unlockBodyScroll();
+  }
+
+  @HostListener('document:keydown.escape')
+  closeCatalogImageViewerOnEscape(): void {
+    if (this.isCatalogImageViewerOpen) {
+      this.closeCatalogImageViewer();
+    }
   }
 
   private normalizeCategoryTree(tree: CategoryTreeNode[] | undefined, flatCategories: FacetItem[]): CategoryTreeNode[] {

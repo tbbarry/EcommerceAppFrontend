@@ -3,6 +3,7 @@ import { Component, Input } from '@angular/core';
 
 import { ProductPricingViewModel, ProductVariantViewModel } from '../../product-detail-view-model';
 import { PromotionBadgeComponent } from '../promotion-badge/promotion-badge.component';
+import { formatUsd } from '../../../../../shared/pricing/pricing-view-model';
 
 @Component({
   selector: 'app-product-price-block',
@@ -15,15 +16,8 @@ export class ProductPriceBlockComponent {
   @Input({ required: true }) pricing!: ProductPricingViewModel;
   @Input() selectedVariant: ProductVariantViewModel | null = null;
 
-  private formatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
   format(value: number): string {
-    return this.formatter.format(value);
+    return formatUsd(value);
   }
 
   get primaryPrice(): string {

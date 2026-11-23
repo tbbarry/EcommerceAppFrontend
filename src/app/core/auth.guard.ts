@@ -7,6 +7,9 @@ export const authGuard: CanActivateFn = (_, state) => {
   const router = inject(Router);
 
   if (auth.isLoggedIn()) {
+    if (auth.currentUser?.mustChangePassword && state.url !== '/account/profile') {
+      return router.createUrlTree(['/account/profile']);
+    }
     return true;
   }
 

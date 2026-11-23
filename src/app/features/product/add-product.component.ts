@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } 
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { flattenCategoryOptions } from '../../shared/category-options';
 
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
@@ -34,7 +35,6 @@ interface Attribute {
 
 interface VariantRow {
   id?: string;
-  sku: string;
   attributeValueSelection: { attributeId: number; attributeValueId: number; attributeName: string; valueName: string }[];
   price: number;
   quantity: number;
@@ -44,7 +44,6 @@ interface ImageUpload {
   id?: string;
   file?: File;
   url?: string;
-  alt: string;
   isMain: boolean;
   displayOrder: number;
   visualAttributeValueId?: number;
@@ -56,17 +55,14 @@ interface ProductCreatePayload {
   description: string;
   price: number;
   brand: string;
-  slug: string;
   categoryId: number;
   variants: Array<{
-    sku: string;
     price: number;
-    attributeValueIds: number[];
+    attributeValueIds: { attributeValueId: number }[];
     quantity: number;
   }>;
   images: Array<{
     url: string;
-    alt: string;
     isMain: boolean;
     displayOrder: number;
     visualAttributeValueId?: number;
@@ -94,7 +90,7 @@ export class AddProductComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private destroy$ = new Subject<void>();
-  private readonly apiBaseUrl = environment.apiBaseUrl || 'http://localhost:8080';
+  private readonly apiBaseUrl = (environment.apiBaseUrl || '').replace(/\/$/, '');
 
   productForm!: FormGroup;
   activeTab = 'basic';
@@ -103,12 +99,13 @@ export class AddProductComponent implements OnInit, OnDestroy {
   successMessage = '';
   errorMessage = '';
 
-  categories: Category[] = [];
+  categoryOptions: { id: number; label: string }[] = [];
   attributes: Attribute[] = [];
   selectedAttributes: { [attributeId: number]: number } = {};
 
   variants: VariantRow[] = [];
   uploadedImages: ImageUpload[] = [];
+  private pendingImages = 0;
 
   showVariantModal = false;
   isLoadingData = true;
@@ -123,18 +120,10 @@ export class AddProductComponent implements OnInit, OnDestroy {
     this.productForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required]],
-      brand: [''],
+      brand: ['', [Validators.required]],
       categoryId: ['', [Validators.required]],
-      price: [null, [Validators.required, Validators.min(0)]],
-      slug: ['', [Validators.required]]
+      price: [null, [Validators.required, Validators.min(0)]]
     });
-
-    this.productForm.get('name')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(name => {
-        const slug = this.generateSlug(name);
-        this.productForm.patchValue({ slug }, { emitEvent: false });
-      });
   }
 
   private loadBackendData(): void {
@@ -144,7 +133,7 @@ export class AddProductComponent implements OnInit, OnDestroy {
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          this.categories = data.categories;
+          this.categoryOptions = flattenCategoryOptions(data.categories);
           this.attributes = data.attributes;
           this.isLoadingData = false;
         },
@@ -158,22 +147,6 @@ export class AddProductComponent implements OnInit, OnDestroy {
 
   switchTab(tab: string): void {
     this.activeTab = tab;
-  }
-
-  private generateSlug(name: string): string {
-    if (!name) return '';
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[àâäæ]/g, 'a')
-      .replace(/[èéêë]/g, 'e')
-      .replace(/[ìîï]/g, 'i')
-      .replace(/[òôöœ]/g, 'o')
-      .replace(/[ùûüµ]/g, 'u')
-      .replace(/[ýÿ]/g, 'y')
-      .replace(/[ç]/g, 'c')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -230,12 +203,10 @@ export class AddProductComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const sku = this.generateSKU(attributeValueSelection);
     const basePrice = this.productForm.get('price')?.value || 0;
 
     const variant: VariantRow = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      sku,
       attributeValueSelection,
       price: basePrice,
       quantity: 0
@@ -245,17 +216,6 @@ export class AddProductComponent implements OnInit, OnDestroy {
     this.closeVariantModal();
     this.successMessage = '✓ Variante ajoutée';
     setTimeout(() => this.successMessage = '', 2000);
-  }
-
-  private generateSKU(attributeValueSelection: { attributeId: number; attributeValueId: number; attributeName: string; valueName: string }[]): string {
-    const name = this.productForm.get('name')?.value || 'PROD';
-    const prefix = name.substring(0, 3).toUpperCase();
-    const attrs = attributeValueSelection
-      .sort((a, b) => a.attributeName.localeCompare(b.attributeName))
-      .map(c => c.valueName.substring(0, 1).toUpperCase())
-      .join('-');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `${prefix}-${attrs}-${random}`;
   }
 
   removeVariant(id: string): void {
@@ -285,7 +245,7 @@ export class AddProductComponent implements OnInit, OnDestroy {
     if (!files) return;
 
     for (let file of Array.from(files)) {
-      if (this.uploadedImages.length >= 10) {
+      if (this.uploadedImages.length + this.pendingImages >= 10) {
         this.errorMessage = 'Maximum 10 images autorisées';
         break;
       }
@@ -294,21 +254,30 @@ export class AddProductComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Formats autorisés: JPG, PNG';
         continue;
       }
+      if (file.size > 10 * 1024 * 1024) {
+        this.errorMessage = 'Chaque image doit peser au maximum 10 Mo';
+        continue;
+      }
 
       const reader = new FileReader();
+      this.pendingImages++;
       reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.pendingImages--;
         const base64 = e.target?.result as string;
         const image: ImageUpload = {
           id: Date.now().toString() + Math.random(),
           file,
           base64,
           url: base64,
-          alt: '',
           isMain: this.uploadedImages.length === 0,
           displayOrder: this.uploadedImages.length,
           visualAttributeValueId: undefined
         };
         this.uploadedImages.push(image);
+      };
+      reader.onerror = () => {
+        this.pendingImages--;
+        this.errorMessage = 'Impossible de lire cette image. Veuillez réessayer.';
       };
       reader.readAsDataURL(file);
     }
@@ -339,7 +308,7 @@ export class AddProductComponent implements OnInit, OnDestroy {
   }
 
   get isFormComplete(): boolean {
-    return this.productForm.valid && this.variants.length > 0 && this.uploadedImages.length > 0;
+    return this.productForm.valid && this.variants.length > 0 && this.uploadedImages.length > 0 && this.pendingImages === 0;
   }
 
   get totalAvailableStock(): number {
@@ -407,11 +376,27 @@ export class AddProductComponent implements OnInit, OnDestroy {
   }
 
   nextStep(): void {
-    if (this.currentStep === 1 && this.productForm.valid) {
+    if (this.currentStep === 1) {
+      if (this.productForm.invalid) {
+        this.productForm.markAllAsTouched();
+        return;
+      }
       this.currentStep = 2;
-    } else if (this.currentStep === 2 && this.variants.length > 0) {
+    } else if (this.currentStep === 2) {
+      if (this.variants.length === 0) {
+        this.errorMessage = 'Ajoutez au moins une variante pour continuer.';
+        return;
+      }
       this.currentStep = 3;
-    } else if (this.currentStep === 3 && this.uploadedImages.length > 0) {
+    } else if (this.currentStep === 3) {
+      if (this.pendingImages > 0) {
+        this.errorMessage = 'Patientez pendant la lecture des images.';
+        return;
+      }
+      if (this.uploadedImages.length === 0) {
+        this.errorMessage = 'Ajoutez au moins une image pour continuer.';
+        return;
+      }
       this.currentStep = 4;
     }
   }
@@ -435,25 +420,21 @@ export class AddProductComponent implements OnInit, OnDestroy {
       description: this.productForm.get('description')?.value || '',
       price: this.productForm.get('price')?.value,
       brand: this.productForm.get('brand')?.value || '',
-      slug: this.productForm.get('slug')?.value || '',
       categoryId: this.productForm.get('categoryId')?.value,
       variants: this.variants.map(v => {
         return {
-          sku: v.sku,
           price: v.price,
-          attributeValueIds: v.attributeValueSelection.map(sel => sel.attributeValueId),
+          attributeValueIds: v.attributeValueSelection.map(sel => ({ attributeValueId: sel.attributeValueId })),
           quantity: v.quantity
         };
       }),
       images: this.uploadedImages.map((img, index) => ({
         url: img.base64 || img.url || '',
-        alt: img.alt || '',
         isMain: img.isMain,
         displayOrder: index,
         visualAttributeValueId: img.visualAttributeValueId
       }))
     };
-    console.log(payload);
 
     this.http.post(`${this.apiBaseUrl}/api/products`, payload).subscribe({
       next: (response: any) => {

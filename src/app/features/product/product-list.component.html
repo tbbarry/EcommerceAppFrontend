@@ -12,12 +12,20 @@
           </ng-container>
         </ol>
       </nav>
+      <div class="catalog-heading">
+        <div>
+          <span class="catalog-heading-kicker">THE {{ store.name() }} COLLECTION</span>
+          <h1>Shop our products</h1>
+          <p>Find pieces you'll love, all in one place.</p>
+        </div>
+        <span class="catalog-heading-note"><i class="bi bi-stars" aria-hidden="true"></i> Find your inspiration</span>
+      </div>
     </div>
   </div>
 
   <div class="container pt-0 pb-4">
     <div class="row gx-4 gy-0 catalog-layout-row align-items-start">
-      <aside class="col-lg-4" [class.mobile-filters-open]="isMobileFiltersOpen">
+      <aside id="catalog-filters" class="col-xl-3" [class.mobile-filters-open]="isMobileFiltersOpen" aria-label="Product filters">
         <div class="filter-sidebar">
           <div class="mobile-filters-head d-xl-none">
             <div>
@@ -30,7 +38,7 @@
           <div class="filter-card">
             <div class="filter-card-head">
               <h3 class="widget-title mb-0">Categories</h3>
-              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearCategorySelection()">All categories</button>
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="clearCategorySelection()">View all</button>
             </div>
 
             <div class="category-tree" *ngIf="categories2.length; else noCategories">
@@ -52,6 +60,7 @@
                     class="category-parent-toggle"
                     (click)="toggleCategoryBranch(parent.id)"
                     [attr.aria-expanded]="isCategoryBranchOpen(parent.id)"
+                    [attr.aria-label]="'Toggle ' + parent.name + ' subcategories'"
                   >
                     <i class="bi" [ngClass]="isCategoryBranchOpen(parent.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                   </button>
@@ -82,7 +91,7 @@
 
           <div class="filter-card pricing-range-widget">
             <div class="filter-card-head">
-              <h3 class="widget-title mb-0">Price Range</h3>
+              <h3 class="widget-title mb-0">Price</h3>
               <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFilters()">Reset</button>
             </div>
             <div class="price-range-container">
@@ -93,6 +102,7 @@
                     <input
                       class="form-control min-price-input"
                       type="number"
+                      aria-label="Minimum price"
                       [min]="priceSliderMin"
                       [max]="priceSliderMax"
                       [value]="minPriceValue"
@@ -106,6 +116,7 @@
                     <input
                       class="form-control max-price-input"
                       type="number"
+                      aria-label="Maximum price"
                       [min]="priceSliderMin"
                       [max]="priceSliderMax"
                       [value]="maxPriceValue"
@@ -132,17 +143,17 @@
               </div>
 
               <div class="facet-actions" *ngIf="getSelectedFacetCount(facet) > 0">
-                <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFacet(facet)">Clear facet</button>
+                <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFacet(facet)">Clear</button>
               </div>
             </div>
 
             <ng-template #noFacetValues>
-              <p class="text-muted mb-0">No {{ facet.code }} available.</p>
+              <p class="text-muted mb-0">No options available.</p>
             </ng-template>
           </details>
 
           <div class="mobile-filters-actions d-xl-none">
-            <button type="button" class="btn btn-dark" (click)="applyFiltersFromMobilePanel()">Apply filters</button>
+            <button type="button" class="btn btn-dark" (click)="applyFiltersFromMobilePanel()">Show results</button>
             <button type="button" class="btn btn-outline-secondary" (click)="clearFiltersFromMobilePanel()">Reset</button>
           </div>
         </div>
@@ -156,10 +167,11 @@
         aria-label="Close filters"
       ></button>
 
-      <section class="col-lg-8 catalog-results">
+      <section class="col-xl-9 catalog-results">
         <div class="catalog-toolbar">
           <div class="toolbar-main-row d-flex flex-column flex-xl-row align-items-xl-center gap-3">
-            <button type="button" class="btn btn-outline-dark mobile-filter-toggle d-xl-none" (click)="toggleMobileFilters()">
+            <button type="button" class="btn btn-outline-dark mobile-filter-toggle d-xl-none" (click)="toggleMobileFilters()"
+              aria-controls="catalog-filters" [attr.aria-expanded]="isMobileFiltersOpen">
               <i class="bi bi-sliders me-2"></i>
               Filters
             </button>
@@ -167,8 +179,8 @@
             <form class="toolbar-search-form" [formGroup]="searchForm" (ngSubmit)="applyFilters()">
               <label class="visually-hidden" for="toolbarProductSearch">Search products</label>
               <input id="toolbarProductSearch" type="text" class="form-control" formControlName="query" placeholder="Search products...">
-              <button type="submit" class="btn btn-primary btn-sm">Apply</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">Reset</button>
+              <button type="submit" class="btn btn-primary btn-sm">Search</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">Clear</button>
             </form>
 
             <div class="toolbar-sort-row d-flex align-items-md-center gap-2">
@@ -176,7 +188,7 @@
               <select id="sortBy" class="form-select form-select-sm" [(ngModel)]="selectedSort" (change)="applyFilters()">
                 <option *ngFor="let sort of availableSorts" [value]="sort">{{ formatSortLabel(sort) }}</option>
               </select>
-              <select class="form-select form-select-sm" [(ngModel)]="pageSize" (change)="applyFilters()">
+              <select class="form-select form-select-sm" aria-label="Products per page" [(ngModel)]="pageSize" (change)="applyFilters()">
                 <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} / page</option>
               </select>
             </div>
@@ -193,36 +205,24 @@
           <div class="spinner-border text-primary" role="status"></div>
         </div>
 
-        <div *ngIf="!isLoading && products2.length; else noProducts" class="row g-4 mt-1">
+        <div *ngIf="!isLoading && products2.length" class="row g-3 g-lg-4 mt-1">
           <div *ngFor="let product of products2; let i = index" class="col-6 col-xxl-4">
             <article class="product-card">
               <div
                 class="product-image"
                 [class.image-feedback]="hasImageFeedback(product.id)"
-                (click)="openCatalogImageViewer2(product, i)"
               >
-                <img [src]="getProductImage2(product, i)" [alt]="product.name" loading="lazy">
-                <div class="product-badge">Featured</div>
-                <div class="product-overlay">
-                  <div class="product-actions-floating">
-                    <button class="action-btn action-view" type="button" [routerLink]="['/products', product.slug]" (click)="$event.stopPropagation()">
-                      <span class="action-label">Quick View</span>
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="action-btn action-cart" type="button" [routerLink]="['/products', product.slug]" (click)="$event.stopPropagation()">
-                      <i class="bi bi-cart-plus"></i>
-                    </button>
-                  </div>
-                </div>
+                <a class="product-image-link" [routerLink]="['/products', product.slug]"
+                  [attr.aria-label]="'View details for ' + product.name">
+                  <img [src]="getProductImage2(product, i)" [alt]="product.name" loading="lazy">
+                </a>
+                <button class="product-image-zoom" type="button" (click)="openCatalogImageViewer2(product, i)"
+                  [attr.aria-label]="'Enlarge image of ' + product.name">
+                  <i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>
+                </button>
               </div>
               <div class="product-details">
-                <div class="product-meta-top">
-                  <span class="product-chip">Catalog pick</span>
-                  <span class="product-brand" *ngIf="product.brand">
-                    <i class="bi bi-tag"></i>
-                    {{ product.brand }}
-                  </span>
-                </div>
+                <span class="product-brand" *ngIf="product.brand">{{ product.brand }}</span>
 
                 <h4 class="product-title">
                   <a [routerLink]="['/products', product.slug]">{{ product.name }}</a>
@@ -232,20 +232,17 @@
                   <app-product-price-display [product]="product" context="catalog"></app-product-price-display>
                 </div>
 
-                <div class="product-footer">
-                  <a class="btn btn-dark btn-sm" [routerLink]="['/products', product.slug]">View product</a>
-                </div>
               </div>
             </article>
           </div>
         </div>
 
-        <ng-template #noProducts>
+        <ng-container *ngIf="!isLoading && !products2.length">
           <div class="empty-state">
-            <h3>No products match your filters.</h3>
-            <p>Try adjusting the category, facet selection, price range or search query.</p>
+            <h3>No products match your search.</h3>
+            <p>Try changing your filters or search terms.</p>
           </div>
-        </ng-template>
+        </ng-container>
 
         <nav class="pagination-nav" aria-label="Pagination" *ngIf="pagination.totalPages > 1">
           <ul>

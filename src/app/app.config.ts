@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, TitleStrategy } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import {
   HTTP_INTERCEPTORS,
@@ -11,11 +11,13 @@ import {
 import { routes } from './app.routes';
 import { ErrorInterceptor } from './core/error.interceptor';
 import { JwtInterceptor } from './core/jwt.interceptor';
+import { StoreTitleStrategy } from './core/store-title.strategy';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    { provide: TitleStrategy, useClass: StoreTitleStrategy },
     provideClientHydration(),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
     {

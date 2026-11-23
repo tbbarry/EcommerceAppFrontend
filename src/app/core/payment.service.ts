@@ -3,10 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 export interface PaymentConfirmationResponse {
-  orderId: number;
-  paymentIntentId: string;
+  orderId: string;
+  orderDatabaseId: number;
   amount: number;
-  status: string;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  orderStatus: string;
   paid: boolean;
 }
 
@@ -25,7 +26,13 @@ export class PaymentService {
   verifyPayment(sessionId: string) {
 
     return this.http.get<PaymentConfirmationResponse>(
-      `${this.baseUrl}/api/payments/checkout-session/${sessionId}`,
+      `${this.baseUrl}/api/payments/checkout-session/${encodeURIComponent(sessionId)}`,
+    );
+  }
+
+  reconcilePayment(sessionId: string) {
+    return this.http.post<PaymentConfirmationResponse>(
+      `${this.baseUrl}/api/payments/checkout-session/${encodeURIComponent(sessionId)}/reconcile`, {}
     );
   }
 }

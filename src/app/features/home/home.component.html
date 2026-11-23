@@ -1,0 +1,80 @@
+<div class="home">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="hero-copy">
+      <p class="eyebrow"><span></span> WELCOME TO {{ store.name() }}</p>
+      <h1 id="home-title">Style that<br><em>feels like you.</em></h1>
+      <p class="hero-description">Discover clothes you'll love and build a wardrobe that fits your every day.</p>
+      <a class="primary-link" routerLink="/products">Shop the collection <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="visual-circle"></div>
+      <img class="visual-model visual-model-main" src="assets/img/product/product-f-1.webp" alt="">
+      <img class="visual-model visual-model-second" src="assets/img/product/product-m-1.webp" alt="">
+    </div>
+  </section>
+
+  <section class="catalog-section" aria-labelledby="selection-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">EXPLORE</p>
+        <h2 id="selection-title">Our latest selection<span>.</span></h2>
+        <p>Discover pieces from our collection.</p>
+      </div>
+      <a class="text-link" routerLink="/products">Shop all <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </div>
+
+    <div class="catalog-status" *ngIf="loading" role="status">Loading our selection…</div>
+    <div class="catalog-status" *ngIf="!loading && loadError" role="alert">
+      <p>Our selection is temporarily unavailable.</p>
+      <button type="button" class="retry-link" (click)="loadCatalog()">Try again <i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    </div>
+    <div class="catalog-status" *ngIf="!loading && !loadError && !products.length">
+      Our collection is coming soon. Check back later.
+    </div>
+
+    <div class="product-grid" *ngIf="!loading && !loadError && products.length">
+      <article class="product-card" *ngFor="let product of products">
+        <a class="product-photo" [routerLink]="['/products', product.slug]" [attr.aria-label]="'View ' + product.name">
+          <img *ngIf="imageUrl(product) as image; else noImage" [src]="image" [alt]="product.name"
+            loading="lazy" (error)="brokenImages.add(product.id)">
+          <ng-template #noImage><i class="bi bi-image" aria-hidden="true"></i></ng-template>
+        </a>
+        <div class="product-info">
+          <p *ngIf="product.brand" class="product-brand">{{ product.brand }}</p>
+          <h3><a [routerLink]="['/products', product.slug]">{{ product.name }}</a></h3>
+          <app-product-price-display [product]="product" context="catalog"></app-product-price-display>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="categories-section" *ngIf="categoriesLoading || categoriesError || categories.length" aria-labelledby="categories-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">FIND YOUR INSPIRATION</p>
+        <h2 id="categories-title">Find your style<span>.</span></h2>
+        <p>Explore our categories and find your next favorite pieces.</p>
+      </div>
+    </div>
+    <p *ngIf="categoriesLoading" role="status">Loading categories…</p>
+    <div *ngIf="categoriesError" role="alert">
+      Categories are temporarily unavailable. <button type="button" class="retry-link" (click)="reloadCategories()">Try again</button>
+    </div>
+    <div class="category-grid" *ngIf="!categoriesLoading && !categoriesError">
+      <a class="category-card" *ngFor="let category of categories"
+        routerLink="/products" [queryParams]="{ categoryId: category.id }">
+        <span class="category-name">{{ category.name }}</span>
+        <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+      </a>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div>
+      <p class="eyebrow">MAKE IT YOURS</p>
+      <h2>Make room<br>for your style.</h2>
+      <p>Build a wardrobe that feels like you, one piece at a time.</p>
+    </div>
+    <a class="primary-link" routerLink="/products">Shop clothing <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+  </section>
+</div>

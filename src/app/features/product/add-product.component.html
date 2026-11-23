@@ -9,14 +9,16 @@
   <!-- Progress Bar -->
   <div class="container-fluid bg-white border-bottom sticky-top" style="top: 0; z-index: 100;" *ngIf="!isLoadingData">
     <div class="container">
-      <div class="d-flex gap-2 py-3">
+      <div class="product-steps py-3">
         <div *ngFor="let step of [1, 2, 3, 4]; let i = index" class="flex-grow-1">
           <button 
             type="button" 
             class="btn w-100 btn-sm"
             [class.btn-primary]="currentStep === step"
             [class.btn-light]="currentStep !== step"
-            [disabled]="step > currentStep">
+            [disabled]="step > currentStep"
+            [attr.aria-current]="currentStep === step ? 'step' : null"
+            (click)="currentStep = step">
             <i class="bi" [ngClass]="step <= currentStep ? 'bi-check-circle-fill' : 'bi-circle'"></i>
             {{ ['Infos', 'Variantes', 'Images', 'Confirmation'][i] }}
           </button>
@@ -38,44 +40,38 @@
           <div class="mb-4">
             <label for="productName" class="form-label">Nom du produit <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="productName" formControlName="name" placeholder="ex: T-shirt coton premium" [class.is-invalid]="isFieldInvalid('name')">
-            <div class="invalid-feedback" *ngIf="productForm.get('name')?.hasError('required')">Le nom est obligatoire</div>
-            <div class="invalid-feedback" *ngIf="productForm.get('name')?.hasError('minlength')">Minimum 3 caractères</div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('name') && productForm.get('name')?.hasError('required')">Le nom est obligatoire</div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('name') && productForm.get('name')?.hasError('minlength')">Minimum 3 caractères</div>
           </div>
 
           <div class="mb-4">
             <label for="productDesc" class="form-label">Description <span class="text-danger">*</span></label>
             <textarea class="form-control" id="productDesc" formControlName="description" placeholder="Décrivez votre produit en détail..." rows="6" [class.is-invalid]="isFieldInvalid('description')"></textarea>
-            <div class="invalid-feedback" *ngIf="productForm.get('description')?.hasError('required')">La description est obligatoire</div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('description') && productForm.get('description')?.hasError('required')">La description est obligatoire</div>
           </div>
 
           <div class="row mb-4">
             <div class="col-md-6">
-              <label for="productBrand" class="form-label">Marque</label>
+              <label for="productBrand" class="form-label">Marque <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="productBrand" formControlName="brand" placeholder="ex: Nike, Adidas...">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('brand')">La marque est obligatoire</div>
             </div>
             <div class="col-md-6">
               <label for="productCategory" class="form-label">Catégorie <span class="text-danger">*</span></label>
               <select class="form-select" id="productCategory" formControlName="categoryId" [class.is-invalid]="isFieldInvalid('categoryId')">
                 <option value="">Sélectionnez une catégorie...</option>
-                <optgroup *ngFor="let cat of categories" [label]="cat.name">
-                  <option *ngFor="let child of cat.children" [value]="child.id">— {{ child.name }}</option>
-                </optgroup>
+                <option *ngFor="let category of categoryOptions" [value]="category.id">{{ category.label }}</option>
               </select>
-              <div class="invalid-feedback" *ngIf="productForm.get('categoryId')?.hasError('required')">La catégorie est obligatoire</div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('categoryId') && productForm.get('categoryId')?.hasError('required')">La catégorie est obligatoire</div>
             </div>
           </div>
 
           <div class="row mb-4">
             <div class="col-md-6">
-              <label for="productPrice" class="form-label">Prix de base (€) <span class="text-danger">*</span></label>
+              <label for="productPrice" class="form-label">Prix de base (USD) <span class="text-danger">*</span></label>
               <input type="number" class="form-control" id="productPrice" formControlName="price" placeholder="0.00" min="0" step="0.01" [class.is-invalid]="isFieldInvalid('price')">
-              <div class="invalid-feedback" *ngIf="productForm.get('price')?.hasError('required')">Le prix est obligatoire</div>
-              <div class="invalid-feedback" *ngIf="productForm.get('price')?.hasError('min')">Le prix doit être positif</div>
-            </div>
-            <div class="col-md-6">
-              <label for="productSlug" class="form-label">Slug <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="productSlug" formControlName="slug" placeholder="auto-généré" [class.is-invalid]="isFieldInvalid('slug')">
-              <small class="text-muted">URL-friendly (auto-généré)</small>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('price') && productForm.get('price')?.hasError('required')">Le prix est obligatoire</div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('price') && productForm.get('price')?.hasError('min')">Le prix doit être positif</div>
             </div>
           </div>
         </form>
@@ -93,16 +89,14 @@
           <table class="table table-hover" *ngIf="variants.length > 0">
             <thead class="table-light">
               <tr>
-                <th>SKU</th>
                 <th>Combinaison d'attributs</th>
-                <th>Prix (€)</th>
+                <th>Prix (USD)</th>
                 <th>Stock</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let variant of variants">
-                <td class="fw-bold">{{ variant.sku }}</td>
                 <td>
                   <div class="d-flex flex-wrap gap-2">
                     <span *ngFor="let attr of variant.attributeValueSelection" class="badge bg-info">{{ attr.attributeName }}: {{ attr.valueName }}</span>
@@ -155,13 +149,13 @@
       <div class="card-body">
         <div class="border-2 border-dashed rounded p-5 text-center bg-light mb-4">
           <i class="bi bi-cloud-arrow-up fs-1 text-primary mb-3"></i>
-          <p class="mb-2 fw-semibold">Glissez vos images ici</p>
-          <small class="text-muted">ou utilisez le bouton ci-dessous</small>
+          <p class="mb-2 fw-semibold">Ajoutez les images de votre produit</p>
+          <small class="text-muted">Sélectionnez une ou plusieurs images</small>
           <div class="mt-3">
             <input type="file" #fileInput hidden multiple accept="image/*" (change)="onFilesSelected($event)">
             <button type="button" class="btn btn-primary" (click)="fileInput.click()"><i class="bi bi-plus-lg"></i> Choisir des images</button>
           </div>
-          <small class="text-muted d-block mt-2">Formats: JPG, PNG - Max 10 images</small>
+          <small class="text-muted d-block mt-2">JPG, PNG · 10 Mo par image · 10 images maximum</small>
         </div>
 
         <div *ngIf="uploadedImages.length > 0" class="mt-4">
@@ -170,24 +164,20 @@
             <div *ngFor="let image of uploadedImages; let i = index" class="col-md-6 col-lg-4">
               <div class="card border">
                 <div class="position-relative">
-                  <img [src]="image.url" class="card-img-top" style="height: 200px; object-fit: cover;">
+                  <img [src]="image.url" [alt]="productForm.get('name')?.value || 'Aperçu du produit'" class="card-img-top" style="height: 200px; object-fit: cover;">
                   <div *ngIf="image.isMain" class="badge bg-success position-absolute top-0 start-0 m-2">Principal</div>
                   <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" (click)="removeImage(image.id)"><i class="bi bi-trash"></i></button>
                 </div>
                 <div class="card-body">
                   <div class="mb-3">
-                    <label class="form-label small">Texte ALT</label>
-                    <input type="text" class="form-control form-control-sm" [(ngModel)]="image.alt" placeholder="Description de l'image">
-                  </div>
-                  <div class="mb-3">
                     <button type="button" class="btn btn-sm" [ngClass]="image.isMain ? 'btn-success' : 'btn-outline-success'" (click)="setMainImage(image.id)"><i class="bi bi-star"></i> Principale</button>
                   </div>
                   <div>
                     <label class="form-label small">Attribut visuel (optionnel)</label>
-                    <select class="form-select form-select-sm" [(ngModel)]="image.visualAttributeValueId" (change)="updateImageAttribute(image.id, image.visualAttributeValueId || 0)">
-                      <option [value]="undefined">Aucun</option>
+                    <select class="form-select form-select-sm" [(ngModel)]="image.visualAttributeValueId" (ngModelChange)="updateImageAttribute(image.id, $event || 0)">
+                      <option [ngValue]="undefined">Aucun</option>
                       <optgroup *ngFor="let attr of getVisualAttributesByVariants()" [label]="attr.name">
-                        <option *ngFor="let value of attr.values" [value]="value.id">{{ value.value }}</option>
+                        <option *ngFor="let value of attr.values" [ngValue]="value.id">{{ value.value }}</option>
                       </optgroup>
                     </select>
                   </div>
@@ -225,11 +215,7 @@
                   </div>
                   <div class="col-md-6">
                     <small class="text-muted d-block">Prix de base</small>
-                    <p class="fs-5 fw-bold text-success">{{ (productForm.get('price')?.value || 0) | number: '1.2-2' }} €</p>
-                  </div>
-                  <div class="col-md-6">
-                    <small class="text-muted d-block">Slug</small>
-                    <p class="fs-5 fw-bold" style="font-family: monospace; word-break: break-word;">{{ productForm.get('slug')?.value || 'Non défini' }}</p>
+                    <p class="fs-5 fw-bold text-success">{{ (productForm.get('price')?.value || 0) | currency:'USD':'symbol':'1.2-2' }}</p>
                   </div>
                   <div class="col-12">
                     <small class="text-muted d-block">Description</small>
@@ -247,10 +233,6 @@
             <div *ngIf="variants.length > 0" class="row g-3 mb-4">
               <div *ngFor="let variant of variants; let i = index" class="col-md-6">
                 <div class="card border-info h-100">
-                  <div class="card-header bg-info bg-opacity-10 border-info">
-                    <small class="text-muted d-block">SKU</small>
-                    <p class="mb-0 fw-bold" style="font-family: monospace;">{{ variant.sku }}</p>
-                  </div>
                   <div class="card-body">
                     <div class="mb-3">
                       <small class="text-muted d-block mb-2">Attributs</small>
@@ -263,7 +245,7 @@
                     <div class="row g-2">
                       <div class="col-6">
                         <small class="text-muted d-block">Prix</small>
-                        <p class="fw-bold mb-0">{{ variant.price | number: '1.2-2' }} €</p>
+                        <p class="fw-bold mb-0">{{ variant.price | currency:'USD':'symbol':'1.2-2' }}</p>
                       </div>
                       <div class="col-6">
                         <small class="text-muted d-block">Stock</small>
@@ -286,11 +268,8 @@
             <div *ngIf="uploadedImages.length > 0" class="row g-3">
               <div *ngFor="let image of uploadedImages; let i = index" class="col-md-4">
                 <div class="position-relative">
-                  <img [src]="image.url" class="img-fluid rounded border" style="height: 150px; object-fit: cover; width: 100%;">
+                  <img [src]="image.url" [alt]="productForm.get('name')?.value || 'Aperçu du produit'" class="img-fluid rounded border" style="height: 150px; object-fit: cover; width: 100%;">
                   <div *ngIf="image.isMain" class="badge bg-success position-absolute top-0 start-0 m-2">Principale</div>
-                  <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
-                    {{ image.alt || '(Pas de description)' }}
-                  </small>
                 </div>
               </div>
             </div>
@@ -321,7 +300,7 @@
                     <div class="card-body">
                       <p class="text-muted small mb-1">Prix moyen</p>
                       <p class="fs-4 fw-bold text-info mb-0">{{ (productForm.get('price')?.value || 0) | number: '1.2-2' }}</p>
-                      <small class="text-muted">€</small>
+                      <small class="text-muted">USD</small>
                     </div>
                   </div>
                 </div>

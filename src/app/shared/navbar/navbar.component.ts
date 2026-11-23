@@ -1,76 +1,52 @@
 
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter } from 'rxjs';
+import { EMPTY, catchError, filter, startWith, switchMap } from 'rxjs';
 
 import { AuthService, User } from '../../core/auth.service';
 import { CartService } from '../../core/cart.service';
 import { MenuService, Category } from '../../core/menu.service';
-import type { MegaMenuCategory } from '../../models/categorie.model';
 import { MegaMenuComponent } from './mega-menu/mega-menu.component';
+import { StoreSettingsService } from '../../core/store-settings.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, CurrencyPipe, MegaMenuComponent],
+  imports: [CommonModule, RouterModule, FormsModule, CurrencyPipe, MegaMenuComponent],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnDestroy {
 
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly menuService = inject(MenuService);
 
   readonly cartService = inject(CartService);
+  readonly store = inject(StoreSettingsService);
   readonly user$ = this.authService.user$;
 
 
-  // =========================
-  // MENU
-  // =========================
-
   categories: Category[] = [];
-  megaMenuCategories: MegaMenuCategory[] = [];
-
-  selectedCategory: Category | null = null;
-
-  // =========================
-  // MOBILE
-  // =========================
-
+  menuError = false;
   isMobileMenuOpen = false;
+  isMobileSearchOpen = false;
+  expandedCategories = new Set<number>();
+  searchQuery = '';
 
   constructor() {
-
-    // Chargement du menu depuis l'API
-    this.menuService.getMenu()
-      .pipe(
-        takeUntilDestroyed()
-      )
-      .subscribe({
-        next: (categories) => {
-          this.categories = categories;
-          this.megaMenuCategories = this.buildMegaMenu(categories);
-
-          // Première catégorie sélectionnée par défaut
-          if (categories.length > 0) {
-            this.selectedCategory = categories[0];
-          }
-
-          console.log('Menu chargé :', categories);
-        },
-        error: (error) => {
-          console.error(
-            'Erreur lors du chargement du menu',
-            error
-          );
-        }
-      });
-
-    // Fermeture du menu mobile après navigation
+    this.menuService.changes$.pipe(
+      startWith(undefined),
+      switchMap(() => this.menuService.getMenu().pipe(catchError(error => {
+        this.menuError = true;
+        console.error('Erreur lors du chargement du menu', error);
+        return EMPTY;
+      }))),
+      takeUntilDestroyed()
+    ).subscribe(categories => { this.categories = categories; this.menuError = false; });
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
@@ -78,20 +54,28 @@ export class NavbarComponent {
       )
       .subscribe(() => {
         this.closeMobileMenu();
+        this.isMobileSearchOpen = false;
       });
   }
 
-  // =========================
-  // MENU
-  // =========================
-
-  selectCategory(category: Category): void {
-    this.selectedCategory = category;
+  loadMenu(): void {
+    this.menuService.refresh();
   }
 
-  // =========================
-  // ACCOUNT
-  // =========================
+  ngOnDestroy(): void {
+    this.syncBodyMobileNavState(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeMobileMenu();
+    this.isMobileSearchOpen = false;
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1200) this.closeMobileMenu();
+  }
 
   getDisplayName(user: User): string {
     const fullName =
@@ -101,13 +85,20 @@ export class NavbarComponent {
   }
 
   logout(): void {
-    console.log('Logging out...');
     this.authService.logout();
   }
 
-  // =========================
-  // MOBILE MENU
-  // =========================
+  search(): void {
+    const query = this.searchQuery.trim();
+    this.router.navigate(['/products'], { queryParams: query ? { query } : {} });
+    this.closeMobileMenu();
+    this.isMobileSearchOpen = false;
+  }
+
+  toggleCategory(id: number): void {
+    if (this.expandedCategories.has(id)) this.expandedCategories.delete(id);
+    else this.expandedCategories.add(id);
+  }
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -116,16 +107,8 @@ export class NavbarComponent {
 
   closeMobileMenu(): void {
     this.isMobileMenuOpen = false;
+    this.expandedCategories.clear();
     this.syncBodyMobileNavState(false);
-  }
-
-  goToCategory(categoryId: number): void {
-    this.router.navigate(['/products'], {
-      queryParams: {
-        categoryId
-      }
-    });
-    this.closeMobileMenu();
   }
 
   private syncBodyMobileNavState(isOpen: boolean): void {
@@ -139,47 +122,5 @@ export class NavbarComponent {
     );
   }
 
-  openMegaMenu(category: Category) {
-  this.selectedCategory = category;
-}
-
-closeMegaMenu() {
-  this.selectedCategory = null;
-}
-
-buildMegaMenu(categories: Category[]): MegaMenuCategory[] {
-  return categories.map(category => ({
-    id: category.id,
-    name: category.name,
-    columns: category.children.map(child => ({
-      title: child.name,
-      links: child.children.map(grandchild => ({
-        id: grandchild.id,
-        name: grandchild.name
-      }))
-    }))
-  }));
-}
-
-/*  mega menu*/
-  megaMenuOpen = false;
-  hideTimeOut: any;
-
-
-
-  isMenuOpen = false;
-  activeMenu: string | null = null;
-
-  toggleMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
-  }
-
-  showMegaMenu(menu: string) {
-    this.activeMenu = menu;
-  }
-
-  hideMegaMenu() {
-    this.activeMenu = null;
-  }
 }
 

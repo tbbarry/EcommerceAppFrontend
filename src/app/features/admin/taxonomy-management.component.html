@@ -1,0 +1,112 @@
+<main class="taxonomy-page">
+  <div class="taxonomy-shell">
+    <header class="page-header">
+      <div>
+        <a routerLink="/admin/products" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i> Gestion des produits</a>
+        <p class="eyebrow">ESPACE ADMINISTRATION</p>
+        <h1>Catégories et attributs</h1>
+        <p class="intro">Organisez votre boutique et les options proposées pour vos produits.</p>
+      </div>
+    </header>
+
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="alert alert-success" role="status">{{ successMessage }}</div>
+    <div *ngIf="loading" class="loading" role="status">Chargement en cours…</div>
+    <button *ngIf="!loading && !loaded" type="button" class="btn btn-outline-primary" (click)="load()">Réessayer</button>
+
+    <ng-container *ngIf="loaded">
+      <div class="tab-bar" aria-label="Choisir la section">
+        <button type="button" [class.active]="tab === 'categories'" [attr.aria-pressed]="tab === 'categories'" (click)="switchTab('categories')">
+          <i class="bi bi-grid" aria-hidden="true"></i> Catégories
+        </button>
+        <button type="button" [class.active]="tab === 'attributes'" [attr.aria-pressed]="tab === 'attributes'" (click)="switchTab('attributes')">
+          <i class="bi bi-palette" aria-hidden="true"></i> Attributs et valeurs
+        </button>
+      </div>
+
+      <section *ngIf="tab === 'categories'" class="panel" aria-labelledby="categories-title">
+        <div class="section-header">
+          <div><p class="eyebrow">ORGANISATION DE LA BOUTIQUE</p><h2 id="categories-title">Vos catégories</h2>
+            <p class="helper">Les catégories principales apparaissent dans le menu. Ajoutez des sous-catégories pour guider vos clients.</p></div>
+          <button type="button" class="btn btn-primary" [disabled]="busy || loading" (click)="openCategory()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter une catégorie</button>
+        </div>
+        <div class="info-note"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Pour organiser le menu, modifiez une catégorie principale et indiquez son ordre : 1, 2, 3… À ordre égal, les noms sont classés par ordre alphabétique.</span></div>
+
+        <form *ngIf="editor === 'category'" class="editor" [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+          <h3>{{ editingId === null ? 'Nouvelle catégorie' : 'Modifier la catégorie' }}</h3>
+          <fieldset [disabled]="busy || loading">
+            <div class="form-grid">
+              <div class="field"><label for="category-name">Nom <span aria-hidden="true">*</span></label>
+                <input id="category-name" class="form-control" formControlName="name" placeholder="Ex. Femme" maxlength="255"></div>
+              <div class="field"><label for="category-parent">Catégorie parente</label>
+                <select id="category-parent" class="form-select" formControlName="categoryId">
+                  <option [ngValue]="null">Aucune : catégorie principale</option>
+                  <option *ngFor="let row of availableParents" [ngValue]="row.category.id">{{ '— '.repeat(row.depth) }}{{ row.category.name }}</option>
+                </select>
+                <small>Choisissez « Aucune » pour afficher cette catégorie dans le menu principal.</small></div>
+              <div class="field field-wide"><label for="category-description">Description <span aria-hidden="true">*</span></label>
+                <textarea id="category-description" class="form-control" formControlName="description" rows="2" placeholder="Décrivez brièvement cette catégorie"></textarea></div>
+              <div class="field" *ngIf="categoryForm.controls.categoryId.value === null"><label for="category-order">Ordre dans le menu</label>
+                <input id="category-order" type="number" min="0" step="1" class="form-control" formControlName="displayOrder">
+                <small>Le plus petit numéro apparaît en premier.</small></div>
+            </div>
+            <p *ngIf="categoryForm.invalid && categoryForm.touched" class="text-danger mt-3 mb-0" role="alert">Renseignez le nom, la description et un ordre valide.</p>
+            <div class="editor-actions"><button type="submit" class="btn btn-primary">Enregistrer</button><button type="button" class="btn btn-outline-secondary" (click)="closeEditor()">Annuler</button></div>
+          </fieldset>
+        </form>
+
+        <div *ngIf="!rows.length" class="empty-state"><i class="bi bi-folder2-open" aria-hidden="true"></i><strong>Aucune catégorie</strong><span>Créez une première catégorie pour organiser votre boutique.</span></div>
+        <div class="category-list">
+          <article class="category-row" *ngFor="let row of rows" [class.category-child]="row.depth > 0">
+            <span class="category-depth" [style.width.rem]="row.depth * 1.1" aria-hidden="true"></span>
+            <span class="item-icon"><i [class]="row.depth ? 'bi bi-folder' : 'bi bi-grid'" aria-hidden="true"></i></span>
+            <div class="item-details"><strong>{{ row.category.name }}</strong>
+              <small *ngIf="row.depth === 0">Catégorie principale · Ordre {{ row.category.displayOrder ?? 0 }}</small>
+              <small *ngIf="row.depth > 0">Sous-catégorie · Niveau {{ row.depth + 1 }}</small></div>
+            <div class="item-actions">
+              <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy || loading" (click)="openCategory(undefined, row.category.id)" [attr.aria-label]="'Ajouter une sous-catégorie à ' + row.category.name">Ajouter une sous-catégorie</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy || loading" (click)="openCategory(row)" [attr.aria-label]="'Modifier ' + row.category.name">Modifier</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy || loading || editor !== null" (click)="deleteCategory(row)" [attr.aria-label]="'Supprimer ' + row.category.name">Supprimer</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section *ngIf="tab === 'attributes'" class="panel" aria-labelledby="attributes-title">
+        <div class="section-header">
+          <div><p class="eyebrow">OPTIONS DES PRODUITS</p><h2 id="attributes-title">Attributs et valeurs</h2>
+            <p class="helper">Un attribut est une option comme « Couleur » ; ses valeurs peuvent être « Rouge » ou « Bleu ».</p></div>
+          <button type="button" class="btn btn-primary" [disabled]="busy || loading" (click)="openAttribute()"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter un attribut</button>
+        </div>
+        <form *ngIf="editor === 'attribute' || editor === 'value'" class="editor" [formGroup]="nameForm" (ngSubmit)="saveName()">
+          <h3 *ngIf="editor === 'attribute'">{{ editingId === null ? 'Nouvel attribut' : 'Modifier l’attribut' }}</h3>
+          <h3 *ngIf="editor === 'value'">{{ editingId === null ? 'Ajouter une valeur' : 'Modifier la valeur' }} · {{ valueAttribute?.name }}</h3>
+          <fieldset [disabled]="busy || loading">
+            <div class="field"><label for="attribute-name">{{ editor === 'attribute' ? 'Nom de l’attribut' : 'Valeur' }} <span aria-hidden="true">*</span></label>
+              <input id="attribute-name" class="form-control" formControlName="name" maxlength="255" [placeholder]="editor === 'attribute' ? 'Ex. Couleur' : 'Ex. Rouge'"></div>
+            <p *ngIf="nameForm.invalid && nameForm.touched" class="text-danger mt-3 mb-0" role="alert">Saisissez un nom valide.</p>
+            <div class="editor-actions"><button type="submit" class="btn btn-primary">Enregistrer</button><button type="button" class="btn btn-outline-secondary" (click)="closeEditor()">Annuler</button></div>
+          </fieldset>
+        </form>
+        <div *ngIf="!attributes.length" class="empty-state"><i class="bi bi-tags" aria-hidden="true"></i><strong>Aucun attribut</strong><span>Ajoutez par exemple une couleur ou une taille.</span></div>
+        <div class="attribute-grid">
+          <article class="attribute-card" *ngFor="let attribute of attributes">
+            <div class="attribute-header"><div><h3>{{ attribute.name }}</h3><span class="helper">{{ attribute.values.length }} valeur(s)</span></div>
+              <div class="item-actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy || loading" (click)="openAttribute(attribute)" [attr.aria-label]="'Modifier ' + attribute.name">Modifier</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy || loading || editor !== null" (click)="deleteAttribute(attribute)" [attr.aria-label]="'Supprimer ' + attribute.name">Supprimer</button>
+              </div></div>
+            <p *ngIf="!attribute.values.length" class="helper">Aucune valeur pour le moment.</p>
+            <div class="value-list">
+              <div class="value-row" *ngFor="let value of attribute.values"><span>{{ value.value }}</span>
+                <div class="value-actions"><button type="button" [disabled]="busy || loading" (click)="openValue(attribute, value)" [attr.aria-label]="'Modifier ' + value.value"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+                  <button type="button" [disabled]="busy || loading || editor !== null" (click)="deleteValue(attribute, value)" [attr.aria-label]="'Supprimer ' + value.value"><i class="bi bi-trash" aria-hidden="true"></i></button></div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary add-value" [disabled]="busy || loading" (click)="openValue(attribute)"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter une valeur</button>
+          </article>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</main>

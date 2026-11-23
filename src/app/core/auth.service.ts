@@ -26,6 +26,7 @@ export interface User {
   email?: string;
   phone?: string;
   role?: string;
+  mustChangePassword?: boolean;
   addresses?: Address[];
 }
 
@@ -87,8 +88,8 @@ export class AuthService {
     '/api/user/address/{id}'
   ];
   private readonly changePasswordEndpoints = [
-    '/api/user/change-password',
     '/api/users/change-password',
+    '/api/user/change-password',
     '/users/me/change-password',
     '/auth/change-password'
   ];
@@ -107,13 +108,9 @@ export class AuthService {
   }
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
-    console.log('Login credentials:', credentials);
-
     return this.http.post(this.buildApiUrl('/auth/login'), credentials, { responseType: 'text' }).pipe(
       map((body) => {
-        console.log('Raw login response body:', body);
         const parsed = this.parseResponseBody(body);
-        console.log('Parsed login response:', parsed);
         return parsed as AuthResponse;
       }),
       tap((response) => {
@@ -154,9 +151,9 @@ export class AuthService {
     );
   }
 
-  getMyAddresses(): Observable<Address[]> {
+  getMyAddresses(allowCachedFallback = true): Observable<Address[]> {
     if (!this.token) {
-      return of([]);
+      return allowCachedFallback ? of([]) : throwError(() => new Error('No auth token available'));
     }
 
     return this.fetchAddressesFromEndpoints(this.addressReadEndpoints, 0).pipe(
@@ -168,7 +165,9 @@ export class AuthService {
           map((user) => user.addresses ?? [])
         )
       ),
-      catchError(() => of(this.currentUser?.addresses ?? []))
+      catchError((error) => allowCachedFallback
+        ? of(this.currentUser?.addresses ?? [])
+        : throwError(() => error))
     );
   }
 
@@ -318,11 +317,11 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(loginUrl = '/auth/login'): void {
     this.removeFromStorage(this.authTokenKey);
     this.removeFromStorage(this.userStorageKey);
     this.userSubject.next(null);
-    this.router.navigateByUrl('/auth/login');
+    this.router.navigateByUrl(loginUrl);
   }
 
   isLoggedIn(): boolean {
@@ -494,6 +493,7 @@ export class AuthService {
       email,
       phone,
       role,
+      mustChangePassword: record['mustChangePassword'] === true,
       addresses
     };
   }
@@ -548,6 +548,7 @@ export class AuthService {
         this.toText(record['telephone']) ||
         this.toText(record['mobile']),
       role: this.toText(record['role']),
+      mustChangePassword: record['mustChangePassword'] === true,
       addresses: this.extractAddressesFromRecord(record)
     };
 
@@ -862,10 +863,7 @@ export class AuthService {
         if (status === 404 || status === 405) {
           return this.changePasswordFromEndpoints(endpoints, index + 1, payload);
         }
-        if (index >= endpoints.length - 1) {
-          return throwError(() => new Error(this.extractHttpErrorMessage(error)));
-        }
-        return this.changePasswordFromEndpoints(endpoints, index + 1, payload);
+        return throwError(() => new Error(this.extractHttpErrorMessage(error)));
       })
     );
   }

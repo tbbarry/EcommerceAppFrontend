@@ -1,0 +1,9 @@
+:host{display:block;max-width:520px;margin-top:.8rem}
+.review-toggle{background:none;border:0;padding:0;color:#315b77;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.editor{margin-top:.75rem;padding:1rem;background:#f7f8f6;border:1px solid #e6e9e5;border-radius:12px}
+fieldset{border:0;padding:0;margin:0 0 .7rem}legend,label{font-size:.84rem;font-weight:700}legend{float:none;width:auto;margin:0}
+.stars{display:flex;gap:.2rem}.stars label{position:relative;font-size:1.75rem;color:#c4c9c5;cursor:pointer;line-height:1.2}.stars label.selected{color:#b5771e}
+.stars input{position:absolute;opacity:0}.stars label:focus-within{outline:2px solid #315b77;outline-offset:2px}
+textarea{display:block;width:100%;margin-top:.35rem;padding:.7rem;border:1px solid #cbd2cd;border-radius:8px;resize:vertical;font:inherit}
+.optional{font-weight:400;color:#66736b}.actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}.actions button{border:0;border-radius:8px;padding:.6rem .9rem;font-weight:700}.save{background:#1b332a;color:white}.remove{background:#e8ebe8;color:#543b3b}button:disabled{opacity:.55}
+.feedback{font-size:.85rem;margin:.5rem 0}.error{color:#a22626}.success{color:#216842}

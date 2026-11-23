@@ -3,7 +3,7 @@
   <div class="variant-summary-row"><strong>Couleur</strong><span>{{ color || '-' }}</span></div>
   <div class="variant-summary-row"><strong>Taille</strong><span>{{ size || '-' }}</span></div>
   <div class="variant-summary-row"><strong>Stock</strong><span>{{ stock }}</span></div>
-  <div class="variant-summary-row"><strong>Prix final</strong><span>{{ variant.finalPrice | number:'1.2-2' }} €</span></div>
+  <div class="variant-summary-row"><strong>Prix final</strong><span>{{ variant.finalPrice | currency:'USD':'symbol':'1.2-2' }}</span></div>
   <div class="variant-summary-row" *ngIf="variant.appliedDiscountPercent > 0"><strong>Remise</strong><span>-{{ variant.appliedDiscountPercent }}%</span></div>
 </div>
 

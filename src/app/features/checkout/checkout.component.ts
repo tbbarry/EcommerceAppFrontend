@@ -9,21 +9,7 @@ import { environment } from '../../../environments/environment';
 import { Address, AuthService, UpsertAddressPayload, User } from '../../core/auth.service';
 import { CartItem, CartService } from '../../core/cart.service';
 import { TaxService } from '../../core/tax.service';
-
-type ShippingDeliveryType = 'HOME' | 'HAND_TO_HAND' | 'LOCKER' | 'PICKUP_POINT';
-
-interface ShippingMethod {
-  id: number;
-  name: string;
-  code: string;
-  deliveryType: ShippingDeliveryType;
-  description: string;
-  minDeliveryDays: number;
-  maxDeliveryDays: number;
-  price: number;
-  freeShippingThreshold: number | null;
-  active: boolean;
-}
+import { ShippingDeliveryType, ShippingMethod } from '../../core/shipping-method.service';
 
 interface UserAddressResponse {
   id: number;
@@ -74,6 +60,8 @@ interface CouponPreviewResult {
   taxAmount?: number;
   shippingCost?: number;
   couponCodeUsed?: string | null;
+  couponApplied?: boolean;
+  unitPrices?: Record<string, number>;
 }
 
 interface CouponPreviewPayload {
@@ -125,6 +113,8 @@ export class CheckoutComponent implements OnInit {
   addressError = '';
   shippingError = '';
   checkoutError = '';
+  addressLoadFailed = false;
+  shippingLoadFailed = false;
   addresses: Address[] = [];
   selectedAddressId: string | null = null;
   editingAddressIndex: number | null = null;
@@ -172,7 +162,7 @@ export class CheckoutComponent implements OnInit {
     }
 
     const fullName = `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim();
-    return fullName || 'Customer';
+    return fullName || 'Client';
   }
 
   get selectedAddress(): Address | null {
@@ -196,7 +186,23 @@ export class CheckoutComponent implements OnInit {
   }
 
   get canConfirmOrder(): boolean {
-    return this.canContinueToReview && !this.cartService.isEmpty() && this.deliveryNote.length <= 300;
+    return this.canContinueToReview && !this.cartService.isEmpty() && this.deliveryNote.length <= 300
+      && !this.showAddAddressForm && !this.isSavingAddress && !this.isLoadingAddresses
+      && !this.isLoadingShippingMethods && !this.addressLoadFailed && !this.shippingLoadFailed
+      && !this.isApplyingCoupon && (!this.appliedCouponCode || this.couponValidationStatus === 'valid');
+  }
+
+  get confirmationHint(): string {
+    if (this.isLoadingAddresses || this.isLoadingShippingMethods) return 'Loading shipping information…';
+    if (this.addressLoadFailed || this.shippingLoadFailed) return 'Rechargez les informations indisponibles pour continuer.';
+    if (this.isSavingAddress) return 'Saving your address…';
+    if (this.showAddAddressForm) return 'Save or cancel your address changes to continue.';
+    if (!this.selectedAddress) return 'Choose or add a shipping address.';
+    if (!this.selectedShippingMethod) return 'Choose a shipping method.';
+    if (this.deliveryNote.length > 300) return 'Delivery instructions must be 300 characters or fewer.';
+    if (this.isApplyingCoupon) return 'Checking your promo code…';
+    if (this.appliedCouponCode && this.couponValidationStatus !== 'valid') return 'Check your promo code again before continuing.';
+    return '';
   }
 
   get canApplyCoupon(): boolean {
@@ -248,7 +254,30 @@ export class CheckoutComponent implements OnInit {
   }
 
   getItemLineTotal(item: CartItem): number {
-    return item.price * item.quantity;
+    return this.getItemUnitPrice(item) * item.quantity;
+  }
+
+  getItemUnitPrice(item: CartItem): number {
+    const previewPrice = item.variantId == null ? undefined : this.exactCouponPreview?.unitPrices?.[item.variantId];
+    return previewPrice ?? item.price;
+  }
+
+  get summarySubtotal(): number {
+    return this.exactCouponPreview?.subtotal ?? this.cartService.subtotal();
+  }
+
+  get productSavings(): number {
+    const savings = this.cartService.cartItems().reduce((sum, item) =>
+      sum + Math.max(0, (item.basePrice ?? item.price) - this.getItemUnitPrice(item)) * item.quantity, 0);
+    return Math.round(savings * 100) / 100;
+  }
+
+  get originalSubtotal(): number {
+    return Math.round((this.summarySubtotal + this.productSavings) * 100) / 100;
+  }
+
+  get totalSavings(): number {
+    return Math.round((this.productSavings + this.discountPreview) * 100) / 100;
   }
 
   getAddressTitle(address: Address, index: number): string {
@@ -256,7 +285,7 @@ export class CheckoutComponent implements OnInit {
       return address.label;
     }
 
-    return `Address ${index + 1}`;
+    return `Adresse ${index + 1}`;
   }
 
   getAddressLine(address: Address): string {
@@ -292,11 +321,11 @@ export class CheckoutComponent implements OnInit {
   }
 
   getShippingEtaLabel(method: ShippingMethod): string {
-    return `Delivery in ${method.minDeliveryDays}-${method.maxDeliveryDays} business days`;
+    return `Delivery in ${method.minDeliveryDays}–${method.maxDeliveryDays} business days`;
   }
 
   isShippingFree(method: ShippingMethod): boolean {
-    return method.freeShippingThreshold !== null && this.cartService.subtotal() >= method.freeShippingThreshold;
+    return method.price === 0 || (method.freeShippingThreshold !== null && this.summarySubtotal >= method.freeShippingThreshold);
   }
 
   getShippingPreviewForMethod(method: ShippingMethod): number {
@@ -338,7 +367,7 @@ export class CheckoutComponent implements OnInit {
     this.previewDiscountAmount = 0;
     this.exactCouponPreview = null;
     this.couponValidationStatus = 'idle';
-    this.couponInfoMessage = 'Clique sur Apply pour verifier ce coupon.';
+    this.couponInfoMessage = 'Select Apply to check this code.';
   }
 
   onDeliveryPreferencesChanged(): void {
@@ -353,7 +382,7 @@ export class CheckoutComponent implements OnInit {
     this.exactCouponPreview = null;
     this.previewDiscountAmount = 0;
     this.couponValidationStatus = 'pending';
-    this.couponInfoMessage = 'Adresse, livraison ou preferences modifiees. Clique sur Apply pour recalculer la reduction.';
+    this.couponInfoMessage = 'Your information has changed. Select Apply to recalculate the discount.';
   }
 
   goToStep(step: 1 | 2 | 3): void {
@@ -435,7 +464,7 @@ export class CheckoutComponent implements OnInit {
     this.addressError = '';
 
     if (!this.isAddressFormValid()) {
-      this.addressError = 'Address is invalid. Check all required fields and formats.';
+      this.addressError = 'Check the required fields and formats.';
       return;
     }
 
@@ -472,23 +501,24 @@ export class CheckoutComponent implements OnInit {
             error?.error?.error ||
             error?.message;
           this.addressError = backendMessage
-            ? `Unable to save address: ${backendMessage}`
-            : 'Unable to save address right now. Please try again.';
+            ? `Could not save your address: ${backendMessage}`
+            : 'Could not save your address right now. Please try again.';
         }
       });
   }
 
   placeOrder(): void {
     this.checkoutError = '';
+    this.checkoutErrorAction = 'NONE';
     this.couponError = '';
 
-    if (!this.canConfirmOrder || !this.selectedAddressId || !this.selectedShippingMethodId) {
+    if (this.isPlacingOrder || !this.canConfirmOrder || !this.selectedAddressId || !this.selectedShippingMethodId) {
       return;
     }
 
     const payload = this.buildCheckoutPayload(this.appliedCouponCode);
     if (!payload) {
-      this.checkoutError = 'Selected address is invalid. Please select another one.';
+      this.checkoutError = 'The selected address is invalid. Choose another address.';
       return;
     }
 
@@ -505,17 +535,15 @@ export class CheckoutComponent implements OnInit {
           this.cartService.clearCart();
           this.router.navigate(['/order-confirmation', response.orderId]); */
           if(response && response.paymentUrl) {
+            this.checkoutIdempotencyService.bindOrder(response.orderId);
             window.location.href = response.paymentUrl;
+          } else {
+            this.checkoutError = 'The payment link was not provided. Try again or contact customer support before placing another order.';
           }
 
         },
         error: (error) => {
-          console.log('Checkout error:', error);
-          if(error && error.error.code) {
-            let code = error.error.code;
-            this.handleCheckoutError(error);
-          }
-          
+          this.handleCheckoutError(error);
         }
       });
   }
@@ -528,7 +556,7 @@ export class CheckoutComponent implements OnInit {
 
     if (!this.selectedAddressId || !this.selectedShippingMethodId) {
       this.couponValidationStatus = 'pending';
-      this.couponInfoMessage = 'Selectionne d abord une adresse et une livraison pour valider le coupon et afficher le montant exact.';
+      this.couponInfoMessage = 'Choose an address and shipping method before checking the code.';
       return;
     }
 
@@ -546,11 +574,24 @@ export class CheckoutComponent implements OnInit {
   }
 
   private executeCouponValidation(code: string, showFeedback: boolean): void {
+    const addressId = this.selectedAddressId;
+    const shippingMethodId = this.selectedShippingMethodId;
     this.isApplyingCoupon = true;
     this.validateCouponWithBackend(code)
       .pipe(finalize(() => (this.isApplyingCoupon = false)))
       .subscribe({
         next: (result) => {
+          if (this.selectedAddressId !== addressId || this.selectedShippingMethodId !== shippingMethodId
+              || this.couponCode.trim().toUpperCase() !== code) {
+            if (this.couponCode.trim().toUpperCase() === code) {
+              this.appliedCouponCode = code;
+              this.exactCouponPreview = null;
+              this.previewDiscountAmount = 0;
+              this.couponValidationStatus = 'pending';
+              this.couponInfoMessage = 'Your information has changed. Select Apply to recalculate the discount.';
+            }
+            return;
+          }
           this.couponCode = code;
 
           if (result.status === 'invalid' || !result.valid) {
@@ -610,9 +651,11 @@ export class CheckoutComponent implements OnInit {
               valid: true,
               discountAmount: preview.discountAmount,
               status: 'valid',
-              message: preview.discountAmount > 0
-                ? `Vous allez beneficier d'une reduction de ${preview.discountAmount.toFixed(2)} USD.`
-                : 'Coupon valide, mais aucune reduction ne s applique a ce panier.',
+              message: preview.couponApplied === false
+                ? 'The cart promotion offers a better discount, so the coupon will not be used.'
+                : preview.discountAmount > 0
+                ? `You save $${preview.discountAmount.toFixed(2)}.`
+                : 'The coupon is valid, but does not apply to this cart.',
               preview
             } satisfies CouponValidationResult;
           }),
@@ -643,7 +686,7 @@ export class CheckoutComponent implements OnInit {
               valid: false,
               discountAmount: 0,
               status: 'pending',
-              message: 'Impossible de verifier le coupon pour le moment. Reessaie dans un instant.'
+              message: 'Could not check the coupon right now. Please try again.'
             } satisfies CouponValidationResult);
           })
         );
@@ -653,7 +696,7 @@ export class CheckoutComponent implements OnInit {
       valid: false,
       discountAmount: 0,
       status: 'pending',
-      message: 'Selectionne d abord une adresse et une livraison pour verifier ce coupon exactement.'
+      message: 'Choose an address and shipping method to check this coupon.'
     } satisfies CouponValidationResult);
   }
 
@@ -676,8 +719,20 @@ export class CheckoutComponent implements OnInit {
       taxRate: this.toNumber(record['taxRate']),
       taxAmount: this.toNumber(record['taxAmount']),
       shippingCost: this.toNumber(record['shippingCost']),
-      couponCodeUsed: this.toText(record['couponCodeUsed']) ?? this.toText(record['couponCode']) ?? this.appliedCouponCode
+      couponCodeUsed: this.toText(record['couponCodeUsed']) ?? this.toText(record['couponCode']),
+      couponApplied: this.toBoolean(record['couponApplied']) ?? true,
+      unitPrices: this.readPreviewUnitPrices(record['unitPrices'])
     };
+  }
+
+  private readPreviewUnitPrices(value: unknown): Record<string, number> | undefined {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+    const result: Record<string, number> = {};
+    for (const [variantId, price] of Object.entries(value)) {
+      const parsed = this.toNumber(price);
+      if (parsed !== undefined) result[variantId] = parsed;
+    }
+    return result;
   }
 
   private buildCouponPreviewPayload(couponCode: string): CouponPreviewPayload | null {
@@ -833,7 +888,7 @@ export class CheckoutComponent implements OnInit {
       return 'First name is required.';
     }
     if (value.length > 80) {
-      return 'First name must be 80 characters max.';
+      return 'First name must be 80 characters or fewer.';
     }
     return '';
   }
@@ -844,7 +899,7 @@ export class CheckoutComponent implements OnInit {
       return 'Last name is required.';
     }
     if (value.length > 80) {
-      return 'Last name must be 80 characters max.';
+      return 'Last name must be 80 characters or fewer.';
     }
     return '';
   }
@@ -852,38 +907,38 @@ export class CheckoutComponent implements OnInit {
   getLabelError(): string {
     const value = (this.newAddress.label || '').trim();
     if (!value) {
-      return 'Label is required.';
+      return 'Address label is required.';
     }
     if (value.length > 30) {
-      return 'Label must be 30 characters max.';
+      return 'Address label must be 30 characters or fewer.';
     }
     return '';
   }
 
   getStateError(): string {
     const value = (this.newAddress.state || '').trim().toUpperCase();
-    return /^[A-Z]{2}$/.test(value) ? '' : 'State must be 2 uppercase letters (ex: CA).';
+    return /^[A-Z]{2}$/.test(value) ? '' : 'Enter a two-letter state code, such as CA.';
   }
 
   getZipCodeError(): string {
     const value = (this.newAddress.postalCode || '').trim();
-    return /^\d{5}(?:-\d{4})?$/.test(value) ? '' : 'Zip code must be 12345 or 12345-6789.';
+    return /^\d{5}(?:-\d{4})?$/.test(value) ? '' : 'Use 12345 or 12345-6789.';
   }
 
   getPhoneError(): string {
     const value = (this.newAddress.phone || '').trim();
     return /^(\+1[-. ]?)?\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}$/.test(value)
       ? ''
-      : 'Phone must be (212) 555-0102 or 212-555-0102.';
+      : 'Use (212) 555-0102 or 212-555-0102.';
   }
 
   getCountryError(): string {
     const value = (this.newAddress.country || '').trim().toUpperCase();
-    return /^[A-Z]{2}$/.test(value) ? '' : 'Country must be ISO-2 code (ex: US).';
+    return /^[A-Z]{2}$/.test(value) ? '' : 'Enter a two-letter country code, such as US.';
   }
 
   getDeliveryNoteError(): string {
-    return this.deliveryNote.length <= 300 ? '' : 'Delivery note must be 300 characters max.';
+    return this.deliveryNote.length <= 300 ? '' : 'Delivery instructions must be 300 characters or fewer.';
   }
 
   trackByAddress(index: number, address: Address): string {
@@ -908,22 +963,20 @@ export class CheckoutComponent implements OnInit {
     return `${method.name} - ${this.getShippingEtaLabel(method)}`;
   }
 
-  private loadAddresses(forceRefresh = false): void {
+  loadAddresses(forceRefresh = false): void {
     if (!forceRefresh) {
       const localAddresses = this.authService.getLocalAddresses();
       this.addresses = localAddresses;
       this.selectedAddressId = this.resolveSelectedAddressId();
     }
 
+    this.addressLoadFailed = false;
+    this.addressError = '';
     this.isLoadingAddresses = true;
     this.http
       .get<UserAddressResponse[]>(`${this.apiBase}/api/users/addresses`)
       .pipe(
-        catchError(() =>
-          this.authService.getMyAddresses().pipe(
-            catchError(() => of([]))
-          )
-        ),
+        catchError(() => this.authService.getMyAddresses(false)),
         finalize(() => (this.isLoadingAddresses = false))
       )
       .subscribe({
@@ -936,23 +989,30 @@ export class CheckoutComponent implements OnInit {
         error: () => {
           this.addresses = [];
           this.selectedAddressId = null;
-          this.addressError = 'Could not load addresses right now. You can still add one below.';
+          this.addressLoadFailed = true;
+          this.addressError = 'Could not load your addresses. Try again before continuing.';
         }
       });
   }
 
-  private loadShippingMethods(forceRefresh = false): void {
+  loadShippingMethods(forceRefresh = false): void {
     if (forceRefresh) {
       this.selectedShippingMethodId = null;
     }
 
+    this.shippingLoadFailed = false;
+    this.shippingError = '';
     this.isLoadingShippingMethods = true;
     this.http
       .get<ShippingMethod[]>(`${this.apiBase}/api/shipping-methods`)
       .pipe(finalize(() => (this.isLoadingShippingMethods = false)))
       .subscribe({
         next: (methods) => {
-          this.shippingMethods = (methods || []).filter((method) => method.active);
+          this.shippingMethods = (methods || []).filter((method) =>
+            method.active && (method.deliveryType === 'HOME' || method.deliveryType === 'HAND_TO_HAND'));
+          if (!this.shippingMethods.length) {
+            this.shippingError = 'No shipping methods are available right now.';
+          }
           if (this.selectedShippingMethodId && !this.shippingMethods.some((method) => method.id === this.selectedShippingMethodId)) {
             this.selectedShippingMethodId = null;
           }
@@ -960,7 +1020,8 @@ export class CheckoutComponent implements OnInit {
         error: () => {
           this.shippingMethods = [];
           this.selectedShippingMethodId = null;
-          this.shippingError = 'Could not load shipping methods right now.';
+          this.shippingLoadFailed = true;
+          this.shippingError = 'Could not load shipping methods. Please try again.';
         }
       });
   }
@@ -971,7 +1032,7 @@ export class CheckoutComponent implements OnInit {
         const record = item as UserAddressResponse;
         return {
           id: record.id !== undefined && record.id !== null ? String(record.id) : undefined,
-          label: record.label || `Address ${index + 1}`,
+          label: record.label || `Adresse ${index + 1}`,
           firstName: record.firstName,
           lastName: record.lastName,
           line1: record.street || (item as Address).line1 || '',
@@ -1096,7 +1157,7 @@ export class CheckoutComponent implements OnInit {
             case 'VARIANT_NOT_FOUND':
             case 'STOCK_NOT_FOUND_FOR_VARIANT':
             this.checkoutError =
-                'Something went wrong with your cart. Please review your cart and try again.';
+                'There is a problem with your cart. Review it before trying again.';
             this.checkoutErrorAction = 'CART';
             break;
 
@@ -1107,7 +1168,7 @@ export class CheckoutComponent implements OnInit {
 
             case 'INSUFFICIENT_STOCK':
             this.checkoutError =
-                'One or more products in your cart are no longer available in the requested quantity. Please review your cart and try again.';
+                'One or more items are no longer available in the requested quantity. Review your cart.';
             this.checkoutErrorAction = 'CART';
             break;
 
@@ -1119,7 +1180,7 @@ export class CheckoutComponent implements OnInit {
             case 'DELIVERY_ADDRESS_REQUIRED':
             case 'DELIVERY_ADDRESS_NOT_FOUND':
             this.checkoutError =
-                'We could not use your delivery address. Please select a valid delivery address and try again.';
+                'This address cannot be used. Choose a valid address and try again.';
             this.checkoutErrorAction = 'NONE';
             break;
             
@@ -1129,8 +1190,9 @@ export class CheckoutComponent implements OnInit {
             // ============================================================
 
             case 'SHIPPING_METHOD_NOT_FOUND':
+            case 'SHIPPING_METHOD_UNAVAILABLE':
             this.checkoutError =
-                'The selected shipping method is no longer available. Please select another shipping method and try again.';
+                'This shipping method is no longer available. Choose another and try again.';
             this.checkoutErrorAction = 'NONE';
             break;
 
@@ -1141,13 +1203,13 @@ export class CheckoutComponent implements OnInit {
 
             case 'USER_NOT_FOUND':
             this.checkoutError =
-                'We could not find your account. Please sign in again and try again.';
+                'Your account could not be found. Sign in again and retry.';
             this.checkoutErrorAction = 'NONE';
             break;
 
             case 'ORDER_NOT_FOUND':
             this.checkoutError =
-                'We could not find your order. Please try again.';
+                'Your order could not be found. Please try again.';
             this.checkoutErrorAction = 'NONE';
             break;
 
@@ -1158,7 +1220,7 @@ export class CheckoutComponent implements OnInit {
 
             case 'STRIPE_SESSION_CREATION_FAILED':
             this.checkoutError =
-                'We could not start the payment process. Please try again in a moment.';
+                'Could not start payment. Please try again.';
             this.checkoutErrorAction = 'NONE';
             break;
 
@@ -1169,7 +1231,7 @@ export class CheckoutComponent implements OnInit {
 
             default:
             this.checkoutError =
-                'Something went wrong while placing your order. Please try again.';
+                'Could not continue checkout right now. Please try again.';
             this.checkoutErrorAction = 'NONE';
             break;
         }

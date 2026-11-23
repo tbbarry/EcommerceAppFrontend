@@ -1,0 +1,64 @@
+:host { display: block; }
+.taxonomy-page { min-height: 100vh; padding: 2rem 1rem 4rem; background: #f5f7fb; color: #17233c; }
+.taxonomy-shell { max-width: 1180px; margin: auto; }
+.page-header { margin-bottom: 1.5rem; }
+.back-link { display: inline-flex; gap: .4rem; margin-bottom: 1rem; color: #52617b; font-size: .88rem; text-decoration: none; }
+.eyebrow { color: #61728d; font-size: .7rem; font-weight: 800; letter-spacing: .1em; margin: 0 0 .4rem; }
+h1 { font-size: clamp(1.7rem, 3vw, 2.45rem); font-weight: 800; letter-spacing: -.035em; margin: 0; }
+.intro, .helper { color: #65728a; font-size: .9rem; margin: .4rem 0 0; }
+.tab-bar { display: flex; gap: .5rem; margin-bottom: 1rem; overflow-x: auto; }
+.tab-bar button { border: 1px solid #dfe6f0; border-radius: 10px; background: #fff; padding: .7rem 1rem; color: #52617b; font-weight: 700; white-space: nowrap; }
+.tab-bar button.active { background: #17233c; border-color: #17233c; color: #fff; }
+.panel { background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; padding: 1.5rem; box-shadow: 0 8px 26px rgba(28, 49, 80, .045); }
+.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem; }
+.section-header h2 { font-size: 1.2rem; font-weight: 750; margin: 0; }
+.section-header .btn { flex-shrink: 0; }
+.info-note { display: flex; gap: .7rem; padding: .85rem 1rem; margin-bottom: 1rem; background: #ebf3ff; border: 1px solid #d6e6ff; border-radius: 10px; color: #365784; font-size: .86rem; }
+.editor { background: #f8faff; border: 1px solid #dbe6fa; border-radius: 12px; padding: 1.15rem; margin-bottom: 1.25rem; }
+.editor h3 { font-size: 1rem; font-weight: 750; margin: 0 0 1rem; }
+.editor fieldset { min-width: 0; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.field { display: grid; gap: .4rem; min-width: 0; }
+.field label { font-size: .88rem; font-weight: 700; }
+.field small { color: #728098; }
+.field-wide { grid-column: span 2; }
+.editor-actions, .item-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.editor-actions { margin-top: 1rem; }
+.category-list { display: grid; gap: .5rem; }
+.category-row { display: flex; align-items: center; gap: .65rem; padding: .8rem; border: 1px solid #e8edf4; border-radius: 11px; }
+.category-child { background: #fafbfe; }
+.category-depth { flex: 0 0 auto; max-width: 3rem; }
+.item-icon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; background: #edf2ff; color: #315cd3; border-radius: 10px; }
+.item-details { display: grid; gap: .2rem; flex: 1; min-width: 0; }
+.item-details strong, .attribute-header h3, .value-row span { overflow-wrap: anywhere; }
+.item-details small { color: #728098; }
+.attribute-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 1rem; }
+.attribute-card { border: 1px solid #e8edf4; border-radius: 12px; padding: 1rem; min-width: 0; }
+.attribute-header { display: flex; justify-content: space-between; align-items: start; gap: .6rem; }
+.attribute-header h3 { font-size: 1rem; font-weight: 750; margin: 0; }
+.value-list { display: grid; margin: .6rem 0; }
+.value-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; border-top: 1px solid #f0f2f6; padding: .4rem 0; }
+.value-actions { display: flex; gap: .25rem; }
+.value-actions button { min-width: 38px; min-height: 38px; border: 0; border-radius: .5rem; background: #f3f6fa; color: #52617b; }
+.value-actions button:disabled { opacity: .5; }
+.empty-state { display: grid; justify-items: center; gap: .5rem; padding: 2rem 1rem; color: #728098; text-align: center; }
+.empty-state i { font-size: 2rem; color: #90a4c4; }
+.empty-state strong { color: #263a5b; }
+.loading { padding: .7rem 0; color: #65728a; }
+@media (max-width: 767px) {
+  .taxonomy-page { padding: 1.25rem .75rem 3rem; }
+  .panel { padding: 1rem; }
+  .section-header { flex-direction: column; }
+  .section-header .btn { width: 100%; }
+  .form-grid { grid-template-columns: 1fr; }
+  .field-wide { grid-column: auto; }
+  .category-row { flex-wrap: wrap; }
+  .category-row .item-actions { flex: 0 0 100%; }
+  .item-actions .btn { flex: 1; }
+  .category-depth { max-width: 1rem; }
+}
+@media (max-width: 390px) {
+  .attribute-header { flex-direction: column; }
+  .attribute-header .item-actions { width: 100%; }
+  .tab-bar button { padding: .65rem .75rem; font-size: .86rem; }
+}

@@ -62,6 +62,17 @@
   color: #0f172a;
 }
 
+.review-summary-link {
+  color: #355a46;
+  font-size: .88rem;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.review-summary-link span {
+  color: #b5771e;
+}
+
 .product-description {
   margin: 0;
   color: #475569;

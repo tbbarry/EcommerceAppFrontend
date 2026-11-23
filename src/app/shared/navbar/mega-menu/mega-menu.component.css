@@ -90,7 +90,7 @@
   color: #64748b;
 }
 
-.mega-menu-hero h3 {
+.mega-menu-hero h2 {
   margin: 0;
   font-size: 1.4rem;
   color: #0f172a;
@@ -118,6 +118,9 @@
   text-align: left;
   padding: 0;
   color: #0f172a;
+  display: block;
+  text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
 .dropdown-header-button {
@@ -136,6 +139,10 @@
 .dropdown-header-button:hover {
   color: #0d6efd;
 }
+
+.mega-branches { list-style: none; padding: 0; margin: 0; }
+.mega-branches .mega-branches { padding-left: .8rem; border-left: 1px solid #e6ebf2; }
+.custom-mega-menu { max-height: min(70vh, 640px); overflow-y: auto; }
 
 @media (max-width: 1199.98px) {
   :host {

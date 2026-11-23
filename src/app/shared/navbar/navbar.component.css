@@ -8,6 +8,17 @@
   margin: 0;
   font-size: 2.25rem;
   letter-spacing: -0.5px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  margin-right: 0.5rem;
 }
 
 .header-start {
@@ -356,6 +367,34 @@
   color: #0f172a;
   font-weight: 700;
   border: 0;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mobile-category-line { display: flex; align-items: center; }
+.category-expand { flex: 0 0 44px; height: 44px; border: 0; border-radius: .7rem; background: #f1f5f9; color: #475569; }
+.mobile-section-label { margin: .8rem .25rem .1rem; color: #64748b; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.mobile-nav-children .mobile-nav-section { box-shadow: none; background: #f8fafc; }
+.menu-error { font-size: .85rem; color: #9f1239; }
+.menu-error button { background: none; border: 0; text-decoration: underline; color: inherit; }
+.menu-error-notice { padding: .5rem 1rem; text-align: center; color: #9f1239; background: #fff1f2; font-size: .85rem; }
+.menu-error-notice button { border: 0; background: transparent; color: inherit; text-decoration: underline; }
+.admin-menu { min-width: 250px; padding: .5rem; border: 1px solid #e2e8f0; border-radius: .9rem; box-shadow: 0 16px 40px rgba(15, 23, 42, .14); }
+.admin-menu-title { margin: .4rem .7rem .6rem; color: #64748b; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+.admin-menu .dropdown-item { display: flex; align-items: center; gap: .7rem; border-radius: .6rem; padding: .65rem .7rem; font-size: .9rem; }
+.mobile-admin-menu { border-radius: .85rem; background: #f8fafc; }
+.mobile-admin-menu summary { cursor: pointer; padding: .85rem 1rem; font-weight: 700; color: #0f172a; }
+.mobile-admin-menu a { padding: .7rem 1rem .7rem 2rem; color: #475569; }
+.mobile-admin-menu a:hover { color: #0b5ed7; }
+.mobile-search { padding: .3rem 0 1rem; }
+.mobile-search .search-form { margin: 0; max-width: none; }
+.header-action-btn:hover, .header-action-btn:focus-visible { background: #f1f5f9; }
+@media (max-width: 575px) {
+  .cart-dropdown .dropdown-menu, .cart-preview-panel { width: min(360px, calc(100vw - 1rem)); }
+  .account-dropdown .dropdown-menu { width: min(300px, calc(100vw - 1rem)); }
+  .search-form .form-control { min-height: 46px; }
+  .search-form .btn { min-width: 52px; }
 }
 
 .mobile-nav-children {
@@ -424,6 +463,7 @@
 
   .main-header .sitename {
     font-size: 1.55rem;
+    max-width: min(120px, 20vw);
   }
 
   .app-mobile-nav-toggle {

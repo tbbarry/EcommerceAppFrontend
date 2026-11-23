@@ -9,6 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { catchError, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { isPublicStoreRequest } from './store-settings.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !isPublicStoreRequest(request.url, request.method)) {
           this.authService.logout();
           this.router.navigate(['/auth/login'], { replaceUrl: true });
         }

@@ -12,6 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
+import { resolveProductImageUrl } from '../shared/product-image-url';
 
 
 // ============================================================
@@ -27,6 +28,7 @@ export interface CartItem {
   name: string;
 
   price: number;
+  basePrice?: number;
 
   imageUrl: string | null;
   imageAlt: string | null;
@@ -69,6 +71,7 @@ interface BackendCartItem {
   inStock: boolean;
 
   unitPrice: number;
+  baseUnitPrice?: number;
   lineTotal: number;
 
   imageUrl: string | null;
@@ -1022,6 +1025,12 @@ export class CartService {
       .subscribe();
   }
 
+  refreshCart(): void {
+    if (this.authService.isLoggedIn()) {
+      this.loadBackendCart();
+    }
+  }
+
 
   // ==========================================================
   // APPLICATION DE LA RÉPONSE BACKEND
@@ -1058,8 +1067,11 @@ export class CartService {
           price:
             item.unitPrice,
 
+          basePrice:
+            item.baseUnitPrice,
+
           imageUrl:
-            item.imageUrl,
+            item.imageUrl ? resolveProductImageUrl(item.imageUrl) : null,
 
           imageAlt:
             item.imageAlt,

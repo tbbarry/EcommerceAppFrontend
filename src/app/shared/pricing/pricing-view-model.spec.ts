@@ -10,7 +10,7 @@ describe('mapPricingViewModel', () => {
       price: 49.9
     });
 
-    expect(vm.primaryText).toBe('49,90\u00a0€');
+    expect(vm.primaryText).toBe('$49.90');
     expect(vm.secondaryText).toBeNull();
     expect(vm.discountBadge).toBeNull();
     expect(vm.hasDiscount).toBeFalse();
@@ -27,8 +27,8 @@ describe('mapPricingViewModel', () => {
       discountPercentGlobal: 20
     });
 
-    expect(vm.primaryText).toBe('80,00\u00a0€');
-    expect(vm.secondaryText).toBe('100,00\u00a0€');
+    expect(vm.primaryText).toBe('$80.00');
+    expect(vm.secondaryText).toBe('$100.00');
     expect(vm.discountBadge).toBe('-20%');
     expect(vm.hasDiscount).toBeTrue();
     expect(vm.promoScope).toBe('GLOBAL');
@@ -46,11 +46,11 @@ describe('mapPricingViewModel', () => {
       discountPercentMax: 20
     });
 
-    expect(vm.primaryText).toBe('À partir de\u00a096,00\u00a0€');
-    expect(vm.secondaryText).toBe('au lieu de 120,00\u00a0€');
-    expect(vm.discountBadge).toBe('-6% à -20%');
-    expect(vm.detailNote).toBe('Remise variable selon la variante');
-    expect(vm.detailRangeText).toBe('Prix: 96,00\u00a0€ à 170,00\u00a0€');
+    expect(vm.primaryText).toBe('From\u00a0$96.00');
+    expect(vm.secondaryText).toBe('was $120.00');
+    expect(vm.discountBadge).toBe('6%–20% off');
+    expect(vm.detailNote).toBe('Discount varies by option');
+    expect(vm.detailRangeText).toBe('Price: $96.00–$170.00');
     expect(vm.promoScope).toBe('VARIANT');
   });
 });
