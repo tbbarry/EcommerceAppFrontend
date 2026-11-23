@@ -94,6 +94,10 @@
             <a class="btn btn-sm btn-primary" [routerLink]="['/admin/promotions', promo.id, 'assignments']"
               [attr.aria-label]="'Gérer les produits de ' + promo.code">Gérer les produits <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="openEditor(promo)">Modifier</button>
+            <button type="button" class="btn btn-sm" [ngClass]="promo.isActive ? 'btn-warning' : 'btn-success'" [disabled]="busy" (click)="toggleActivation(promo)">
+              <i [class]="promo.isActive ? 'bi bi-pause-circle' : 'bi bi-play-circle'" aria-hidden="true"></i>
+              {{ promo.isActive ? 'Désactiver' : 'Activer' }}
+            </button>
             <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="delete(promo)">Supprimer</button>
           </div>
         </article>
