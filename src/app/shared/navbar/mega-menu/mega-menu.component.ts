@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, Input } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, HostListener, Input, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 
 import { Category } from '../../../core/menu.service';
 
@@ -13,6 +13,7 @@ import { Category } from '../../../core/menu.service';
 })
 export class MegaMenuComponent {
   @Input({ required: true }) categories: Category[] = [];
+  readonly router = inject(Router);
   activeCategory: Category | null = null;
   private openedByHover = false;
 
@@ -28,6 +29,10 @@ export class MegaMenuComponent {
       this.activeCategory = category;
       this.openedByHover = false;
     }
+  }
+
+  onHomeOrShopHover(): void {
+    this.hideMegaMenu();
   }
 
   @HostListener('document:keydown.escape')

@@ -38,6 +38,7 @@
   border-radius: 999px;
   white-space: nowrap;
   transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  position: relative;
 }
 
 .mega-home-link:hover,
@@ -46,6 +47,23 @@
 .mega-category-trigger[aria-expanded='true'] {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0d6efd;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.mega-home-link.active .active-indicator {
+  opacity: 1;
 }
 
 .mega-menu-item {
