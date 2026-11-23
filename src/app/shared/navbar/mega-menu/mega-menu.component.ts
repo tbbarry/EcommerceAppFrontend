@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, Input, inject } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 import { Category } from '../../../core/menu.service';
 
@@ -14,6 +14,7 @@ import { Category } from '../../../core/menu.service';
 export class MegaMenuComponent {
   @Input({ required: true }) categories: Category[] = [];
   readonly router = inject(Router);
+  readonly activatedRoute = inject(ActivatedRoute);
   activeCategory: Category | null = null;
   private openedByHover = false;
 
@@ -35,6 +36,11 @@ export class MegaMenuComponent {
     this.hideMegaMenu();
   }
 
+  isActiveCategoryFilter(categoryId: number): boolean {
+    const categoryIdParam = this.activatedRoute.snapshot.queryParamMap.get('categoryId');
+    return categoryIdParam ? parseInt(categoryIdParam, 10) === categoryId : false;
+  }
+
   @HostListener('document:keydown.escape')
   hideMegaMenu(): void {
     this.activeCategory = null;
@@ -48,3 +54,4 @@ export class MegaMenuComponent {
     }
   }
 }
+

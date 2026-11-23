@@ -6,18 +6,23 @@
       <span>Home</span>
       <span class="active-indicator" *ngIf="router.url === '/'"></span>
     </a>
-    <a routerLink="/products" class="mega-home-link" [class.active]="router.url.startsWith('/products')" 
+    <a routerLink="/products" class="mega-home-link" [class.active]="router.url.startsWith('/products') && !activatedRoute.snapshot.queryParamMap.get('categoryId')" 
        (mouseenter)="onHomeOrShopHover()" (click)="hideMegaMenu()">
       <span>Shop all</span>
-      <span class="active-indicator" *ngIf="router.url.startsWith('/products')"></span>
+      <span class="active-indicator" *ngIf="router.url.startsWith('/products') && !activatedRoute.snapshot.queryParamMap.get('categoryId')"></span>
     </a>
     <div class="mega-menu-item" *ngFor="let category of categories" (mouseenter)="showMegaMenu(category)">
       <button *ngIf="category.children.length" type="button" class="mega-category-trigger"
+        [class.active]="isActiveCategoryFilter(category.id)"
         (click)="toggleMegaMenu(category)" [attr.aria-expanded]="activeCategory?.id === category.id" aria-controls="mega-menu-panel">
         <span>{{ category.name }}</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+        <span class="active-indicator" *ngIf="isActiveCategoryFilter(category.id)"></span>
       </button>
-      <a *ngIf="!category.children.length" class="mega-category-trigger" [routerLink]="['/products']"
-        [queryParams]="{ categoryId: category.id }" (click)="hideMegaMenu()">{{ category.name }}</a>
+      <a *ngIf="!category.children.length" class="mega-category-trigger" [class.active]="isActiveCategoryFilter(category.id)" [routerLink]="['/products']"
+        [queryParams]="{ categoryId: category.id }" (click)="hideMegaMenu()">
+        <span>{{ category.name }}</span>
+        <span class="active-indicator" *ngIf="isActiveCategoryFilter(category.id)"></span>
+      </a>
     </div>
   </div>
 
