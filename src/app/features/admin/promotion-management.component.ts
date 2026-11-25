@@ -126,6 +126,15 @@ export class PromotionManagementComponent implements OnInit {
     });
   }
 
+  toggleActivation(promo: AdminPromo): void {
+    if (this.busy) return;
+    const action = promo.isActive ? 'deactivatePromo' : 'activatePromo';
+    const message = promo.isActive ? 'Promotion désactivée.' : 'Promotion activée.';
+    this.mutate(this.promosService[action](promo.id), message, () => {
+      this.loadPromos();
+    });
+  }
+
   status(promo: AdminPromo): string {
     if (!promo.isActive) return 'Désactivée';
     const now = Date.now();

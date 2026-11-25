@@ -60,4 +60,12 @@ export class AdminPromoService {
   removeAssignment(id: number, assignment: PromoAssignment) {
     return this.http.delete<void>(`${this.url}/${id}/assignments/${assignment.type}/${assignment.id}`);
   }
+
+  deactivatePromo(id: number) {
+    return this.http.put<AdminPromo>(`${this.url}/${id}/deactivate`, {});
+  }
+
+  activatePromo(id: number) {
+    return this.http.put<AdminPromo>(`${this.url}/${id}/activate`, {});
+  }
 }
